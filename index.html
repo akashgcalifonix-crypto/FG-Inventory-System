@@ -2,17 +2,33 @@
 <html>
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>FG Inventory Tool</title>
+  <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    body { background-color: #f0f2f5; padding: 20px; font-family: sans-serif; }
+    body { background-color: #f0f2f5; padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     .hidden { display: none; }
-    .nav-link { cursor: pointer; }
-    .loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); z-index:9999; display: flex; justify-content: center; align-items: center; font-size: 20px; font-weight: bold;}
-    .floor-badge { font-size: 0.8rem; padding: 4px 8px; border-radius: 4px; color: white; margin-left: 10px; font-weight: bold;}
-    .bg-f1 { background-color: #28a745; }
-    .bg-f2 { background-color: #ffc107; color: black; }
-    .bg-base { background-color: #dc3545; }
+    .nav-link { cursor: pointer; font-weight: 500; }
+    .nav-link.active { background-color: #0d6efd !important; color: white !important; }
+    
+    /* Loader Style */
+    .loading-overlay { 
+      position: fixed; top:0; left:0; width:100%; height:100%; 
+      background:rgba(255,255,255,0.85); z-index:9999; 
+      display: flex; justify-content: center; align-items: center; 
+      font-size: 1.5rem; font-weight: bold; color: #0d6efd;
+    }
+    
+    /* Floor Badges */
+    .floor-badge { font-size: 0.8rem; padding: 5px 10px; border-radius: 12px; color: white; margin-left: 10px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+    .bg-f1 { background-color: #28a745; } /* Green */
+    .bg-f2 { background-color: #ffc107; color: black; } /* Yellow */
+    .bg-base { background-color: #dc3545; } /* Red */
+    
+    /* Logo Style */
+    .logo-container { text-align: center; margin-bottom: 20px; }
+    .logo-img { max-height: 80px; width: auto; object-fit: contain; }
   </style>
 </head>
 <body>
@@ -20,111 +36,157 @@
 <!-- Loader -->
 <div id="loader" class="loading-overlay">Loading Data...</div>
 
-<div class="container bg-white p-4 rounded shadow" style="max-width: 1000px;">
-  <h3 class="text-center text-primary mb-4">FG Inventory System (GitHub Host)</h3>
+<div class="container bg-white p-4 rounded shadow" style="max-width: 1100px;">
+  
+  <!-- LOGO SECTION -->
+  <div class="logo-container">
+    <img src="https://i.postimg.cc/5y7SN4xc/logo.png" alt="Company Logo" class="logo-img">
+  </div>
+  
+  <h3 class="text-center text-primary mb-4" style="font-weight: 700;">FG Inventory Management System</h3>
 
   <!-- TABS -->
-  <ul class="nav nav-tabs mb-3">
+  <ul class="nav nav-tabs nav-justified mb-4 shadow-sm rounded">
     <li class="nav-item"><a class="nav-link active" onclick="showTab('prod')">Production</a></li>
     <li class="nav-item"><a class="nav-link" onclick="showTab('pdi')">PDI Tracker</a></li>
     <li class="nav-item"><a class="nav-link" onclick="showTab('disp')">Dispatch</a></li>
     <li class="nav-item"><a class="nav-link" onclick="showTab('open')">Opening</a></li>
-    <li class="nav-item"><a class="nav-link text-dark fw-bold" onclick="showTab('dash1')">Line Dashboard</a></li>
-    <li class="nav-item"><a class="nav-link text-dark fw-bold" onclick="showTab('dash2')">Master Dashboard</a></li>
+    <li class="nav-item"><a class="nav-link text-dark bg-light border-start" onclick="showTab('dash1')">📊 Line Dash</a></li>
+    <li class="nav-item"><a class="nav-link text-dark bg-light" onclick="showTab('dash2')">📈 Master Dash</a></li>
   </ul>
 
-  <!-- 1. PRODUCTION -->
+  <!-- 1. PRODUCTION TAB -->
   <div id="prod" class="tab-pane">
-    <form onsubmit="saveData(event, 'Production')">
-      <div class="row g-3">
-        <div class="col-md-3"><label>Date</label><input type="date" name="date" class="form-control" required></div>
-        <div class="col-md-3">
-          <label>Line (1-24)</label>
-          <input type="number" name="line" class="form-control" min="1" max="24" oninput="checkFloor(this, 'bdg-p')" required>
-          <span id="bdg-p" class="floor-badge hidden"></span>
+    <div class="card p-3 border-0">
+      <h5 class="mb-3 text-secondary">Daily Production Entry</h5>
+      <form onsubmit="saveData(event, 'Production')">
+        <div class="row g-3">
+          <div class="col-md-3"><label class="form-label">Date</label><input type="date" name="date" class="form-control" required></div>
+          <div class="col-md-3">
+            <label class="form-label">Line (1-24)</label>
+            <input type="number" name="line" class="form-control" min="1" max="24" oninput="checkFloor(this, 'bdg-p')" required>
+            <span id="bdg-p" class="floor-badge hidden"></span>
+          </div>
+          <div class="col-md-3"><label class="form-label">Model</label><select name="model" id="prod-m" class="form-select" onchange="filterC('prod')" required></select></div>
+          <div class="col-md-3"><label class="form-label">Color</label><select name="color" id="prod-c" class="form-select" onchange="fillP('prod')" required></select></div>
+          <div class="col-md-6"><label class="form-label">boAt Part Code</label><input type="text" name="partCode" id="prod-p" class="form-control bg-light" readonly></div>
+          <div class="col-md-6"><label class="form-label">FG Output (Qty)</label><input type="number" name="fgQty" class="form-control" required></div>
         </div>
-        <div class="col-md-3"><label>Model</label><select name="model" id="prod-m" class="form-select" onchange="filterC('prod')" required></select></div>
-        <div class="col-md-3"><label>Color</label><select name="color" id="prod-c" class="form-select" onchange="fillP('prod')" required></select></div>
-        <div class="col-md-6"><label>boAt Part Code</label><input type="text" name="partCode" id="prod-p" class="form-control bg-light" readonly></div>
-        <div class="col-md-6"><label>FG Output</label><input type="number" name="fgQty" class="form-control" required></div>
-      </div>
-      <button class="btn btn-primary mt-3 w-100">Save Production</button>
-    </form>
+        <button class="btn btn-primary mt-4 w-100 py-2 fw-bold">Save Production Data</button>
+      </form>
+    </div>
   </div>
 
-  <!-- 2. PDI -->
+  <!-- 2. PDI TAB -->
   <div id="pdi" class="tab-pane hidden">
-    <form onsubmit="saveData(event, 'PDI')">
-      <div class="row g-3">
-        <div class="col-md-3"><label>Date</label><input type="date" name="date" class="form-control" required></div>
-        <div class="col-md-3"><label>Line</label><input type="number" name="line" class="form-control" min="1" max="24" oninput="checkFloor(this, 'bdg-d')" required><span id="bdg-d" class="floor-badge hidden"></span></div>
-        <div class="col-md-3"><label>Model</label><select name="model" id="pdi-m" class="form-select" onchange="filterC('pdi')" required></select></div>
-        <div class="col-md-3"><label>Color</label><select name="color" id="pdi-c" class="form-select" onchange="fillP('pdi')" required></select></div>
-        <div class="col-md-4"><label>Part Code</label><input type="text" name="partCode" id="pdi-p" class="form-control bg-light" readonly></div>
-        <div class="col-md-4"><label>Lot ID</label><input type="text" name="lotId" class="form-control"></div>
-        <div class="col-md-4"><label>Lot Type</label><select name="lotType" class="form-select"><option>Fresh</option><option>Rework</option><option>Warranty</option><option>Old FG</option><option>Market Return</option></select></div>
-        <div class="col-md-4"><label>Offer</label><input type="number" id="off" name="pdiOffer" class="form-control" oninput="calcP()" required></div>
-        <div class="col-md-4"><label>Pass</label><input type="number" id="pas" name="pdiPass" class="form-control" oninput="calcP()" required></div>
-        <div class="col-md-4"><label>Fail</label><input type="text" id="fal" class="form-control" readonly></div>
-        <div id="defBox" class="col-12 hidden"><div class="alert alert-danger"><label>Reason:</label><input type="text" name="defectReason" class="form-control"></div></div>
-      </div>
-      <button class="btn btn-warning mt-3 w-100">Save PDI</button>
-    </form>
+    <div class="card p-3 border-0">
+      <h5 class="mb-3 text-secondary">PDI Quality Tracker</h5>
+      <form onsubmit="saveData(event, 'PDI')">
+        <div class="row g-3">
+          <div class="col-md-3"><label class="form-label">Date</label><input type="date" name="date" class="form-control" required></div>
+          <div class="col-md-3"><label class="form-label">Line</label><input type="number" name="line" class="form-control" min="1" max="24" oninput="checkFloor(this, 'bdg-d')" required><span id="bdg-d" class="floor-badge hidden"></span></div>
+          <div class="col-md-3"><label class="form-label">Model</label><select name="model" id="pdi-m" class="form-select" onchange="filterC('pdi')" required></select></div>
+          <div class="col-md-3"><label class="form-label">Color</label><select name="color" id="pdi-c" class="form-select" onchange="fillP('pdi')" required></select></div>
+          
+          <div class="col-md-4"><label class="form-label">Part Code</label><input type="text" name="partCode" id="pdi-p" class="form-control bg-light" readonly></div>
+          <div class="col-md-4"><label class="form-label">Lot ID</label><input type="text" name="lotId" class="form-control"></div>
+          <div class="col-md-4"><label class="form-label">Lot Type</label><select name="lotType" class="form-select"><option>Fresh</option><option>Rework</option><option>Warranty</option><option>Old FG</option><option>Market Return</option></select></div>
+          
+          <div class="col-md-4"><label class="form-label">PDI Offer Qty</label><input type="number" id="off" name="pdiOffer" class="form-control" oninput="calcP()" required></div>
+          <div class="col-md-4"><label class="form-label">PDI Pass Qty</label><input type="number" id="pas" name="pdiPass" class="form-control" oninput="calcP()" required></div>
+          <div class="col-md-4"><label class="form-label">Fail Qty</label><input type="text" id="fal" class="form-control" readonly style="font-weight:bold; color:red;"></div>
+          
+          <div id="defBox" class="col-12 hidden">
+            <div class="alert alert-danger shadow-sm">
+              <label class="form-label fw-bold">Reason for Defect / Rework:</label>
+              <input type="text" name="defectReason" class="form-control" placeholder="Enter reason...">
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-warning mt-4 w-100 py-2 fw-bold text-dark">Save PDI Data</button>
+      </form>
+    </div>
   </div>
 
-  <!-- 3. DISPATCH -->
+  <!-- 3. DISPATCH TAB -->
   <div id="disp" class="tab-pane hidden">
-    <form onsubmit="saveData(event, 'Dispatch')">
-      <div class="row g-3">
-        <div class="col-md-3"><label>Date</label><input type="date" name="date" class="form-control" required></div>
-        <div class="col-md-3"><label>Model</label><select name="model" id="disp-m" class="form-select" onchange="filterC('disp')" required></select></div>
-        <div class="col-md-3"><label>Color</label><select name="color" id="disp-c" class="form-select" onchange="fillP('disp')" required></select></div>
-        <div class="col-md-3"><label>Part Code</label><input type="text" name="partCode" id="disp-p" class="form-control bg-light" readonly></div>
-        <div class="col-12"><label>Dispatch Qty</label><input type="number" name="dispatchQty" class="form-control" required></div>
-      </div>
-      <button class="btn btn-success mt-3 w-100">Save Dispatch</button>
-    </form>
+    <div class="card p-3 border-0">
+      <h5 class="mb-3 text-secondary">Dispatch Entry</h5>
+      <form onsubmit="saveData(event, 'Dispatch')">
+        <div class="row g-3">
+          <div class="col-md-3"><label class="form-label">Date</label><input type="date" name="date" class="form-control" required></div>
+          <div class="col-md-3"><label class="form-label">Model</label><select name="model" id="disp-m" class="form-select" onchange="filterC('disp')" required></select></div>
+          <div class="col-md-3"><label class="form-label">Color</label><select name="color" id="disp-c" class="form-select" onchange="fillP('disp')" required></select></div>
+          <div class="col-md-3"><label class="form-label">Part Code</label><input type="text" name="partCode" id="disp-p" class="form-control bg-light" readonly></div>
+          <div class="col-12"><label class="form-label">Dispatched Qty</label><input type="number" name="dispatchQty" class="form-control" required></div>
+        </div>
+        <button class="btn btn-success mt-4 w-100 py-2 fw-bold">Save Dispatch</button>
+      </form>
+    </div>
   </div>
 
-  <!-- 4. OPENING -->
+  <!-- 4. OPENING TAB -->
   <div id="open" class="tab-pane hidden">
-    <form onsubmit="saveData(event, 'Opening')">
-      <div class="row g-3">
-        <div class="col-md-4"><label>Month</label><input type="month" name="month" class="form-control" required></div>
-        <div class="col-md-4"><label>Type</label><select name="openType" class="form-select" onchange="toggleOp(this.value)"><option value="PDI">PDI Opening</option><option value="Dispatch">Dispatch Opening</option></select></div>
-        <div class="col-md-4"><label>Model</label><select name="model" id="open-m" class="form-select" onchange="filterC('open')" required></select></div>
-        <div class="col-md-4"><label>Color</label><select name="color" id="open-c" class="form-select" onchange="fillP('open')" required></select></div>
-        <div class="col-md-4"><label>Part Code</label><input type="text" name="partCode" id="open-p" class="form-control bg-light" readonly></div>
-        
-        <div class="grp-pdi col-md-4"><label>Line</label><input type="number" name="line" class="form-control" min="1" max="24"></div>
-        <div class="grp-pdi col-md-4"><label>For PDI Open</label><input type="number" name="pdiOpenQty" class="form-control"></div>
-        <div class="grp-pdi col-md-4"><label>For Rework Open</label><input type="number" name="reworkOpenQty" class="form-control"></div>
-        <div class="grp-pdi col-12"><label>Rework Reason</label><input type="text" name="reworkReason" class="form-control"></div>
-        <div class="grp-disp col-12 hidden"><label>Dispatch Opening Qty</label><input type="number" name="dispatchOpenQty" class="form-control"></div>
-      </div>
-      <button class="btn btn-info mt-3 w-100 text-white">Save Opening</button>
-    </form>
+    <div class="card p-3 border-info" style="border: 1px solid #0dcaf0;">
+      <h5 class="text-info mb-3">Monthly Opening Balance</h5>
+      <form onsubmit="saveData(event, 'Opening')">
+        <div class="row g-3">
+          <div class="col-md-4"><label class="form-label">Month</label><input type="month" name="month" class="form-control" required></div>
+          <div class="col-md-4"><label class="form-label">Entry Type</label><select name="openType" class="form-select" onchange="toggleOp(this.value)"><option value="PDI">PDI Opening</option><option value="Dispatch">Dispatch Opening</option></select></div>
+          
+          <div class="col-md-4"><label class="form-label">Model</label><select name="model" id="open-m" class="form-select" onchange="filterC('open')" required></select></div>
+          <div class="col-md-6"><label class="form-label">Color</label><select name="color" id="open-c" class="form-select" onchange="fillP('open')" required></select></div>
+          <div class="col-md-6"><label class="form-label">Part Code</label><input type="text" name="partCode" id="open-p" class="form-control bg-light" readonly></div>
+          
+          <!-- PDI Fields -->
+          <div class="grp-pdi col-md-3"><label class="form-label">Line</label><input type="number" name="line" class="form-control" min="1" max="24"></div>
+          <div class="grp-pdi col-md-3"><label class="form-label">For PDI (Open)</label><input type="number" name="pdiOpenQty" class="form-control"></div>
+          <div class="grp-pdi col-md-3"><label class="form-label">For Rework (Open)</label><input type="number" name="reworkOpenQty" class="form-control"></div>
+          <div class="grp-pdi col-md-12"><label class="form-label">Rework Reason</label><input type="text" name="reworkReason" class="form-control"></div>
+          
+          <!-- Dispatch Fields -->
+          <div class="grp-disp col-12 hidden"><label class="form-label">Dispatch Opening Qty</label><input type="number" name="dispatchOpenQty" class="form-control"></div>
+        </div>
+        <button class="btn btn-info mt-4 w-100 text-white fw-bold">Save Opening Balance</button>
+      </form>
+    </div>
   </div>
 
   <!-- 5. LINE DASHBOARD -->
   <div id="dash1" class="tab-pane hidden">
-    <h4>Line Wise Status</h4>
-    <div class="input-group mb-3"><input type="number" id="dashLine" class="form-control" placeholder="Line No (1-24)"><button class="btn btn-dark" onclick="renderDash1()">Show</button></div>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+       <h4>Line Wise PDI Status</h4>
+    </div>
+    <div class="input-group mb-3 shadow-sm">
+      <span class="input-group-text bg-dark text-white">Line No</span>
+      <input type="number" id="dashLine" class="form-control" placeholder="Enter (1-24)">
+      <button class="btn btn-dark" onclick="renderDash1()">Show Status</button>
+    </div>
     <div id="dash1-res"></div>
   </div>
 
   <!-- 6. MASTER DASHBOARD -->
   <div id="dash2" class="tab-pane hidden">
-    <div class="d-flex justify-content-between"><h4>Master Status</h4><button class="btn btn-sm btn-outline-dark" onclick="renderDash2()">Refresh</button></div>
-    <div class="table-responsive mt-2"><table class="table table-bordered table-sm table-striped"><thead class="table-dark"><tr><th>Model</th><th>Color</th><th>Part</th><th>Opn(Disp)</th><th>FG Out</th><th>PDI Pass</th><th>Disp</th><th>Bal(PDI)</th><th>Bal(Disp)</th></tr></thead><tbody id="master-body"></tbody></table></div>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4>Master Reconciliation</h4>
+      <button class="btn btn-outline-dark btn-sm" onclick="renderDash2()">Refresh Data</button>
+    </div>
+    <div class="table-responsive shadow-sm" style="max-height: 500px; overflow:auto;">
+      <table class="table table-bordered table-sm table-hover table-striped">
+        <thead class="table-dark" style="position: sticky; top: 0;">
+           <tr><th>Model</th><th>Color</th><th>Part</th><th>Opn(Disp)</th><th>FG Out</th><th>PDI Pass</th><th>Disp</th><th>Bal(PDI)</th><th>Bal(Disp)</th></tr>
+        </thead>
+        <tbody id="master-body"></tbody>
+      </table>
+    </div>
   </div>
 
 </div>
 
 <script>
   // **********************************************
-  // PASTE YOUR GOOGLE SCRIPT WEB APP URL HERE
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyMyOtajspBbAH-9SqiVwxFBwnn3ovU0r4P4kxB2h3TVa0pPTkvFiYbEnJ0Mv_cNgdD/exec"; 
+  // IMPORTANT: PASTE YOUR GOOGLE APP SCRIPT URL HERE
+  const SCRIPT_URL = "PASTE_YOUR_WEB_APP_URL_HERE"; 
   // **********************************************
 
   let masterData = [];
@@ -142,10 +204,13 @@
         populateModels(['prod','pdi','disp','open']);
         toggleLoader(false);
       })
-      .catch(e => { alert("Error connecting to Google Sheet: "+e); toggleLoader(false); });
+      .catch(e => { 
+        if(SCRIPT_URL.includes("PASTE_YOUR")) alert("Please edit index.html and paste your Web App URL!");
+        else alert("Connection Failed. Check your URL or Internet."); 
+        toggleLoader(false); 
+      });
   };
 
-  // --- TAB UI ---
   function showTab(id) {
     document.querySelectorAll('.tab-pane').forEach(e => e.classList.add('hidden'));
     document.getElementById(id).classList.remove('hidden');
@@ -199,7 +264,7 @@
   // --- SAVE DATA (POST) ---
   function saveData(e, type) {
     e.preventDefault();
-    if(SCRIPT_URL.includes("PASTE_YOUR")) return alert("Please update SCRIPT_URL in index.html");
+    if(SCRIPT_URL.includes("PASTE_YOUR")) return alert("Please update SCRIPT_URL in index.html line 132");
     
     toggleLoader(true);
     let formData = Object.fromEntries(new FormData(e.target));
@@ -231,19 +296,19 @@
     fetchDashData(() => {
        let map = {};
        const k = (m,c,p)=>m+"|"+c+"|"+p;
-       // Logic: Production
+       
        dashboardData.prod.filter(r=>r[1]==line).forEach(r=>{
          let key = k(r[3],r[4],r[5]);
          if(!map[key]) map[key]={m:r[3],c:r[4],p:r[5],fg:0,oPdi:0,oRew:0,pass:0,fail:0,rewPass:0,rsn:""};
          map[key].fg += Number(r[6]||0);
        });
-       // Opening
+       
        dashboardData.open.filter(r=>r[2]==line && r[1]=='PDI').forEach(r=>{
          let key = k(r[3],r[4],r[5]);
          if(!map[key]) map[key]={m:r[3],c:r[4],p:r[5],fg:0,oPdi:0,oRew:0,pass:0,fail:0,rewPass:0,rsn:r[8]};
          map[key].oPdi += Number(r[6]||0); map[key].oRew += Number(r[7]||0);
        });
-       // PDI
+       
        dashboardData.pdi.filter(r=>r[1]==line).forEach(r=>{
          let key = k(r[3],r[4],r[5]);
          if(!map[key]) map[key]={m:r[3],c:r[4],p:r[5],fg:0,oPdi:0,oRew:0,pass:0,fail:0,rewPass:0,rsn:""};
@@ -252,7 +317,7 @@
          if(r[7]=='Rework' || r[7]=='Old FG') map[key].rewPass += Number(r[9]||0);
        });
 
-       let h='<table class="table table-bordered"><thead><tr><th>Model</th><th>Color</th><th>Open PDI</th><th>FG Out</th><th>Pass</th><th>Bal PDI</th><th>For Rework</th><th>Reason</th></tr></thead><tbody>';
+       let h='<table class="table table-bordered table-hover"><thead><tr class="table-secondary"><th>Model</th><th>Color</th><th>Open PDI</th><th>FG Out</th><th>Pass</th><th>Bal PDI</th><th>For Rework</th><th>Reason</th></tr></thead><tbody>';
        for(let x in map){
          let o=map[x];
          let bPdi = (o.oPdi + o.fg) - o.pass;
@@ -277,7 +342,7 @@
          let o=map[k];
          let bPdi = o.fg - o.pass;
          let bDsp = (o.od + o.pass) - o.disp;
-         h+=`<tr><td>${o.m}</td><td>${o.c}</td><td>${o.p}</td><td>${o.od}</td><td>${o.fg}</td><td>${o.pass}</td><td>${o.disp}</td><td>${bPdi}</td><td>${bDsp}</td></tr>`;
+         h+=`<tr><td>${o.m}</td><td>${o.c}</td><td>${o.p}</td><td>${o.od}</td><td>${o.fg}</td><td>${o.pass}</td><td>${o.disp}</td><td class="bg-light fw-bold">${bPdi}</td><td class="bg-warning text-dark fw-bold">${bDsp}</td></tr>`;
        }
        document.getElementById('master-body').innerHTML = h;
     });
@@ -285,5 +350,4 @@
 </script>
 
 </body>
-
 </html>
