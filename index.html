@@ -145,28 +145,30 @@
     </div>
   </div>
 
-  <!-- DASH 1: LINE -->
+  <!-- DASH 1: LINE DASH -->
   <div id="dash1" class="tab-pane hidden">
-    <div class="input-group mb-3"><span class="input-group-text">Line No</span><input type="number" id="dashLine" class="form-control"><button class="btn btn-dark" onclick="renderDash1()">Show</button></div>
-    <div id="dash1-res"></div>
+    <div class="input-group mb-3">
+        <span class="input-group-text">Line No</span>
+        <input type="number" id="dashLine" class="form-control" placeholder="Enter Line (1-24)">
+        <button class="btn btn-dark" onclick="renderDash1()">Show</button>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-bordered text-center table-sm">
+            <thead class="table-secondary">
+                <tr><th>Model</th><th>Color</th><th>Open PDI</th><th>Open Rework</th><th>FG Out</th><th>Pass</th><th>Bal PDI</th><th>For Rework</th><th>Reason (Pending)</th></tr>
+            </thead>
+            <tbody id="dash1-res"></tbody>
+        </table>
+    </div>
   </div>
 
-  <!-- DASH 2: MASTER (UPDATED FORMULA) -->
+  <!-- DASH 2: MASTER DASH -->
   <div id="dash2" class="tab-pane hidden">
     <button class="btn btn-outline-dark btn-sm mb-2" onclick="renderDash2()">Refresh Master</button>
     <div class="table-responsive">
       <table class="table table-bordered table-sm table-striped text-center">
         <thead class="table-dark">
-          <tr>
-            <th>Model</th><th>Color</th><th>Part</th>
-            <th>Opn(PDI+Rew)</th>
-            <th>FG Out</th>
-            <th>PDI Pass</th>
-            <th>Opn(Disp)</th>
-            <th>Disp</th>
-            <th>Bal(PDI)</th>
-            <th>Bal(Disp)</th>
-          </tr>
+          <tr><th>Model</th><th>Color</th><th>Part</th><th>Opn(PDI+Rew)</th><th>FG Out</th><th>PDI Pass</th><th>Opn(Disp)</th><th>Disp</th><th>Bal(PDI)</th><th>Bal(Disp)</th></tr>
         </thead>
         <tbody id="master-body"></tbody>
       </table>
@@ -178,7 +180,7 @@
 <script>
   // **********************************************
   // 👇 IS URL KO UPDATE KAREIN 👇
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxjO26Ant9-eposWJGkcUutN7Dmlm5ruVlTUrUKrEW8Zw6C2DtmzgVBxNPgrdhugy-N_w/exec"; 
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwr4KvWw2c5YZrYFDQIgzrrY4yBNxmxDcIgCw5NA9HEDEFyxeYwDQ8qPRkQSxF4RCYZsw/exec"; 
   // **********************************************
 
   let masterData = [];
@@ -241,8 +243,6 @@
 
   function submitQueue(tab, type) {
     if(queueData[tab].length === 0) return alert("List is empty!");
-    if(SCRIPT_URL.includes("PASTE_YOUR")) return alert("Please update SCRIPT_URL in code!");
-
     toggleLoader(true, "Saving Data...");
     fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ type: type, data: queueData[tab] }) })
     .then(r => r.json())
@@ -257,7 +257,7 @@
          alert("Error: " + d.message);
       }
     })
-    .catch(e => { toggleLoader(false); alert("Connection Error. Check Console."); });
+    .catch(e => { toggleLoader(false); alert("Connection Error."); });
   }
 
   // --- HELPERS ---
@@ -272,62 +272,70 @@
   function calcP(){ let f=(document.getElementById('off').value||0)-(document.getElementById('pas').value||0); document.getElementById('fal').value=f; document.getElementById('defBox').classList.toggle('hidden',f<=0); }
   function toggleOp(v){ document.querySelectorAll('.grp-pdi').forEach(e=>e.classList.toggle('hidden',v!='PDI')); document.querySelector('.grp-disp').classList.toggle('hidden',v!='Dispatch'); }
 
-  // --- DASHBOARDS ---
+  // --- DASHBOARD 1: LINE DASH (LOT ID LOGIC) ---
   function renderDash1() {
      let line = document.getElementById('dashLine').value; if(!line) return alert("Enter Line");
-     toggleLoader(true, "Fetching Dashboard...");
+     toggleLoader(true, "Fetching Line Data...");
      fetch(SCRIPT_URL+"?action=getDashboard").then(r=>r.json()).then(d=>{
         toggleLoader(false);
-        let map={}; const k=(m,c,p)=>m+"|"+c+"|"+p;
-        d.prod.filter(r=>r[1]==line).forEach(r=>{ let key=k(r[3],r[4],r[5]); if(!map[key])map[key]={m:r[3],c:r[4],p:r[5],fg:0,oPdi:0,oRew:0,pass:0,fail:0,rewPass:0,rsn:""}; map[key].fg+=Number(r[6]||0); });
-        d.pdi.filter(r=>r[1]==line).forEach(r=>{ let key=k(r[3],r[4],r[5]); if(!map[key])map[key]={m:r[3],c:r[4],p:r[5],fg:0,oPdi:0,oRew:0,pass:0,fail:0,rewPass:0,rsn:""}; map[key].pass+=Number(r[9]||0); map[key].fail+=Number(r[10]||0); if(r[11])map[key].rsn=r[11]; if(r[7]=='Rework'||r[7]=='Old FG')map[key].rewPass+=Number(r[9]||0); });
-        d.open.filter(r=>r[2]==line&&r[1]=='PDI').forEach(r=>{ let key=k(r[3],r[4],r[5]); if(!map[key])map[key]={m:r[3],c:r[4],p:r[5],fg:0,oPdi:0,oRew:0,pass:0,fail:0,rewPass:0,rsn:r[8]}; map[key].oPdi+=Number(r[6]||0); map[key].oRew+=Number(r[7]||0); });
+        let map={}; const get=(m,c)=>{ let k=m+"|"+c; if(!map[k])map[k]={m,c,oPdi:0,oRew:0,oRsn:[],fg:0,freshOff:0,pass:0,newFail:0,rewPass:0,failLots:{}}; return map[k]; };
 
-        let h='<table class="table table-bordered"><thead><tr class="table-secondary"><th>Model</th><th>Color</th><th>Open PDI</th><th>FG Out</th><th>Pass</th><th>Bal PDI</th><th>For Rework</th><th>Reason</th></tr></thead><tbody>';
-        for(let x in map){ let o=map[x], bPdi=(o.oPdi+o.fg)-o.pass, bRew=o.oRew+o.fail-o.rewPass; h+=`<tr><td>${o.m}</td><td>${o.c}</td><td>${o.oPdi}</td><td>${o.fg}</td><td>${o.pass}</td><td class="bg-light fw-bold">${bPdi}</td><td class="text-danger fw-bold">${bRew}</td><td>${bRew>0?o.rsn:''}</td></tr>`; }
-        document.getElementById('dash1-res').innerHTML=h+'</tbody></table>';
-     });
+        // 1. Opening
+        d.open.filter(r=>r[2]==line&&r[1]=='PDI').forEach(r=>{ let o=get(r[3],r[4]); o.oPdi+=Number(r[6]||0); o.oRew+=Number(r[7]||0); if(r[8])o.oRsn.push(r[8]); });
+        // 2. Production
+        d.prod.filter(r=>r[1]==line).forEach(r=>get(r[3],r[4]).fg+=Number(r[6]||0));
+        // 3. PDI (Lot Tracking)
+        d.pdi.filter(r=>r[1]==line).forEach(r=>{
+           let o=get(r[3],r[4]);
+           let lotID=String(r[6]||"").trim(), type=r[7], off=Number(r[8]||0), pass=Number(r[9]||0), fail=Number(r[10]||0), rsn=r[11];
+           o.pass+=pass;
+           if(type==='Fresh') o.freshOff+=off;
+           
+           // Fail Logic: Add to list
+           if(fail>0){ 
+              o.newFail+=fail; 
+              if(lotID) o.failLots[lotID]=rsn; else o.oRsn.push(rsn+" (NoID)"); 
+           }
+           // Pass Logic (Rework/OldFG): Remove from list
+           if((type==='Rework'||type==='Old FG') && pass>0){
+              o.rewPass+=pass;
+              if(lotID && o.failLots[lotID]) delete o.failLots[lotID];
+           }
+        });
+
+        let h='';
+        for(let k in map){
+           let o=map[k];
+           let balPdi = (o.oPdi + o.fg) - o.freshOff; if(balPdi<0) balPdi=0;
+           let forRew = o.oRew + o.newFail - o.rewPass;
+           let rsnStr = [...new Set([...o.oRsn, ...Object.values(o.failLots)])].join(", ");
+           h+=`<tr><td>${o.m}</td><td>${o.c}</td><td>${o.oPdi}</td><td class="fw-bold text-secondary">${o.oRew}</td><td>${o.fg}</td><td class="text-success">${o.pass}</td><td class="bg-light fw-bold">${balPdi}</td><td class="fw-bold text-danger">${forRew}</td><td class="text-danger small">${forRew>0?rsnStr:''}</td></tr>`;
+        }
+        document.getElementById('dash1-res').innerHTML=h;
+     }).catch(e=>{toggleLoader(false);alert("Error:"+e);});
   }
 
+  // --- DASHBOARD 2: MASTER DASH (UPDATED FORMULA) ---
   function renderDash2() {
-     toggleLoader(true, "Calculating Master Dash...");
+     toggleLoader(true, "Fetching Master...");
      fetch(SCRIPT_URL+"?action=getDashboard").then(r=>r.json()).then(d=>{
         toggleLoader(false);
-        let map={}; 
-        const get=(m,c,p)=>{let k=m+"|"+c; if(!map[k])map[k]={m,c,p,opPdi:0,opRew:0,opDisp:0,fg:0,pass:0,disp:0}; if(p&&!map[k].p)map[k].p=p; return map[k];};
+        let map={}; const get=(m,c,p)=>{let k=m+"|"+c; if(!map[k])map[k]={m,c,p,opPdi:0,opRew:0,opDisp:0,fg:0,pass:0,disp:0}; if(p&&!map[k].p)map[k].p=p; return map[k];};
         
-        // 1. Opening Data
-        d.open.forEach(r=>{
-           let o=get(r[3],r[4],r[5]);
-           if(r[1]=='PDI') { o.opPdi+=Number(r[6]||0); o.opRew+=Number(r[7]||0); }
-           else if(r[1]=='Dispatch') { o.opDisp+=Number(r[9]||0); }
-        });
-        
-        // 2. Transactions
+        d.open.forEach(r=>{ let o=get(r[3],r[4],r[5]); if(r[1]=='PDI'){o.opPdi+=Number(r[6]||0);o.opRew+=Number(r[7]||0);} else if(r[1]=='Dispatch')o.opDisp+=Number(r[9]||0); });
         d.prod.forEach(r=>get(r[3],r[4],r[5]).fg+=Number(r[6]||0));
         d.pdi.forEach(r=>get(r[3],r[4],r[5]).pass+=Number(r[9]||0));
         d.disp.forEach(r=>get(r[1],r[2],r[3]).disp+=Number(r[4]||0));
         
-        // 3. Render Table
         let h=''; 
         for(let k in map){ 
-           let o=map[k];
-           let totOpnPdi = o.opPdi + o.opRew;
-           let balPdi = totOpnPdi + o.fg - o.pass;  // Formula: (OpenPDI+OpenRew) + FG - Pass
-           let balDisp = o.opDisp + o.pass - o.disp; // Formula: OpenDisp + Pass - Disp
-           
-           h+=`<tr>
-                <td>${o.m}</td><td>${o.c}</td><td>${o.p||'-'}</td>
-                <td class="fw-bold text-primary">${totOpnPdi}</td>
-                <td>${o.fg}</td><td class="text-success">${o.pass}</td>
-                <td class="fw-bold text-info">${o.opDisp}</td>
-                <td>${o.disp}</td>
-                <td class="fw-bold bg-light">${balPdi}</td>
-                <td class="fw-bold bg-light">${balDisp}</td>
-             </tr>`;
+           let o=map[k], totOpnPdi = o.opPdi + o.opRew;
+           let balPdi = totOpnPdi + o.fg - o.pass;
+           let balDisp = o.opDisp + o.pass - o.disp;
+           h+=`<tr><td>${o.m}</td><td>${o.c}</td><td>${o.p||'-'}</td><td class="fw-bold text-primary">${totOpnPdi}</td><td>${o.fg}</td><td class="text-success">${o.pass}</td><td class="fw-bold text-info">${o.opDisp}</td><td>${o.disp}</td><td class="fw-bold bg-light">${balPdi}</td><td class="fw-bold bg-light">${balDisp}</td></tr>`;
         }
         document.getElementById('master-body').innerHTML=h;
-     }).catch(e=>{ toggleLoader(false); alert("Error: "+e); });
+     }).catch(e=>{toggleLoader(false);alert("Error:"+e);});
   }
 </script>
 
