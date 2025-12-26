@@ -6,23 +6,29 @@
   <title>FG Inventory Tool</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    body { background-color: #f0f2f5; padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    .hidden { display: none; }
+    body { background-color: #f0f2f5; padding: 20px; font-family: 'Segoe UI', sans-serif; }
+    .hidden { display: none !important; }
     .nav-link { cursor: pointer; font-weight: 500; }
     .nav-link.active { background-color: #0d6efd !important; color: white !important; }
-    .loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.85); z-index:9999; display: flex; justify-content: center; align-items: center; font-size: 1.5rem; font-weight: bold; color: #0d6efd;}
+    /* Improved Loader */
+    .loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); z-index:9999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #0d6efd;}
+    .spinner-border { width: 3rem; height: 3rem; }
     .floor-badge { font-size: 0.8rem; padding: 5px 10px; border-radius: 12px; color: white; margin-left: 10px; font-weight: bold; }
     .bg-f1 { background-color: #28a745; } .bg-f2 { background-color: #ffc107; color: black; } .bg-base { background-color: #dc3545; }
     .logo-container { text-align: center; margin-bottom: 20px; }
     .logo-img { max-height: 80px; width: auto; }
-    /* Queue Table Styles */
     .queue-table th { background-color: #e9ecef; font-size: 0.9em; }
     .queue-table td { font-size: 0.9em; vertical-align: middle; }
   </style>
 </head>
 <body>
 
-<div id="loader" class="loading-overlay hidden">Processing...</div>
+<!-- LOADER -->
+<div id="loader" class="loading-overlay">
+  <div class="spinner-border mb-3" role="status"></div>
+  <div id="loader-text" class="h5">Connecting to Server...</div>
+  <button id="retry-btn" class="btn btn-sm btn-outline-danger mt-3 hidden" onclick="location.reload()">Retry / Reload</button>
+</div>
 
 <div class="container bg-white p-4 rounded shadow" style="max-width: 1100px;">
   
@@ -57,14 +63,9 @@
         </div>
         <button type="button" class="btn btn-warning mt-3 w-100 fw-bold" onclick="addQueue('prod')">+ Add to List</button>
       </form>
-      
-      <!-- Queue Table -->
       <div class="mt-4">
-        <h6>Pending Entries (Click Save to Upload)</h6>
-        <table class="table table-bordered table-sm queue-table">
-          <thead><tr><th>Date</th><th>Line</th><th>Model</th><th>Color</th><th>Qty</th><th>Action</th></tr></thead>
-          <tbody id="queue-prod"></tbody>
-        </table>
+        <h6>Pending Entries</h6>
+        <table class="table table-bordered table-sm queue-table"><thead><tr><th>Date</th><th>Line</th><th>Model</th><th>Color</th><th>Qty</th><th>Action</th></tr></thead><tbody id="queue-prod"></tbody></table>
         <button class="btn btn-primary w-100 fw-bold" onclick="submitQueue('prod', 'Production')">Save All to Google Sheet</button>
       </div>
     </div>
@@ -90,13 +91,9 @@
         </div>
         <button type="button" class="btn btn-warning mt-3 w-100 fw-bold" onclick="addQueue('pdi')">+ Add to List</button>
       </form>
-      
       <div class="mt-4">
         <h6>Pending PDI Entries</h6>
-        <table class="table table-bordered table-sm queue-table">
-          <thead><tr><th>Line</th><th>Model</th><th>Color</th><th>Lot</th><th>Pass/Fail</th><th>Action</th></tr></thead>
-          <tbody id="queue-pdi"></tbody>
-        </table>
+        <table class="table table-bordered table-sm queue-table"><thead><tr><th>Line</th><th>Model</th><th>Color</th><th>Lot</th><th>Pass/Fail</th><th>Action</th></tr></thead><tbody id="queue-pdi"></tbody></table>
         <button class="btn btn-primary w-100 fw-bold" onclick="submitQueue('pdi', 'PDI')">Save All PDI Data</button>
       </div>
     </div>
@@ -116,13 +113,9 @@
         </div>
         <button type="button" class="btn btn-warning mt-3 w-100 fw-bold" onclick="addQueue('disp')">+ Add to List</button>
       </form>
-      
       <div class="mt-4">
         <h6>Pending Dispatch Entries</h6>
-        <table class="table table-bordered table-sm queue-table">
-          <thead><tr><th>Date</th><th>Model</th><th>Color</th><th>Qty</th><th>Action</th></tr></thead>
-          <tbody id="queue-disp"></tbody>
-        </table>
+        <table class="table table-bordered table-sm queue-table"><thead><tr><th>Date</th><th>Model</th><th>Color</th><th>Qty</th><th>Action</th></tr></thead><tbody id="queue-disp"></tbody></table>
         <button class="btn btn-success w-100 fw-bold" onclick="submitQueue('disp', 'Dispatch')">Save All Dispatch</button>
       </div>
     </div>
@@ -131,7 +124,7 @@
   <!-- 4. OPENING TAB -->
   <div id="open" class="tab-pane hidden">
     <div class="card p-3 border-info">
-      <h5 class="text-info">Opening Balance (Add Multiple)</h5>
+      <h5 class="text-info">Opening Balance</h5>
       <form id="form-open">
         <div class="row g-3">
           <div class="col-md-4"><label class="form-label">Month</label><input type="month" name="month" class="form-control" required></div>
@@ -139,7 +132,6 @@
           <div class="col-md-4"><label class="form-label">Model</label><select name="model" id="open-m" class="form-select" onchange="filterC('open')" required></select></div>
           <div class="col-md-6"><label class="form-label">Color</label><select name="color" id="open-c" class="form-select" onchange="fillP('open')" required></select></div>
           <div class="col-md-6"><label class="form-label">Part Code</label><input type="text" name="partCode" id="open-p" class="form-control bg-light" readonly></div>
-          
           <div class="grp-pdi col-md-3"><label class="form-label">Line</label><input type="number" name="line" class="form-control" min="1" max="24"></div>
           <div class="grp-pdi col-md-3"><label class="form-label">For PDI Open</label><input type="number" name="pdiOpenQty" class="form-control"></div>
           <div class="grp-pdi col-md-3"><label class="form-label">For Rework Open</label><input type="number" name="reworkOpenQty" class="form-control"></div>
@@ -148,19 +140,15 @@
         </div>
         <button type="button" class="btn btn-info mt-3 w-100 fw-bold text-white" onclick="addQueue('open')">+ Add to List</button>
       </form>
-      
       <div class="mt-4">
         <h6>Pending Opening Entries</h6>
-        <table class="table table-bordered table-sm queue-table">
-          <thead><tr><th>Type</th><th>Model</th><th>Color</th><th>Qty</th><th>Action</th></tr></thead>
-          <tbody id="queue-open"></tbody>
-        </table>
+        <table class="table table-bordered table-sm queue-table"><thead><tr><th>Type</th><th>Model</th><th>Color</th><th>Qty</th><th>Action</th></tr></thead><tbody id="queue-open"></tbody></table>
         <button class="btn btn-dark w-100 fw-bold" onclick="submitQueue('open', 'Opening')">Save All Opening Data</button>
       </div>
     </div>
   </div>
 
-  <!-- DASHBOARDS (Same as before) -->
+  <!-- DASHBOARDS -->
   <div id="dash1" class="tab-pane hidden">
     <div class="input-group mb-3"><span class="input-group-text">Line No</span><input type="number" id="dashLine" class="form-control"><button class="btn btn-dark" onclick="renderDash1()">Show</button></div>
     <div id="dash1-res"></div>
@@ -174,21 +162,39 @@
 
 <script>
   // **********************************************
-  // PASTE YOUR NEW WEB APP URL HERE
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz2m8-BKAfnTuCwE1Lb8ivqD3ZuKa4uG75cy4zDrPTLdG_YEvY7681JdiNMJqSLfiKt/exec"; 
+  // 👇 PASTE YOUR NEW DEPLOYED URL HERE 👇
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxaBzjalGDzWwbcAiOhF8r7A9jVpxFt-tZTCac8F01G54_Cob1ic8Mo-rPM_MFWvjvqcg/exec"; 
   // **********************************************
 
   let masterData = [];
-  let dashboardData = {};
   let queueData = { prod: [], pdi: [], disp: [], open: [] };
 
-  function toggleLoader(show) { document.getElementById('loader').classList.toggle('hidden', !show); }
+  function toggleLoader(show, text="Processing...") { 
+    const l = document.getElementById('loader');
+    document.getElementById('loader-text').innerText = text;
+    l.classList.toggle('hidden', !show);
+    if(show) document.getElementById('retry-btn').classList.add('hidden');
+  }
+
+  function showRetry(msg) {
+    document.getElementById('loader-text').innerText = "Error: " + msg;
+    document.getElementById('loader-text').classList.add('text-danger');
+    document.getElementById('retry-btn').classList.remove('hidden');
+  }
 
   window.onload = function() {
-    toggleLoader(true);
+    toggleLoader(true, "Loading Master Data...");
     fetch(SCRIPT_URL + "?action=getMasters")
-      .then(r => r.json()).then(d => { masterData = d; populateModels(['prod','pdi','disp','open']); toggleLoader(false); })
-      .catch(e => { alert("Connection Failed. Check URL."); toggleLoader(false); });
+      .then(r => r.json())
+      .then(d => { 
+        masterData = d; 
+        populateModels(['prod','pdi','disp','open']); 
+        toggleLoader(false); 
+      })
+      .catch(e => { 
+        console.error(e);
+        showRetry("Check URL or Permissions");
+      });
   };
 
   function showTab(id) {
@@ -202,15 +208,10 @@
   function addQueue(tab) {
     let form = document.getElementById('form-' + tab);
     if(!form.checkValidity()) { form.reportValidity(); return; }
-    
     let formData = Object.fromEntries(new FormData(form));
     queueData[tab].push(formData);
     renderQueue(tab);
-    
-    // Clear numeric/text fields only (Keep Date/Line/Model for ease)
-    form.querySelectorAll('input[type="number"], input[type="text"]').forEach(i => {
-       if(i.name !== 'line' && i.name !== 'month') i.value = "";
-    });
+    form.querySelectorAll('input[type="number"], input[type="text"]').forEach(i => { if(i.name !== 'line' && i.name !== 'month') i.value = ""; });
   }
 
   function renderQueue(tab) {
@@ -222,21 +223,17 @@
        if(tab=='pdi') row = `<td>${item.line}</td><td>${item.model}</td><td>${item.color}</td><td>${item.lotType}</td><td>${item.pdiPass}/${item.pdiOffer}</td>`;
        if(tab=='disp') row = `<td>${item.date}</td><td>${item.model}</td><td>${item.color}</td><td>${item.dispatchQty}</td>`;
        if(tab=='open') row = `<td>${item.openType}</td><td>${item.model}</td><td>${item.color}</td><td>${item.openType=='PDI'?item.pdiOpenQty:item.dispatchOpenQty}</td>`;
-       
        tbody.innerHTML += `<tr>${row}<td><button class="btn btn-sm btn-danger" onclick="removeQueue('${tab}', ${index})">X</button></td></tr>`;
     });
   }
 
-  function removeQueue(tab, index) {
-    queueData[tab].splice(index, 1);
-    renderQueue(tab);
-  }
+  function removeQueue(tab, index) { queueData[tab].splice(index, 1); renderQueue(tab); }
 
   function submitQueue(tab, type) {
-    if(queueData[tab].length === 0) return alert("List is empty! Add data first.");
-    if(SCRIPT_URL.includes("PASTE_YOUR")) return alert("Update SCRIPT_URL!");
+    if(queueData[tab].length === 0) return alert("List is empty!");
+    if(SCRIPT_URL.includes("PASTE_YOUR")) return alert("Please update SCRIPT_URL in code!");
 
-    toggleLoader(true);
+    toggleLoader(true, "Saving Data...");
     fetch(SCRIPT_URL, {
       method: 'POST',
       body: JSON.stringify({ type: type, data: queueData[tab] })
@@ -244,19 +241,25 @@
     .then(r => r.json())
     .then(d => {
       toggleLoader(false);
-      alert(d.message);
       if(d.status === 'success') {
+         alert(d.message);
          queueData[tab] = [];
          renderQueue(tab);
          document.getElementById('form-' + tab).reset();
+      } else {
+         alert("Error: " + d.message);
       }
     })
-    .catch(e => { toggleLoader(false); alert("Error: " + e); });
+    .catch(e => { toggleLoader(false); alert("Connection Error. Check Console."); });
   }
 
   // --- HELPERS ---
   function checkFloor(i,id){ let v=parseInt(i.value),e=document.getElementById(id); e.className="floor-badge"; if(v>=1&&v<=8){e.innerText="1st";e.classList.add("bg-f1");}else if(v>=9&&v<=16){e.innerText="2nd";e.classList.add("bg-f2");}else if(v>=17&&v<=24){e.innerText="Base";e.classList.add("bg-base");}else e.classList.add("hidden"); }
-  function populateModels(ids){ let m=[...new Set(masterData.map(r=>r[1]))].sort(); ids.forEach(x=>{ let s=document.getElementById(x+'-m'); s.innerHTML='<option value="">Select Model</option>'; m.forEach(v=>s.innerHTML+=`<option value="${v}">${v}</option>`) }); }
+  function populateModels(ids){ 
+    if(!masterData || masterData.length === 0) return;
+    let m=[...new Set(masterData.map(r=>r[1]))].sort(); 
+    ids.forEach(x=>{ let s=document.getElementById(x+'-m'); s.innerHTML='<option value="">Select Model</option>'; m.forEach(v=>s.innerHTML+=`<option value="${v}">${v}</option>`) }); 
+  }
   function filterC(p){ let m=document.getElementById(p+'-m').value,s=document.getElementById(p+'-c'); s.innerHTML='<option value="">Select Color</option>'; [...new Set(masterData.filter(r=>r[1]==m).map(r=>r[2]))].sort().forEach(c=>s.innerHTML+=`<option value="${c}">${c}</option>`); document.getElementById(p+'-p').value=""; }
   function fillP(p){ let m=document.getElementById(p+'-m').value,c=document.getElementById(p+'-c').value,f=masterData.find(r=>r[1]==m&&r[2]==c); if(f)document.getElementById(p+'-p').value=f[0]; }
   function calcP(){ let f=(document.getElementById('off').value||0)-(document.getElementById('pas').value||0); document.getElementById('fal').value=f; document.getElementById('defBox').classList.toggle('hidden',f<=0); }
@@ -265,7 +268,7 @@
   // --- DASHBOARDS ---
   function renderDash1() {
      let line = document.getElementById('dashLine').value; if(!line) return alert("Enter Line");
-     toggleLoader(true);
+     toggleLoader(true, "Fetching Dashboard...");
      fetch(SCRIPT_URL+"?action=getDashboard").then(r=>r.json()).then(d=>{
         toggleLoader(false);
         let map={}; const k=(m,c,p)=>m+"|"+c+"|"+p;
@@ -295,5 +298,3 @@
 
 </body>
 </html>
-
-
