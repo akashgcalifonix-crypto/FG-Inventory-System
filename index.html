@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>FG Inventory Tool</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     body { background-color: #f0f2f5; padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     .hidden { display: none !important; }
@@ -17,6 +18,7 @@
     .logo-img { max-height: 80px; width: auto; }
     .queue-table th { background-color: #e9ecef; font-size: 0.9em; }
     .queue-table td { font-size: 0.9em; vertical-align: middle; }
+    .btn-excel { background-color: #198754; color: white; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -60,9 +62,16 @@
         </div>
         <button type="button" class="btn btn-warning mt-3 w-100 fw-bold" onclick="addQueue('prod')">+ Add to List</button>
       </form>
+      
       <div class="mt-4">
-        <h6>Pending Entries</h6>
-        <table class="table table-bordered table-sm queue-table"><thead><tr><th>Date</th><th>Line</th><th>Model</th><th>Color</th><th>Qty</th><th>Action</th></tr></thead><tbody id="queue-prod"></tbody></table>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6>Pending Entries</h6>
+            <div>
+              <button class="btn btn-sm btn-danger me-2" onclick="deleteLastSaved('Production')">🗑 Delete Last Saved</button>
+              <button class="btn btn-sm btn-excel" onclick="downloadQueue('queue-prod', 'Production_Queue')">📥 Excel</button>
+            </div>
+        </div>
+        <table class="table table-bordered table-sm queue-table" id="table-prod"><thead><tr><th>Date</th><th>Line</th><th>Model</th><th>Color</th><th>Qty</th><th>Action</th></tr></thead><tbody id="queue-prod"></tbody></table>
         <button class="btn btn-primary w-100 fw-bold" onclick="submitQueue('prod', 'Production')">Save All to Google Sheet</button>
       </div>
     </div>
@@ -89,8 +98,14 @@
         <button type="button" class="btn btn-warning mt-3 w-100 fw-bold" onclick="addQueue('pdi')">+ Add to List</button>
       </form>
       <div class="mt-4">
-        <h6>Pending PDI Entries</h6>
-        <table class="table table-bordered table-sm queue-table"><thead><tr><th>Line</th><th>Model</th><th>Color</th><th>Lot</th><th>Pass/Fail</th><th>Action</th></tr></thead><tbody id="queue-pdi"></tbody></table>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6>Pending PDI Entries</h6>
+            <div>
+              <button class="btn btn-sm btn-danger me-2" onclick="deleteLastSaved('PDI')">🗑 Delete Last Saved</button>
+              <button class="btn btn-sm btn-excel" onclick="downloadQueue('queue-pdi', 'PDI_Queue')">📥 Excel</button>
+            </div>
+        </div>
+        <table class="table table-bordered table-sm queue-table" id="table-pdi"><thead><tr><th>Line</th><th>Model</th><th>Color</th><th>Lot</th><th>Pass/Fail</th><th>Action</th></tr></thead><tbody id="queue-pdi"></tbody></table>
         <button class="btn btn-primary w-100 fw-bold" onclick="submitQueue('pdi', 'PDI')">Save All PDI Data</button>
       </div>
     </div>
@@ -111,8 +126,14 @@
         <button type="button" class="btn btn-warning mt-3 w-100 fw-bold" onclick="addQueue('disp')">+ Add to List</button>
       </form>
       <div class="mt-4">
-        <h6>Pending Dispatch Entries</h6>
-        <table class="table table-bordered table-sm queue-table"><thead><tr><th>Date</th><th>Model</th><th>Color</th><th>Qty</th><th>Action</th></tr></thead><tbody id="queue-disp"></tbody></table>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6>Pending Dispatch Entries</h6>
+            <div>
+              <button class="btn btn-sm btn-danger me-2" onclick="deleteLastSaved('Dispatch')">🗑 Delete Last Saved</button>
+              <button class="btn btn-sm btn-excel" onclick="downloadQueue('queue-disp', 'Dispatch_Queue')">📥 Excel</button>
+            </div>
+        </div>
+        <table class="table table-bordered table-sm queue-table" id="table-disp"><thead><tr><th>Date</th><th>Model</th><th>Color</th><th>Qty</th><th>Action</th></tr></thead><tbody id="queue-disp"></tbody></table>
         <button class="btn btn-success w-100 fw-bold" onclick="submitQueue('disp', 'Dispatch')">Save All Dispatch</button>
       </div>
     </div>
@@ -138,8 +159,14 @@
         <button type="button" class="btn btn-info mt-3 w-100 fw-bold text-white" onclick="addQueue('open')">+ Add to List</button>
       </form>
       <div class="mt-4">
-        <h6>Pending Opening Entries</h6>
-        <table class="table table-bordered table-sm queue-table"><thead><tr><th>Type</th><th>Model</th><th>Color</th><th>Qty</th><th>Action</th></tr></thead><tbody id="queue-open"></tbody></table>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6>Pending Opening Entries</h6>
+            <div>
+              <button class="btn btn-sm btn-danger me-2" onclick="deleteLastSaved('Opening')">🗑 Delete Last Saved</button>
+              <button class="btn btn-sm btn-excel" onclick="downloadQueue('queue-open', 'Opening_Queue')">📥 Excel</button>
+            </div>
+        </div>
+        <table class="table table-bordered table-sm queue-table" id="table-open"><thead><tr><th>Type</th><th>Model</th><th>Color</th><th>Qty</th><th>Action</th></tr></thead><tbody id="queue-open"></tbody></table>
         <button class="btn btn-dark w-100 fw-bold" onclick="submitQueue('open', 'Opening')">Save All Opening Data</button>
       </div>
     </div>
@@ -147,13 +174,16 @@
 
   <!-- DASH 1: LINE DASH -->
   <div id="dash1" class="tab-pane hidden">
-    <div class="input-group mb-3">
-        <span class="input-group-text">Line No</span>
-        <input type="number" id="dashLine" class="form-control" placeholder="Enter Line (1-24)">
-        <button class="btn btn-dark" onclick="renderDash1()">Show</button>
+    <div class="d-flex justify-content-between mb-3">
+        <div class="input-group" style="max-width:300px;">
+            <span class="input-group-text">Line No</span>
+            <input type="number" id="dashLine" class="form-control" placeholder="1-24">
+            <button class="btn btn-dark" onclick="renderDash1()">Show</button>
+        </div>
+        <button class="btn btn-excel" onclick="exportTableToExcel('tbl-dash1', 'Line_Dashboard')">📥 Excel</button>
     </div>
     <div class="table-responsive">
-        <table class="table table-bordered text-center table-sm">
+        <table class="table table-bordered text-center table-sm" id="tbl-dash1">
             <thead class="table-secondary">
                 <tr><th>Model</th><th>Color</th><th>Open PDI</th><th>Open Rework</th><th>FG Out</th><th>Pass</th><th>Bal PDI</th><th>For Rework</th><th>Reason (Pending)</th></tr>
             </thead>
@@ -164,9 +194,12 @@
 
   <!-- DASH 2: MASTER DASH -->
   <div id="dash2" class="tab-pane hidden">
-    <button class="btn btn-outline-dark btn-sm mb-2" onclick="renderDash2()">Refresh Master</button>
+    <div class="d-flex justify-content-between mb-2">
+        <button class="btn btn-outline-dark btn-sm" onclick="renderDash2()">Refresh Master</button>
+        <button class="btn btn-excel btn-sm" onclick="exportTableToExcel('tbl-dash2', 'Master_Dashboard')">📥 Excel</button>
+    </div>
     <div class="table-responsive">
-      <table class="table table-bordered table-sm table-striped text-center">
+      <table class="table table-bordered table-sm table-striped text-center" id="tbl-dash2">
         <thead class="table-dark">
           <tr><th>Model</th><th>Color</th><th>Part</th><th>Opn(PDI+Rew)</th><th>FG Out</th><th>PDI Pass</th><th>Opn(Disp)</th><th>Disp</th><th>Bal(PDI)</th><th>Bal(Disp)</th></tr>
         </thead>
@@ -179,8 +212,8 @@
 
 <script>
   // **********************************************
-  // 👇 IS URL KO UPDATE KAREIN 👇
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwr4KvWw2c5YZrYFDQIgzrrY4yBNxmxDcIgCw5NA9HEDEFyxeYwDQ8qPRkQSxF4RCYZsw/exec"; 
+  // 👇 PASTE YOUR NEW URL HERE 👇
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwSmKVcnxS3vFGCVnrrm0j_D8Cg67EcqSoi7kWF5p_X9w6_zau7U4WTNBFrsY6PiGKXCg/exec"; 
   // **********************************************
 
   let masterData = [];
@@ -214,6 +247,22 @@
     document.getElementById(id).classList.remove('hidden');
     document.querySelectorAll('.nav-link').forEach(e => e.classList.remove('active'));
     event.target.classList.add('active');
+  }
+
+  // --- DELETE SAVED ---
+  function deleteLastSaved(type) {
+    if(!confirm("Are you sure you want to DELETE the last saved entry for " + type + "? This cannot be undone.")) return;
+    toggleLoader(true, "Deleting...");
+    fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'deleteLast', type: type })
+    })
+    .then(r => r.json())
+    .then(d => {
+        toggleLoader(false);
+        alert(d.message);
+    })
+    .catch(e => { toggleLoader(false); alert("Error deleting."); });
   }
 
   // --- QUEUE LOGIC ---
@@ -260,6 +309,37 @@
     .catch(e => { toggleLoader(false); alert("Connection Error."); });
   }
 
+  // --- EXCEL DOWNLOAD ---
+  function downloadQueue(tbodyId, filename) {
+      // Create a dummy table to export just the tbody
+      let data = [];
+      let rows = document.getElementById(tbodyId).querySelectorAll('tr');
+      if(rows.length === 0) return alert("No data to export");
+      
+      let wb = XLSX.utils.book_new();
+      let ws_data = [];
+      // Headers
+      if(filename.includes('Prod')) ws_data.push(["Date","Line","Model","Color","Qty"]);
+      if(filename.includes('PDI')) ws_data.push(["Line","Model","Color","Lot","Pass/Offer"]);
+      
+      // Body
+      rows.forEach(r => {
+          let rowData = [];
+          r.querySelectorAll('td').forEach((c, i) => { if(i < r.cells.length -1) rowData.push(c.innerText); }); // Skip Action btn
+          ws_data.push(rowData);
+      });
+      
+      let ws = XLSX.utils.aoa_to_sheet(ws_data);
+      XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+      XLSX.writeFile(wb, filename+".xlsx");
+  }
+
+  function exportTableToExcel(tableId, filename) {
+      let table = document.getElementById(tableId);
+      let wb = XLSX.utils.table_to_book(table, {sheet: "Sheet1"});
+      XLSX.writeFile(wb, filename + ".xlsx");
+  }
+
   // --- HELPERS ---
   function checkFloor(i,id){ let v=parseInt(i.value),e=document.getElementById(id); e.className="floor-badge"; if(v>=1&&v<=8){e.innerText="1st";e.classList.add("bg-f1");}else if(v>=9&&v<=16){e.innerText="2nd";e.classList.add("bg-f2");}else if(v>=17&&v<=24){e.innerText="Base";e.classList.add("bg-base");}else e.classList.add("hidden"); }
   function populateModels(ids){ 
@@ -272,33 +352,39 @@
   function calcP(){ let f=(document.getElementById('off').value||0)-(document.getElementById('pas').value||0); document.getElementById('fal').value=f; document.getElementById('defBox').classList.toggle('hidden',f<=0); }
   function toggleOp(v){ document.querySelectorAll('.grp-pdi').forEach(e=>e.classList.toggle('hidden',v!='PDI')); document.querySelector('.grp-disp').classList.toggle('hidden',v!='Dispatch'); }
 
-  // --- DASHBOARD 1: LINE DASH (LOT ID LOGIC) ---
+  // --- DASHBOARD 1: LINE DASH (CORRECTED CALCULATION) ---
   function renderDash1() {
      let line = document.getElementById('dashLine').value; if(!line) return alert("Enter Line");
      toggleLoader(true, "Fetching Line Data...");
      fetch(SCRIPT_URL+"?action=getDashboard").then(r=>r.json()).then(d=>{
         toggleLoader(false);
-        let map={}; const get=(m,c)=>{ let k=m+"|"+c; if(!map[k])map[k]={m,c,oPdi:0,oRew:0,oRsn:[],fg:0,freshOff:0,pass:0,newFail:0,rewPass:0,failLots:{}}; return map[k]; };
+        let map={}; const get=(m,c)=>{ let k=m+"|"+c; if(!map[k])map[k]={m,c,oPdi:0,oRew:0,oRsn:[],fg:0,pass:0,freshProcessed:0,rewPass:0,totalFail:0,failLots:{}}; return map[k]; };
 
         // 1. Opening
         d.open.filter(r=>r[2]==line&&r[1]=='PDI').forEach(r=>{ let o=get(r[3],r[4]); o.oPdi+=Number(r[6]||0); o.oRew+=Number(r[7]||0); if(r[8])o.oRsn.push(r[8]); });
         // 2. Production
         d.prod.filter(r=>r[1]==line).forEach(r=>get(r[3],r[4]).fg+=Number(r[6]||0));
-        // 3. PDI (Lot Tracking)
+        // 3. PDI (Calculated)
         d.pdi.filter(r=>r[1]==line).forEach(r=>{
            let o=get(r[3],r[4]);
-           let lotID=String(r[6]||"").trim(), type=r[7], off=Number(r[8]||0), pass=Number(r[9]||0), fail=Number(r[10]||0), rsn=r[11];
-           o.pass+=pass;
-           if(type==='Fresh') o.freshOff+=off;
+           let lotID=String(r[6]||"").trim(), type=r[7], pass=Number(r[9]||0), fail=Number(r[10]||0), rsn=r[11];
            
-           // Fail Logic: Add to list
-           if(fail>0){ 
-              o.newFail+=fail; 
-              if(lotID) o.failLots[lotID]=rsn; else o.oRsn.push(rsn+" (NoID)"); 
+           o.pass += pass; // Just for display (Total Pass)
+
+           if(type === 'Fresh') {
+              o.freshProcessed += (pass + fail); // Only Fresh Lots deduct from Available Balance
+           } else {
+              // Rework or Old FG
+              o.rewPass += pass; // Track rework passes to reduce For Rework count
            }
-           // Pass Logic (Rework/OldFG): Remove from list
+           
+           // Fail Handling (Universal)
+           if(fail > 0) {
+              o.totalFail += fail;
+              if(lotID) o.failLots[lotID]=rsn; else o.oRsn.push(rsn+" (NoID)");
+           }
+           // Reason Removal
            if((type==='Rework'||type==='Old FG') && pass>0){
-              o.rewPass+=pass;
               if(lotID && o.failLots[lotID]) delete o.failLots[lotID];
            }
         });
@@ -306,8 +392,13 @@
         let h='';
         for(let k in map){
            let o=map[k];
-           let balPdi = (o.oPdi + o.fg) - o.freshOff; if(balPdi<0) balPdi=0;
-           let forRew = o.oRew + o.newFail - o.rewPass;
+           // Formula 1: Bal PDI = (Open PDI + FG Out) - (Fresh Lots Processed i.e Pass+Fail)
+           let balPdi = (o.oPdi + o.fg) - o.freshProcessed; 
+           if(balPdi < 0) balPdi = 0; // Safety
+
+           // Formula 2: For Rework = Open Rework + All Fails - Rework Passes
+           let forRew = o.oRew + o.totalFail - o.rewPass;
+           
            let rsnStr = [...new Set([...o.oRsn, ...Object.values(o.failLots)])].join(", ");
            h+=`<tr><td>${o.m}</td><td>${o.c}</td><td>${o.oPdi}</td><td class="fw-bold text-secondary">${o.oRew}</td><td>${o.fg}</td><td class="text-success">${o.pass}</td><td class="bg-light fw-bold">${balPdi}</td><td class="fw-bold text-danger">${forRew}</td><td class="text-danger small">${forRew>0?rsnStr:''}</td></tr>`;
         }
@@ -315,7 +406,7 @@
      }).catch(e=>{toggleLoader(false);alert("Error:"+e);});
   }
 
-  // --- DASHBOARD 2: MASTER DASH (UPDATED FORMULA) ---
+  // --- DASHBOARD 2: MASTER DASH ---
   function renderDash2() {
      toggleLoader(true, "Fetching Master...");
      fetch(SCRIPT_URL+"?action=getDashboard").then(r=>r.json()).then(d=>{
