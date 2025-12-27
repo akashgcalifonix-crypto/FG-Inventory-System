@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Integrated Inventory & PDI System</title>
+    <title>Integrated Inventory & PDI System v2.0</title>
     
     <!-- Dependencies -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -33,7 +33,6 @@
         .floor-badge { font-size: 0.8rem; padding: 5px 10px; border-radius: 12px; color: white; margin-left: 10px; font-weight: bold; }
         .bg-f1 { background-color: #28a745; } .bg-f2 { background-color: #ffc107; color: black; } .bg-base { background-color: #dc3545; }
         
-        /* --- PDI SPECIFIC STYLES --- */
         .stat-card { padding: 20px; border-radius: 12px; background: white; text-align: center; border-bottom: 4px solid transparent; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .stat-val { font-size: 2.5rem; font-weight: 800; }
         .b-blue { border-color: var(--accent); color: var(--accent); }
@@ -43,6 +42,8 @@
         .st-fail { background: #fee2e2; color: #991b1b; padding: 5px 12px; border-radius: 20px; font-weight: 700; font-size: 0.85em; }
         .ticket { background: white; padding: 10px; border-radius: 8px; margin-bottom: 10px; border-left: 5px solid var(--danger); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .edit-active { background-color: #fffbeb !important; border: 2px dashed #f59e0b !important; }
+        .table-recent th { background-color: #f8f9fa; font-size: 0.85rem; text-transform: uppercase; }
+        .table-recent td { font-size: 0.9rem; vertical-align: middle; }
     </style>
 </head>
 <body>
@@ -74,52 +75,67 @@
     <!-- 1. PRODUCTION TAB -->
     <!-- ========================================== -->
     <div id="view-prod" class="main-view">
-        <div class="card p-4">
+        <div class="card p-4" id="card-prod">
             <h5 class="text-secondary fw-bold mb-3">Daily Production Entry</h5>
             <form id="form-prod">
+                <input type="hidden" id="editIdx-prod" value="">
                 <div class="row g-3">
-                    <div class="col-md-3"><label class="form-label">Date</label><input type="date" name="date" class="form-control" required></div>
+                    <div class="col-md-3"><label class="form-label">Date</label><input type="date" name="date" id="prod-date" class="form-control" required></div>
                     <div class="col-md-3">
                         <label class="form-label">Line (1-24)</label>
-                        <input type="number" name="line" class="form-control" min="1" max="24" oninput="checkFloor(this, 'bdg-p')" required>
+                        <input type="number" name="line" id="prod-line" class="form-control" min="1" max="24" oninput="checkFloor(this, 'bdg-p')" required>
                         <span id="bdg-p" class="floor-badge hidden"></span>
                     </div>
                     <div class="col-md-3"><label class="form-label">Model</label><select name="model" id="prod-m" class="form-select" onchange="filterC('prod')" required></select></div>
                     <div class="col-md-3"><label class="form-label">Color</label><select name="color" id="prod-c" class="form-select" onchange="fillP('prod')" required></select></div>
                     <div class="col-md-6"><label class="form-label">boAt Part Code</label><input type="text" name="partCode" id="prod-p" class="form-control bg-light" readonly></div>
-                    <div class="col-md-6"><label class="form-label">FG Output (Qty)</label><input type="number" name="fgQty" class="form-control" required></div>
+                    <div class="col-md-6"><label class="form-label">FG Output (Qty)</label><input type="number" name="fgQty" id="prod-qty" class="form-control" required></div>
                 </div>
-                <button type="button" class="btn btn-warning mt-3 w-100 fw-bold" onclick="addQueue('prod')">+ Add to List</button>
+                
+                <!-- Action Buttons -->
+                <div class="d-flex gap-2 mt-3">
+                    <button type="button" class="btn btn-warning w-100 fw-bold" id="btnAddProd" onclick="addQueue('prod')">+ Add to Queue</button>
+                    <button type="button" class="btn btn-secondary w-100 hidden" id="btnCancelProd" onclick="cancelEdit('prod')">Cancel Edit</button>
+                </div>
             </form>
             
-            <div class="mt-4">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h6 class="fw-bold">Pending List</h6>
-                    <div>
-                        <button class="btn btn-sm btn-danger me-2" onclick="deleteLastSaved('Production')">🗑 Undo Last Save</button>
-                        <button class="btn btn-sm btn-success" onclick="downloadQueue('queue-prod', 'Production_Queue')">📥 Excel</button>
-                    </div>
+            <!-- Pending Queue -->
+            <div class="mt-4 p-3 bg-light rounded border">
+                <h6 class="fw-bold text-muted small">PENDING QUEUE (Not Saved Yet)</h6>
+                <table class="table table-bordered table-sm queue-table bg-white mb-2"><thead><tr><th>Date</th><th>Line</th><th>Model</th><th>Color</th><th>Qty</th><th>Action</th></tr></thead><tbody id="queue-prod"></tbody></table>
+                <button class="btn btn-primary w-100 fw-bold shadow-sm" onclick="submitQueue('prod', 'Production')">Save Queue to Database</button>
+            </div>
+        </div>
+
+        <!-- RECENT PRODUCTION DATA -->
+        <div class="card p-3">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold text-primary m-0"><i class="bi bi-database-check"></i> Recent Production Data</h6>
+                <div class="d-flex gap-2">
+                    <input type="date" id="filter-prod" class="form-control form-control-sm" onchange="renderDBTable('prod')">
+                    <button class="btn btn-sm btn-dark" onclick="previewReport('prod')"><i class="bi bi-eye"></i> Preview</button>
                 </div>
-                <table class="table table-bordered table-sm queue-table bg-white"><thead><tr><th>Date</th><th>Line</th><th>Model</th><th>Color</th><th>Qty</th><th>Action</th></tr></thead><tbody id="queue-prod"></tbody></table>
-                <button class="btn btn-primary w-100 fw-bold shadow-sm" onclick="submitQueue('prod', 'Production')">Save to Database</button>
+            </div>
+            <div class="table-responsive" style="max-height: 400px;">
+                <table class="table table-hover table-bordered table-sm table-recent text-center">
+                    <thead class="table-light sticky-top"><tr><th>Date</th><th>Line</th><th>Model</th><th>Color</th><th>Qty</th><th>Actions</th></tr></thead>
+                    <tbody id="db-prod"></tbody>
+                </table>
             </div>
         </div>
     </div>
 
     <!-- ========================================== -->
-    <!-- 2. PDI MASTER TAB (Restored Code 1 Form) -->
+    <!-- 2. PDI MASTER TAB -->
     <!-- ========================================== -->
     <div id="view-pdi-master" class="main-view hidden">
-        <!-- PDI Sub-Nav -->
         <div class="card p-2 mb-3 bg-light d-flex flex-row gap-2">
             <button class="btn btn-sm btn-outline-primary active" onclick="switchPdiSub('entry', this)">Entry Form</button>
             <button class="btn btn-sm btn-outline-dark" onclick="switchPdiSub('dash', this)">PDI Dashboard</button>
             <button class="btn btn-sm btn-outline-danger" onclick="switchPdiSub('close', this)">Closure / Rework</button>
         </div>
 
-        <!-- PDI ENTRY SUB-TAB -->
         <div id="pdi-sub-entry">
-            <!-- PDI FORM (Code 1 Style) -->
             <div class="card p-3 border-0" id="pdi-card-container">
                 <h5 class="text-secondary">PDI Tracker (Master Entry)</h5>
                 <form id="form-pdi">
@@ -137,32 +153,28 @@
                         <div class="col-md-4"><label class="form-label">Fail Qty (Calc)</label><input type="text" id="fal" class="form-control" readonly></div>
                         <div id="defBox" class="col-12 hidden"><div class="alert alert-danger"><label class="form-label">Defect Reason:</label><input type="text" name="defectReason" id="pdi-rsn" class="form-control"></div></div>
                     </div>
-                    
                     <div class="d-flex gap-2 mt-3">
                         <button type="button" class="btn btn-warning w-100 fw-bold" id="btnAddPdi" onclick="addPdiQueue()">+ Add to Pending</button>
                         <button type="button" class="btn btn-secondary hidden w-100" id="btnCancelEdit" onclick="cancelPdiEdit()">Cancel Edit</button>
                     </div>
                 </form>
-
-                <!-- PENDING QUEUE -->
-                <div class="mt-4">
-                    <h6 class="fw-bold text-warning">Pending Upload (Local)</h6>
-                    <table class="table table-bordered table-sm queue-table bg-white"><thead><tr><th>Line</th><th>Model</th><th>Color</th><th>Lot</th><th>Pass/Offer</th><th>Action</th></tr></thead><tbody id="queue-pdi"></tbody></table>
+                <div class="mt-4 p-3 bg-light rounded border">
+                    <h6 class="fw-bold text-muted small">PENDING QUEUE</h6>
+                    <table class="table table-bordered table-sm queue-table bg-white mb-2"><thead><tr><th>Line</th><th>Model</th><th>Color</th><th>Lot</th><th>Pass/Offer</th><th>Action</th></tr></thead><tbody id="queue-pdi"></tbody></table>
                     <button class="btn btn-primary w-100 fw-bold" onclick="submitPdiQueue()">Save All Pending to Database</button>
                 </div>
             </div>
             
-            <!-- RECENT SAVED DATA (With Edit/Delete/Preview) -->
             <div class="card mt-4">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <span class="fw-bold text-success"><i class="bi bi-cloud-check-fill"></i> Recently Saved Data (Synced)</span>
+                    <span class="fw-bold text-success"><i class="bi bi-cloud-check-fill"></i> Recent PDI Data</span>
                     <div class="d-flex gap-2">
                         <input type="date" id="recentFilter" class="form-control form-control-sm w-auto" onchange="renderRecentTable()">
                         <button class="btn btn-dark btn-sm" onclick="showDaySummary()"><i class="bi bi-eye"></i> Preview</button>
                     </div>
                 </div>
                 <div class="table-responsive" style="max-height: 400px;">
-                    <table class="table table-hover text-center align-middle mb-0 table-sm">
+                    <table class="table table-hover text-center align-middle mb-0 table-sm table-bordered">
                         <thead class="table-light sticky-top"><tr><th>Date</th><th>Line</th><th>Model</th><th>Lot ID</th><th>Pass/Offer</th><th>Fail</th><th>Actions</th></tr></thead>
                         <tbody id="crudTable"></tbody>
                     </table>
@@ -170,43 +182,16 @@
             </div>
         </div>
 
-        <!-- PDI DASH SUB-TAB -->
         <div id="pdi-sub-dash" class="hidden">
-            <div class="card p-3 mb-3">
-                <div class="row g-2 align-items-end">
-                    <div class="col-md-3"><label>From</label><input type="date" id="dashFrom" class="form-control"></div>
-                    <div class="col-md-3"><label>To</label><input type="date" id="dashTo" class="form-control"></div>
-                    <div class="col-md-2"><button class="btn btn-primary w-100" onclick="runPdiAnalysis()">Filter</button></div>
-                    <div class="col-md-2"><button class="btn btn-danger w-100" onclick="downloadPDF()"><i class="bi bi-file-pdf"></i> PDF</button></div>
-                </div>
-            </div>
+            <div class="card p-3 mb-3"><div class="row g-2 align-items-end"><div class="col-md-3"><label>From</label><input type="date" id="dashFrom" class="form-control"></div><div class="col-md-3"><label>To</label><input type="date" id="dashTo" class="form-control"></div><div class="col-md-2"><button class="btn btn-primary w-100" onclick="runPdiAnalysis()">Filter</button></div><div class="col-md-2"><button class="btn btn-danger w-100" onclick="downloadPDF()"><i class="bi bi-file-pdf"></i> PDF</button></div></div></div>
             <div id="pdf-content">
-                <div class="row g-3 mb-4">
-                    <div class="col-md-3"><div class="stat-card b-dark"><div class="stat-val" id="d_total_qty">0</div><div class="text-muted small">OFFER QTY</div></div></div>
-                    <div class="col-md-3"><div class="stat-card b-green"><div class="stat-val text-success" id="d_passed_qty">0</div><div class="text-muted small">PASSED</div></div></div>
-                    <div class="col-md-3"><div class="stat-card b-red"><div class="stat-val text-danger" id="d_rejected_qty">0</div><div class="text-muted small">FAILED</div></div></div>
-                    <div class="col-md-3"><div class="stat-card b-blue"><div class="stat-val text-primary" id="d_pass_rate">0%</div><div class="text-muted small">PASS RATE</div></div></div>
-                </div>
-                <div class="row g-3">
-                    <div class="col-md-6"><div class="card p-2"><div id="ch_trend" style="height:300px"></div></div></div>
-                    <div class="col-md-6"><div class="card p-2"><div id="ch_line" style="height:300px"></div></div></div>
-                    <div class="col-md-6"><div class="card p-2"><div id="ch_floor" style="height:300px"></div></div></div>
-                    <div class="col-md-6"><div class="card p-2"><div id="ch_defects" style="height:300px"></div></div></div>
-                </div>
+                <div class="row g-3 mb-4"><div class="col-md-3"><div class="stat-card b-dark"><div class="stat-val" id="d_total_qty">0</div><div class="text-muted small">OFFER QTY</div></div></div><div class="col-md-3"><div class="stat-card b-green"><div class="stat-val text-success" id="d_passed_qty">0</div><div class="text-muted small">PASSED</div></div></div><div class="col-md-3"><div class="stat-card b-red"><div class="stat-val text-danger" id="d_rejected_qty">0</div><div class="text-muted small">FAILED</div></div></div><div class="col-md-3"><div class="stat-card b-blue"><div class="stat-val text-primary" id="d_pass_rate">0%</div><div class="text-muted small">PASS RATE</div></div></div></div>
+                <div class="row g-3"><div class="col-md-6"><div class="card p-2"><div id="ch_trend" style="height:300px"></div></div></div><div class="col-md-6"><div class="card p-2"><div id="ch_line" style="height:300px"></div></div></div><div class="col-md-6"><div class="card p-2"><div id="ch_floor" style="height:300px"></div></div></div><div class="col-md-6"><div class="card p-2"><div id="ch_defects" style="height:300px"></div></div></div></div>
             </div>
         </div>
 
-        <!-- PDI CLOSURE SUB-TAB -->
         <div id="pdi-sub-close" class="hidden">
-            <div class="row g-3">
-                <div class="col-md-4"><div class="card p-3 bg-light h-100"><h6 class="text-primary fw-bold text-center border-bottom pb-2">Floor 1 Pending</h6><div id="list_f1"></div></div></div>
-                <div class="col-md-4"><div class="card p-3 bg-light h-100"><h6 class="text-success fw-bold text-center border-bottom pb-2">Floor 2 Pending</h6><div id="list_f2"></div></div></div>
-                <div class="col-md-4"><div class="card p-3 bg-light h-100"><h6 class="text-dark fw-bold text-center border-bottom pb-2">Basement Pending</h6><div id="list_fb"></div></div></div>
-            </div>
-            <div class="card mt-3">
-                <div class="card-header bg-success text-white fw-bold">Rework History / Closed Tickets</div>
-                <div class="table-responsive" style="max-height: 300px;"><table class="table table-sm text-center mb-0"><thead class="table-light sticky-top"><tr><th>Date</th><th>Line</th><th>Model</th><th>Lot ID</th><th>Defect</th><th>Status</th></tr></thead><tbody id="reworkTableBody"></tbody></table></div>
-            </div>
+            <div class="row g-3"><div class="col-md-4"><div class="card p-3 bg-light h-100"><h6 class="text-primary fw-bold text-center border-bottom pb-2">Floor 1 Pending</h6><div id="list_f1"></div></div></div><div class="col-md-4"><div class="card p-3 bg-light h-100"><h6 class="text-success fw-bold text-center border-bottom pb-2">Floor 2 Pending</h6><div id="list_f2"></div></div></div><div class="col-md-4"><div class="card p-3 bg-light h-100"><h6 class="text-dark fw-bold text-center border-bottom pb-2">Basement Pending</h6><div id="list_fb"></div></div></div></div>
         </div>
     </div>
 
@@ -214,28 +199,43 @@
     <!-- 3. DISPATCH TAB -->
     <!-- ========================================== -->
     <div id="view-disp" class="main-view hidden">
-        <div class="card p-4">
+        <div class="card p-4" id="card-disp">
             <h5 class="text-secondary fw-bold">Dispatch Entry</h5>
             <form id="form-disp">
+                <input type="hidden" id="editIdx-disp" value="">
                 <div class="row g-3">
-                    <div class="col-md-3"><label class="form-label">Date</label><input type="date" name="date" class="form-control" required></div>
+                    <div class="col-md-3"><label class="form-label">Date</label><input type="date" name="date" id="disp-date" class="form-control" required></div>
                     <div class="col-md-3"><label class="form-label">Model</label><select name="model" id="disp-m" class="form-select" onchange="filterC('disp')" required></select></div>
                     <div class="col-md-3"><label class="form-label">Color</label><select name="color" id="disp-c" class="form-select" onchange="fillP('disp')" required></select></div>
                     <div class="col-md-3"><label class="form-label">Part Code</label><input type="text" name="partCode" id="disp-p" class="form-control bg-light" readonly></div>
-                    <div class="col-12"><label class="form-label">Dispatch Qty</label><input type="number" name="dispatchQty" class="form-control" required></div>
+                    <div class="col-12"><label class="form-label">Dispatch Qty</label><input type="number" name="dispatchQty" id="disp-qty" class="form-control" required></div>
                 </div>
-                <button type="button" class="btn btn-warning mt-3 w-100 fw-bold" onclick="addQueue('disp')">+ Add to List</button>
+                <div class="d-flex gap-2 mt-3">
+                    <button type="button" class="btn btn-warning w-100 fw-bold" id="btnAddDisp" onclick="addQueue('disp')">+ Add to Queue</button>
+                    <button type="button" class="btn btn-secondary w-100 hidden" id="btnCancelDisp" onclick="cancelEdit('disp')">Cancel Edit</button>
+                </div>
             </form>
-            <div class="mt-4">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h6 class="fw-bold">Dispatch Queue</h6>
-                    <div>
-                        <button class="btn btn-sm btn-danger me-2" onclick="deleteLastSaved('Dispatch')">🗑 Undo Save</button>
-                        <button class="btn btn-sm btn-success" onclick="downloadQueue('queue-disp', 'Dispatch_Queue')">📥 Excel</button>
-                    </div>
+            <div class="mt-4 p-3 bg-light rounded border">
+                <h6 class="fw-bold text-muted small">PENDING QUEUE</h6>
+                <table class="table table-bordered table-sm queue-table bg-white mb-2"><thead><tr><th>Date</th><th>Model</th><th>Color</th><th>Qty</th><th>Action</th></tr></thead><tbody id="queue-disp"></tbody></table>
+                <button class="btn btn-success w-100 fw-bold shadow-sm" onclick="submitQueue('disp', 'Dispatch')">Save Queue to Database</button>
+            </div>
+        </div>
+
+        <!-- RECENT DISPATCH DATA -->
+        <div class="card p-3">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold text-primary m-0"><i class="bi bi-database-check"></i> Recent Dispatch Data</h6>
+                <div class="d-flex gap-2">
+                    <input type="date" id="filter-disp" class="form-control form-control-sm" onchange="renderDBTable('disp')">
+                    <button class="btn btn-sm btn-dark" onclick="previewReport('disp')"><i class="bi bi-eye"></i> Preview</button>
                 </div>
-                <table class="table table-bordered table-sm queue-table bg-white"><thead><tr><th>Date</th><th>Model</th><th>Color</th><th>Qty</th><th>Action</th></tr></thead><tbody id="queue-disp"></tbody></table>
-                <button class="btn btn-success w-100 fw-bold shadow-sm" onclick="submitQueue('disp', 'Dispatch')">Save Dispatch Data</button>
+            </div>
+            <div class="table-responsive" style="max-height: 400px;">
+                <table class="table table-hover table-bordered table-sm table-recent text-center">
+                    <thead class="table-light sticky-top"><tr><th>Date</th><th>Model</th><th>Color</th><th>Qty</th><th>Actions</th></tr></thead>
+                    <tbody id="db-disp"></tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -244,26 +244,47 @@
     <!-- 4. OPENING TAB -->
     <!-- ========================================== -->
     <div id="view-open" class="main-view hidden">
-        <div class="card p-4 border-info border-2">
+        <div class="card p-4 border-info border-2" id="card-open">
             <h5 class="text-info fw-bold">Opening Balance Management</h5>
             <form id="form-open">
+                <input type="hidden" id="editIdx-open" value="">
                 <div class="row g-3">
-                    <div class="col-md-4"><label class="form-label">Month</label><input type="month" name="month" class="form-control" required></div>
-                    <div class="col-md-4"><label class="form-label">Type</label><select name="openType" class="form-select" onchange="toggleOp(this.value)"><option value="PDI">PDI Opening</option><option value="Dispatch">Dispatch Opening</option></select></div>
+                    <div class="col-md-4"><label class="form-label">Month</label><input type="month" name="month" id="open-month" class="form-control" required></div>
+                    <div class="col-md-4"><label class="form-label">Type</label><select name="openType" id="open-type" class="form-select" onchange="toggleOp(this.value)"><option value="PDI">PDI Opening</option><option value="Dispatch">Dispatch Opening</option></select></div>
                     <div class="col-md-4"><label class="form-label">Model</label><select name="model" id="open-m" class="form-select" onchange="filterC('open')" required></select></div>
                     <div class="col-md-6"><label class="form-label">Color</label><select name="color" id="open-c" class="form-select" onchange="fillP('open')" required></select></div>
                     <div class="col-md-6"><label class="form-label">Part Code</label><input type="text" name="partCode" id="open-p" class="form-control bg-light" readonly></div>
-                    <div class="grp-pdi col-md-3"><label class="form-label">Line</label><input type="number" name="line" class="form-control" min="1" max="24"></div>
-                    <div class="grp-pdi col-md-3"><label class="form-label">For PDI Open</label><input type="number" name="pdiOpenQty" class="form-control"></div>
-                    <div class="grp-pdi col-md-3"><label class="form-label">For Rework Open</label><input type="number" name="reworkOpenQty" class="form-control"></div>
-                    <div class="grp-pdi col-12"><label class="form-label">Rework Reason</label><input type="text" name="reworkReason" class="form-control"></div>
-                    <div class="grp-disp col-12 hidden"><label class="form-label">Dispatch Open Qty</label><input type="number" name="dispatchOpenQty" class="form-control"></div>
+                    <div class="grp-pdi col-md-3"><label class="form-label">Line</label><input type="number" name="line" id="open-line" class="form-control" min="1" max="24"></div>
+                    <div class="grp-pdi col-md-3"><label class="form-label">For PDI Open</label><input type="number" name="pdiOpenQty" id="open-qpdi" class="form-control"></div>
+                    <div class="grp-pdi col-md-3"><label class="form-label">For Rework Open</label><input type="number" name="reworkOpenQty" id="open-qrew" class="form-control"></div>
+                    <div class="grp-pdi col-12"><label class="form-label">Rework Reason</label><input type="text" name="reworkReason" id="open-rsn" class="form-control"></div>
+                    <div class="grp-disp col-12 hidden"><label class="form-label">Dispatch Open Qty</label><input type="number" name="dispatchOpenQty" id="open-qdisp" class="form-control"></div>
                 </div>
-                <button type="button" class="btn btn-info mt-3 w-100 fw-bold text-white" onclick="addQueue('open')">+ Add to List</button>
+                <div class="d-flex gap-2 mt-3">
+                    <button type="button" class="btn btn-info w-100 fw-bold text-white" id="btnAddOpen" onclick="addQueue('open')">+ Add to Queue</button>
+                    <button type="button" class="btn btn-secondary w-100 hidden" id="btnCancelOpen" onclick="cancelEdit('open')">Cancel Edit</button>
+                </div>
             </form>
-            <div class="mt-4">
-                <table class="table table-bordered table-sm queue-table bg-white"><thead><tr><th>Type</th><th>Model</th><th>Color</th><th>Qty</th><th>Action</th></tr></thead><tbody id="queue-open"></tbody></table>
-                <button class="btn btn-dark w-100 fw-bold shadow-sm" onclick="submitQueue('open', 'Opening')">Save Opening Data</button>
+            <div class="mt-4 p-3 bg-light rounded border">
+                <table class="table table-bordered table-sm queue-table bg-white mb-2"><thead><tr><th>Type</th><th>Model</th><th>Color</th><th>Qty</th><th>Action</th></tr></thead><tbody id="queue-open"></tbody></table>
+                <button class="btn btn-dark w-100 fw-bold shadow-sm" onclick="submitQueue('open', 'Opening')">Save Queue to Database</button>
+            </div>
+        </div>
+
+        <!-- RECENT OPENING DATA -->
+        <div class="card p-3">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold text-primary m-0"><i class="bi bi-database-check"></i> Recent Opening Data</h6>
+                <div class="d-flex gap-2">
+                    <input type="month" id="filter-open" class="form-control form-control-sm" onchange="renderDBTable('open')">
+                    <button class="btn btn-sm btn-dark" onclick="previewReport('open')"><i class="bi bi-eye"></i> Preview</button>
+                </div>
+            </div>
+            <div class="table-responsive" style="max-height: 400px;">
+                <table class="table table-hover table-bordered table-sm table-recent text-center">
+                    <thead class="table-light sticky-top"><tr><th>Month</th><th>Type</th><th>Model</th><th>Color</th><th>Qty</th><th>Actions</th></tr></thead>
+                    <tbody id="db-open"></tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -278,32 +299,13 @@
                 <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#d-master" onclick="renderDash2()">📈 Master Inventory</a></li>
             </ul>
             <div class="tab-content">
-                <!-- LINE DASH -->
                 <div class="tab-pane fade show active" id="d-line">
-                    <div class="d-flex justify-content-between mb-3">
-                        <div class="input-group" style="max-width:300px;">
-                            <span class="input-group-text">Line No</span>
-                            <input type="number" id="dashLine" class="form-control" placeholder="1-24">
-                            <button class="btn btn-dark" onclick="renderDash1()">Show</button>
-                        </div>
-                        <button class="btn btn-success btn-sm" onclick="exportTableToExcel('tbl-dash1', 'Line_Dashboard')">Excel</button>
-                    </div>
-                    <table class="table table-bordered text-center table-sm bg-white" id="tbl-dash1">
-                        <thead class="table-secondary"><tr><th>Model</th><th>Color</th><th>Open PDI</th><th>Open Rework</th><th>FG Out</th><th>Pass</th><th>Bal PDI</th><th>For Rework</th><th>Reason</th></tr></thead>
-                        <tbody id="dash1-res"></tbody>
-                    </table>
+                    <div class="d-flex justify-content-between mb-3"><div class="input-group" style="max-width:300px;"><span class="input-group-text">Line No</span><input type="number" id="dashLine" class="form-control" placeholder="1-24"><button class="btn btn-dark" onclick="renderDash1()">Show</button></div><button class="btn btn-success btn-sm" onclick="exportTableToExcel('tbl-dash1', 'Line_Dashboard')">Excel</button></div>
+                    <table class="table table-bordered text-center table-sm bg-white" id="tbl-dash1"><thead class="table-secondary"><tr><th>Model</th><th>Color</th><th>Open PDI</th><th>Open Rework</th><th>FG Out</th><th>Pass</th><th>Bal PDI</th><th>For Rework</th><th>Reason</th></tr></thead><tbody id="dash1-res"></tbody></table>
                 </div>
-                <!-- MASTER DASH -->
                 <div class="tab-pane fade" id="d-master">
-                    <div class="d-flex justify-content-end mb-2">
-                        <button class="btn btn-success btn-sm" onclick="exportTableToExcel('tbl-dash2', 'Master_Dashboard')">Excel</button>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-sm table-striped text-center bg-white" id="tbl-dash2">
-                            <thead class="table-dark"><tr><th>Model</th><th>Color</th><th>Part</th><th>Opn(PDI)</th><th>FG Out</th><th>PDI Pass</th><th>Opn(Disp)</th><th>Disp</th><th>Bal(PDI)</th><th>Bal(Disp)</th></tr></thead>
-                            <tbody id="master-body"></tbody>
-                        </table>
-                    </div>
+                    <div class="d-flex justify-content-end mb-2"><button class="btn btn-success btn-sm" onclick="exportTableToExcel('tbl-dash2', 'Master_Dashboard')">Excel</button></div>
+                    <div class="table-responsive"><table class="table table-bordered table-sm table-striped text-center bg-white" id="tbl-dash2"><thead class="table-dark"><tr><th>Model</th><th>Color</th><th>Part</th><th>Opn(PDI)</th><th>FG Out</th><th>PDI Pass</th><th>Opn(Disp)</th><th>Disp</th><th>Bal(PDI)</th><th>Bal(Disp)</th></tr></thead><tbody id="master-body"></tbody></table></div>
                 </div>
             </div>
         </div>
@@ -311,14 +313,11 @@
 
 </div>
 
-<!-- MODAL FOR PDI SUMMARY -->
+<!-- MODAL FOR SUMMARIES -->
 <div class="modal fade" id="summaryModal" tabindex="-1">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="modalTitle">Daily Summary Report</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
+            <div class="modal-header bg-primary text-white"><h5 class="modal-title" id="modalTitle">Report</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
             <div class="modal-body bg-light" id="summaryBody"></div>
             <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Close</button><button class="btn btn-primary" onclick="window.print()">Print</button></div>
         </div>
@@ -330,48 +329,59 @@
     const URL_INVENTORY = "https://script.google.com/macros/s/AKfycbwSmKVcnxS3vFGCVnrrm0j_D8Cg67EcqSoi7kWF5p_X9w6_zau7U4WTNBFrsY6PiGKXCg/exec";
     const URL_PDI = "https://script.google.com/macros/s/AKfycbyvBKmQ9GDPwPJXiSBh7En0YPTrJ3uemT7T6nlx-j9EGLJI6fPHXGRhExla4ImSfFyf/exec";
     
-    // Global State
+    // Global Stores
     let masterData = []; 
     let queueData = { prod: [], disp: [], open: [], pdi: [] }; 
     let pdiData = []; 
+    let dbData = { prod: [], disp: [], open: [] }; // Stores fetched inventory data
 
     google.charts.load('current', {'packages':['corechart', 'bar']});
 
     // ================= INITIALIZATION =================
     window.onload = function() {
         let today = new Date().toLocaleDateString('en-CA');
-        ['recentFilter','dashFrom','dashTo', 'pdi-date'].forEach(id=>{ let e=document.getElementById(id); if(e)e.value=today; });
+        let curMonth = today.substring(0, 7);
+        ['filter-prod','filter-disp','recentFilter','dashFrom','dashTo', 'pdi-date', 'prod-date', 'disp-date'].forEach(id=>{ let e=document.getElementById(id); if(e)e.value=today; });
+        ['filter-open', 'open-month'].forEach(id=>{ let e=document.getElementById(id); if(e)e.value=curMonth; });
         
         toggleLoader(true, "Syncing Databases...");
         
         Promise.all([
-            fetch(URL_INVENTORY + "?action=getMasters").then(r=>r.json()),
-            fetch(URL_PDI).then(r=>r.json())
-        ]).then(([invData, pdiRaw]) => {
-            masterData = invData;
-            populateModels(['prod','disp','open','pdi']); // Fill dropdowns
+            fetch(URL_INVENTORY + "?action=getAllData").then(r=>r.json()).catch(e=>{console.log("Inv API fail",e); return {production:[],dispatch:[],opening:[],masters:[]};}),
+            fetch(URL_PDI).then(r=>r.json()).catch(e=>{console.log("PDI API fail",e); return {data:[]};})
+        ]).then(([invRaw, pdiRaw]) => {
+            // Process Inventory Data
+            masterData = invRaw.masters || [];
+            dbData.prod = invRaw.production || [];
+            dbData.disp = invRaw.dispatch || [];
+            dbData.open = invRaw.opening || [];
 
+            // Process PDI Data
             pdiData = pdiRaw.data || [];
             if(pdiData[0] && pdiData[0][0] === "Date") pdiData.shift();
-            renderRecentTable();
+
+            // Render All
+            populateModels(['prod','disp','open','pdi']); 
+            renderRecentTable(); // PDI Table
+            renderDBTable('prod');
+            renderDBTable('disp');
+            renderDBTable('open');
 
             toggleLoader(false);
         }).catch(e => {
             console.error(e);
             toggleLoader(false);
-            alert("Initialization Error: Check connection.");
+            alert("Initialization Warning: Some data could not be fetched. Check API.");
         });
     };
 
-    // ================= NAVIGATION =================
+    // ================= SHARED HELPERS =================
     function switchMainTab(id) {
         document.querySelectorAll('.main-view').forEach(e => e.classList.add('hidden'));
         document.getElementById('view-' + id).classList.remove('hidden');
         document.querySelectorAll('.nav-main .nav-link').forEach(e => e.classList.remove('active'));
         event.target.classList.add('active');
-        if(id==='pdi-master') renderRecentTable();
     }
-
     function switchPdiSub(sub, btn) {
         ['entry','dash','close'].forEach(t => document.getElementById('pdi-sub-'+t).classList.add('hidden'));
         document.getElementById('pdi-sub-'+sub).classList.remove('hidden');
@@ -381,18 +391,8 @@
         if(sub==='dash') { btn.classList.add('btn-outline-dark'); runPdiAnalysis(); }
         if(sub==='close') { btn.classList.add('btn-outline-danger'); runClosureReport(); }
     }
-
-    function toggleLoader(show, txt) {
-        document.getElementById('global-loader').style.display = show ? 'flex' : 'none';
-        if(txt) document.getElementById('loader-text').innerText = txt;
-    }
-
-    // ================= SHARED HELPERS =================
-    function populateModels(ids){ 
-        if(!masterData || masterData.length === 0) return;
-        let m=[...new Set(masterData.map(r=>r[1]))].sort(); 
-        ids.forEach(x=>{ let s=document.getElementById(x+'-m'); s.innerHTML='<option value="">Select Model</option>'; m.forEach(v=>s.innerHTML+=`<option value="${v}">${v}</option>`) }); 
-    }
+    function toggleLoader(show, txt) { document.getElementById('global-loader').style.display = show ? 'flex' : 'none'; if(txt) document.getElementById('loader-text').innerText = txt; }
+    function populateModels(ids){ if(!masterData.length)return; let m=[...new Set(masterData.map(r=>r[1]))].sort(); ids.forEach(x=>{ let s=document.getElementById(x+'-m'); s.innerHTML='<option value="">Select Model</option>'; m.forEach(v=>s.innerHTML+=`<option value="${v}">${v}</option>`) }); }
     function filterC(p){ let m=document.getElementById(p+'-m').value,s=document.getElementById(p+'-c'); s.innerHTML='<option value="">Select Color</option>'; [...new Set(masterData.filter(r=>r[1]==m).map(r=>r[2]))].sort().forEach(c=>s.innerHTML+=`<option value="${c}">${c}</option>`); document.getElementById(p+'-p').value=""; }
     function fillP(p){ let m=document.getElementById(p+'-m').value,c=document.getElementById(p+'-c').value,f=masterData.find(r=>r[1]==m&&r[2]==c); if(f)document.getElementById(p+'-p').value=f[0]; }
     function checkFloor(i,id){ let v=parseInt(i.value),e=document.getElementById(id); e.className="floor-badge"; if(v>=1&&v<=8){e.innerText="1st";e.classList.add("bg-f1");}else if(v>=9&&v<=16){e.innerText="2nd";e.classList.add("bg-f2");}else if(v>=17&&v<=24){e.innerText="Base";e.classList.add("bg-base");}else e.classList.add("hidden"); }
@@ -401,15 +401,26 @@
     function getCleanDate(iso) { if(!iso) return ""; return new Date(iso).toLocaleDateString('en-CA'); }
     function fmtDate(iso) { if(!iso) return ""; let d = new Date(iso); return d.getDate().toString().padStart(2,'0') + '/' + (d.getMonth()+1).toString().padStart(2,'0'); }
 
-    // ================= INVENTORY LOGIC (Queue) =================
+    // ================= INVENTORY LOGIC (Prod, Disp, Open) =================
+    
+    // 1. Queue Management (Local)
     function addQueue(tab) {
         let form = document.getElementById('form-' + tab);
+        let idxInput = document.getElementById('editIdx-' + tab);
+        
+        // If in Edit Mode, Submit Edit instead of Adding to Queue
+        if(idxInput.value !== "") {
+            submitEdit(tab);
+            return;
+        }
+
         if(!form.checkValidity()) { form.reportValidity(); return; }
         let formData = Object.fromEntries(new FormData(form));
         queueData[tab].push(formData);
         renderQueue(tab);
         form.querySelectorAll('input[type="number"], input[type="text"]').forEach(i => { if(i.name !== 'line' && i.name !== 'month') i.value = ""; });
     }
+
     function renderQueue(tab) {
         let tbody = document.getElementById('queue-' + tab);
         tbody.innerHTML = "";
@@ -421,322 +432,280 @@
            tbody.innerHTML += `<tr>${row}<td><button class="btn btn-sm btn-danger" onclick="queueData['${tab}'].splice(${index},1); renderQueue('${tab}');">X</button></td></tr>`;
         });
     }
-    function submitQueue(tab, type) {
+
+    function submitQueue(tab, typeName) {
         if(queueData[tab].length === 0) return alert("List is empty!");
-        toggleLoader(true, "Saving " + type + "...");
-        fetch(URL_INVENTORY, { method: 'POST', body: JSON.stringify({ type: type, data: queueData[tab] }) })
-        .then(r => r.json()).then(d => {
+        toggleLoader(true, "Saving " + typeName + "...");
+        fetch(URL_INVENTORY, { method: 'POST', body: JSON.stringify({ type: typeName, data: queueData[tab] }) })
+        .then(r => r.json()).then(async d => {
+            if(d.status === 'success') { 
+                alert(d.message); 
+                queueData[tab] = []; 
+                renderQueue(tab); 
+                document.getElementById('form-' + tab).reset();
+                await refreshInventoryDB(); // Sync newly saved data
+            } else { alert("Error: " + d.message); }
             toggleLoader(false);
-            if(d.status === 'success') { alert(d.message); queueData[tab] = []; renderQueue(tab); document.getElementById('form-' + tab).reset(); } 
-            else { alert("Error: " + d.message); }
         }).catch(e => { toggleLoader(false); alert("Connection Error."); });
     }
-    function deleteLastSaved(type) {
-        if(!confirm("Delete last entry for "+type+"?")) return;
-        toggleLoader(true, "Deleting...");
-        fetch(URL_INVENTORY, { method: 'POST', body: JSON.stringify({ action: 'deleteLast', type: type }) }).then(r=>r.json()).then(d=>{ toggleLoader(false); alert(d.message); });
+
+    // 2. Fetch & Render Saved Data (DB)
+    async function refreshInventoryDB() {
+        let raw = await fetch(URL_INVENTORY + "?action=getAllData").then(r=>r.json());
+        dbData.prod = raw.production || [];
+        dbData.disp = raw.dispatch || [];
+        dbData.open = raw.opening || [];
+        renderDBTable('prod'); renderDBTable('disp'); renderDBTable('open');
     }
 
-    // ================= PDI MASTER LOGIC (Code 1 Form + Code 2 Advanced) =================
-    
-    // 1. Add to Local Pending Queue
-    function addPdiQueue() {
-        let form = document.getElementById('form-pdi');
-        if(!form.checkValidity()) { form.reportValidity(); return; }
-        
-        let fd = new FormData(form);
-        let row = {
-            date: fd.get('date'),
-            line: fd.get('line'),
-            model: fd.get('model'),
-            color: fd.get('color'),
-            partCode: fd.get('partCode'),
-            lotId: fd.get('lotId'),
-            lotType: fd.get('lotType'),
-            pdiOffer: fd.get('pdiOffer'),
-            pdiPass: fd.get('pdiPass'),
-            defectReason: fd.get('defectReason')
-        };
-        
-        // Handling Edit Mode for SAVED data? No, this is for Pending queue.
-        // If "Edit" was clicked on a SAVED row, we are in a special mode.
-        let editIdx = document.getElementById('pdiEditIndex').value;
-        if(editIdx !== "") {
-            // We are editing a SAVED record. Send directly to update.
-            submitPdiEdit(row, editIdx);
-        } else {
-            // Normal Add to Queue
-            queueData.pdi.push(row);
-            renderPdiQueue();
-            // Clear fields except Date/Line/Model
-            document.getElementById('pdi-lot').value="";
-            document.getElementById('off').value="";
-            document.getElementById('pas').value="";
-            document.getElementById('fal').value="";
-            document.getElementById('pdi-rsn').value="";
-        }
-    }
+    function renderDBTable(tab) {
+        let tbody = document.getElementById('db-' + tab);
+        tbody.innerHTML = "";
+        let filterVal = document.getElementById('filter-' + tab).value;
+        let data = dbData[tab];
+        if(!data.length) { tbody.innerHTML="<tr><td colspan='6'>No data loaded</td></tr>"; return; }
 
-    function renderPdiQueue() {
-        let tbody = document.getElementById('queue-pdi'); tbody.innerHTML = "";
-        queueData.pdi.forEach((item, i) => {
-            tbody.innerHTML += `<tr>
-                <td>${item.line}</td><td>${item.model}</td><td>${item.color}</td><td>${item.lotId}</td>
-                <td>${item.pdiPass}/${item.pdiOffer}</td>
-                <td><button class="btn btn-sm btn-danger" onclick="queueData.pdi.splice(${i},1); renderPdiQueue()">X</button></td>
-            </tr>`;
-        });
-    }
+        data.slice().reverse().forEach((r, realIdx) => {
+            let actualIdx = data.length - 1 - realIdx; // To match original array index for edit
+            let match = false;
+            
+            // Filter Logic
+            if(tab === 'open') { match = (r[0] === filterVal); } // Month check
+            else { match = (getCleanDate(r[0]) === filterVal); } // Date check
 
-    // 2. Submit Queue to Sheet
-    function submitPdiQueue() {
-        if(queueData.pdi.length === 0) return alert("Pending list empty");
-        toggleLoader(true, "Saving PDI Data...");
-        
-        // Convert objects to array format expected by sheet
-        let rows = queueData.pdi.map(r => [
-            r.date, r.line, r.model, r.color, r.partCode, r.lotId, r.lotType, r.pdiOffer, r.pdiPass, r.defectReason
-        ]);
-
-        fetch(URL_PDI, { method: 'POST', body: JSON.stringify({ action: 'save', data: rows }) })
-        .then(r => r.json()).then(async d => {
-            queueData.pdi = []; renderPdiQueue();
-            // Refresh local data
-            let ref = await fetch(URL_PDI).then(x=>x.json());
-            pdiData = ref.data || []; if(pdiData[0][0]==="Date") pdiData.shift();
-            renderRecentTable();
-            toggleLoader(false);
-            alert("Saved!");
-        }).catch(e=>{ toggleLoader(false); alert("Error saving PDI"); });
-    }
-
-    // 3. Render Recent Table (Read Data)
-    function renderRecentTable() {
-        const tb = document.getElementById('crudTable'); tb.innerHTML = "";
-        const fDate = document.getElementById('recentFilter').value;
-        // pdiData format (Array): [Date, Line, Model, Color, Part, LotID, Type, Offer, Pass, Reason]
-        // Indices: 0=Date, 1=Line, 2=Model, 3=Color, 4=Part, 5=LotID, 6=Type, 7=Offer, 8=Pass, 9=Reason
-        
-        pdiData.slice().reverse().forEach(r => {
-            if (getCleanDate(r[0]) === fDate) {
-                let idx = pdiData.indexOf(r);
-                let fail = (r[7] - r[8]);
-                let badge = fail > 0 ? `<span class="st-fail">Fail (${fail})</span>` : `<span class="st-pass">Pass</span>`;
+            if(match) {
+                let rowHtml = "";
+                // Prod: Date(0), Line(1), Model(3), Color(4), Qty(6) - (Indices based on your sheet structure)
+                // Assuming typical structure: [Date, Line, Floor, Model, Color, Part, Qty]
+                if(tab === 'prod') rowHtml = `<td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[6]}</td>`;
+                // Disp: [Date, Model, Color, Part, Qty]
+                if(tab === 'disp') rowHtml = `<td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[4]}</td>`;
+                // Open: [Month, Type, Floor, Model, Color, Part, PdiQty, RewQty, Rsn, DispQty]
+                if(tab === 'open') rowHtml = `<td>${r[0]}</td><td>${r[1]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[1]==='PDI'?r[6]:r[9]}</td>`;
                 
-                tb.innerHTML += `<tr>
-                    <td>${fmtDate(r[0])}</td>
-                    <td>${r[1]}</td>
-                    <td>${r[2]}</td>
-                    <td>${r[5]}</td>
-                    <td>${r[8]} / ${r[7]}</td>
-                    <td>${badge}</td>
-                    <td>
-                        <button class="btn btn-sm text-primary p-0 me-2" onclick="editPdiSaved(${idx})" title="Edit"><i class="bi bi-pencil-square"></i></button>
-                        <button class="btn btn-sm text-danger p-0" onclick="deletePdiSaved(${idx})" title="Delete"><i class="bi bi-trash"></i></button>
-                    </td>
-                </tr>`;
+                tbody.innerHTML += `<tr>${rowHtml}<td>
+                    <button class="btn btn-sm text-primary p-0 me-2" onclick="editDBRow('${tab}', ${actualIdx})" title="Edit"><i class="bi bi-pencil-square"></i></button>
+                    <button class="btn btn-sm text-danger p-0" onclick="deleteDBRow('${tab}', ${actualIdx})" title="Delete"><i class="bi bi-trash"></i></button>
+                </td></tr>`;
             }
         });
     }
 
-    // 4. Edit Saved Record
-    function editPdiSaved(idx) {
-        let r = pdiData[idx]; // [Date, Line, Model, Color, Part, LotID, Type, Offer, Pass, Reason]
+    // 3. Edit Logic
+    function editDBRow(tab, idx) {
+        let r = dbData[tab][idx];
+        let formId = 'form-'+tab;
         
         // Populate Form
-        document.getElementById('pdi-date').value = getCleanDate(r[0]);
-        document.getElementById('pdi-line').value = r[1];
-        
-        // Trigger Model/Color change logic manually or simple fill if matches
-        let mSel = document.getElementById('pdi-m'); mSel.value = r[2]; 
-        filterC('pdi'); // Build Color dropdown
-        document.getElementById('pdi-c').value = r[3];
-        document.getElementById('pdi-p').value = r[4];
-        
-        document.getElementById('pdi-lot').value = r[5];
-        document.getElementById('pdi-type').value = r[6];
-        document.getElementById('off').value = r[7];
-        document.getElementById('pas').value = r[8];
-        document.getElementById('pdi-rsn').value = r[9] || "";
-        
-        calcP(); // Update calc field
+        if(tab === 'prod') {
+            document.getElementById('prod-date').value = getCleanDate(r[0]);
+            document.getElementById('prod-line').value = r[1];
+            document.getElementById('prod-m').value = r[3]; filterC('prod');
+            document.getElementById('prod-c').value = r[4];
+            document.getElementById('prod-p').value = r[5];
+            document.getElementById('prod-qty').value = r[6];
+        } else if (tab === 'disp') {
+            document.getElementById('disp-date').value = getCleanDate(r[0]);
+            document.getElementById('disp-m').value = r[1]; filterC('disp');
+            document.getElementById('disp-c').value = r[2];
+            document.getElementById('disp-p').value = r[3];
+            document.getElementById('disp-qty').value = r[4];
+        } else if (tab === 'open') {
+            document.getElementById('open-month').value = r[0];
+            document.getElementById('open-type').value = r[1]; toggleOp(r[1]);
+            document.getElementById('open-line').value = r[2];
+            document.getElementById('open-m').value = r[3]; filterC('open');
+            document.getElementById('open-c').value = r[4];
+            document.getElementById('open-p').value = r[5];
+            if(r[1]==='PDI'){
+                document.getElementById('open-qpdi').value = r[6];
+                document.getElementById('open-qrew').value = r[7];
+                document.getElementById('open-rsn').value = r[8];
+            } else {
+                document.getElementById('open-qdisp').value = r[9];
+            }
+        }
 
-        // UI Changes
-        document.getElementById('pdiEditIndex').value = idx + 2; // Sheet row index (Header + 1 based)
-        document.getElementById('btnAddPdi').innerText = "Update Record";
-        document.getElementById('btnAddPdi').classList.replace('btn-warning', 'btn-primary');
-        document.getElementById('btnCancelEdit').classList.remove('hidden');
-        document.getElementById('pdi-card-container').classList.add('edit-active');
-        
-        // Scroll to form
-        document.getElementById('view-pdi-master').scrollIntoView();
+        // Set UI to Edit Mode
+        document.getElementById('editIdx-'+tab).value = idx + 2; // +2 for header offset
+        let btnAdd = document.getElementById('btnAdd' + tab.charAt(0).toUpperCase() + tab.slice(1));
+        let btnCan = document.getElementById('btnCancel' + tab.charAt(0).toUpperCase() + tab.slice(1));
+        btnAdd.innerText = "Update Record";
+        btnAdd.classList.replace('btn-warning','btn-primary');
+        btnCan.classList.remove('hidden');
+        document.getElementById('card-'+tab).classList.add('edit-active');
+        document.documentElement.scrollTop = 0;
     }
 
-    function cancelPdiEdit() {
-        document.getElementById('form-pdi').reset();
-        document.getElementById('pdiEditIndex').value = "";
-        document.getElementById('btnAddPdi').innerText = "+ Add to Pending";
-        document.getElementById('btnAddPdi').classList.replace('btn-primary', 'btn-warning');
-        document.getElementById('btnCancelEdit').classList.add('hidden');
-        document.getElementById('pdi-card-container').classList.remove('edit-active');
+    function cancelEdit(tab) {
+        document.getElementById('form-'+tab).reset();
+        document.getElementById('editIdx-'+tab).value = "";
+        let cap = tab.charAt(0).toUpperCase() + tab.slice(1);
+        let btnAdd = document.getElementById('btnAdd' + cap);
+        btnAdd.innerText = "+ Add to Queue";
+        btnAdd.classList.replace('btn-primary','btn-warning');
+        document.getElementById('btnCancel' + cap).classList.add('hidden');
+        document.getElementById('card-'+tab).classList.remove('edit-active');
     }
 
-    function submitPdiEdit(rowObj, rowIndex) {
+    function submitEdit(tab) {
+        let form = document.getElementById('form-'+tab);
+        if(!form.checkValidity()) { form.reportValidity(); return; }
+        
+        // Construct Array Data based on Tab
+        let fd = new FormData(form);
+        let rowArr = [];
+        // Note: This must match the SHEET column order perfectly
+        if(tab==='prod') rowArr = [fd.get('date'), fd.get('line'), (fd.get('line')<=8?"1st":(fd.get('line')<=16?"2nd":"Base")), fd.get('model'), fd.get('color'), fd.get('partCode'), fd.get('fgQty')];
+        if(tab==='disp') rowArr = [fd.get('date'), fd.get('model'), fd.get('color'), fd.get('partCode'), fd.get('dispatchQty')];
+        if(tab==='open') {
+             // Logic for Opening array structure
+             let type = fd.get('openType');
+             let l = fd.get('line') || "";
+             rowArr = [fd.get('month'), type, l, fd.get('model'), fd.get('color'), fd.get('partCode'), fd.get('pdiOpenQty'), fd.get('reworkOpenQty'), fd.get('reworkReason'), fd.get('dispatchOpenQty')];
+        }
+
+        let typeName = (tab==='prod'?'Production':(tab==='disp'?'Dispatch':'Opening'));
+        let idx = document.getElementById('editIdx-'+tab).value;
+
         toggleLoader(true, "Updating Record...");
-        let rowArr = [rowObj.date, rowObj.line, rowObj.model, rowObj.color, rowObj.partCode, rowObj.lotId, rowObj.lotType, rowObj.pdiOffer, rowObj.pdiPass, rowObj.defectReason];
-        
-        fetch(URL_PDI, { method: 'POST', body: JSON.stringify({ action: 'edit', rowIndex: parseInt(rowIndex), data: rowArr }) })
+        fetch(URL_INVENTORY, { method: 'POST', body: JSON.stringify({ action: 'edit', type: typeName, rowIndex: parseInt(idx), data: rowArr }) })
         .then(r=>r.json()).then(async d => {
-            let ref = await fetch(URL_PDI).then(x=>x.json());
-            pdiData = ref.data || []; if(pdiData[0][0]==="Date") pdiData.shift();
-            renderRecentTable();
-            cancelPdiEdit();
+            if(d.status==='success'){
+                await refreshInventoryDB();
+                cancelEdit(tab);
+                alert("Update Successful");
+            } else { alert("Update Failed: " + d.message); }
             toggleLoader(false);
-            alert("Updated Successfully");
         });
     }
 
-    // 5. Delete Saved Record
-    async function deletePdiSaved(idx) {
+    // 4. Delete Logic
+    function deleteDBRow(tab, idx) {
         if(!confirm("Are you sure you want to delete this record?")) return;
+        let typeName = (tab==='prod'?'Production':(tab==='disp'?'Dispatch':'Opening'));
         toggleLoader(true, "Deleting...");
-        await fetch(URL_PDI, { method: 'POST', body: JSON.stringify({ action: 'delete', rowIndex: idx + 2 }) });
-        let ref = await fetch(URL_PDI).then(x=>x.json());
-        pdiData = ref.data || []; if(pdiData[0][0]==="Date") pdiData.shift();
-        renderRecentTable();
-        toggleLoader(false);
-    }
-
-    // ================= DASHBOARDS & REPORTS =================
-    // 1. Line Dash (Inv)
-    function renderDash1() {
-        let line = document.getElementById('dashLine').value; if(!line) return;
-        toggleLoader(true, "Processing...");
-        
-        fetch(URL_INVENTORY+"?action=getDashboard").then(r=>r.json()).then(d=>{
-            let map={}; const get=(m,c)=>{ let k=m+"|"+c; if(!map[k])map[k]={m,c,oPdi:0,oRew:0,fg:0,pass:0,freshProcessed:0,rewPass:0,totalFail:0,rsn:[]}; return map[k]; };
-            
-            // Inv Data
-            d.open.filter(r=>r[2]==line&&r[1]=='PDI').forEach(r=>{ let o=get(r[3],r[4]); o.oPdi+=Number(r[6]||0); o.oRew+=Number(r[7]||0); if(r[8])o.rsn.push(r[8]); });
-            d.prod.filter(r=>r[1]==line).forEach(r=>get(r[3],r[4]).fg+=Number(r[6]||0));
-            
-            // PDI Data (Mapped from new structure: Line=1, Model=2, Color=3, Type=6, Offer=7, Pass=8, Reason=9)
-            pdiData.filter(r=>r[1]==line).forEach(r=>{
-                let o=get(r[2],r[3]);
-                let type=r[6], off=Number(r[7]||0), pass=Number(r[8]||0);
-                let fail = off - pass;
-                
-                o.pass += pass; 
-                if(type==='Fresh') o.freshProcessed += off; // Offer is total processed
-                else o.rewPass += pass;
-
-                if(fail > 0) { o.totalFail += fail; if(r[9]) o.rsn.push(r[9]); }
-            });
-
-            let h='';
-            for(let k in map){
-                let o=map[k], balPdi = (o.oPdi + o.fg) - o.freshProcessed; if(balPdi<0)balPdi=0;
-                let forRew = o.oRew + o.totalFail - o.rewPass;
-                h+=`<tr><td>${o.m}</td><td>${o.c}</td><td>${o.oPdi}</td><td>${o.oRew}</td><td>${o.fg}</td><td class="text-success fw-bold">${o.pass}</td><td class="bg-light fw-bold">${balPdi}</td><td class="text-danger fw-bold">${forRew}</td><td class="small text-danger">${[...new Set(o.rsn)].join(',')}</td></tr>`;
-            }
-            document.getElementById('dash1-res').innerHTML=h;
+        fetch(URL_INVENTORY, { method: 'POST', body: JSON.stringify({ action: 'delete', type: typeName, rowIndex: idx + 2 }) })
+        .then(r=>r.json()).then(async d => {
+            await refreshInventoryDB();
             toggleLoader(false);
+            alert("Record Deleted");
         });
     }
 
-    function renderDash2() { renderDash1(); }
-
-    // 2. PDI Dashboard (Updated for new data structure)
-    function runPdiAnalysis() {
-        let from=document.getElementById('dashFrom').value, to=document.getElementById('dashTo').value;
-        let dOffer=0, pQty=0, fQty=0, dates={}, lines={}, floors={}, defects={};
+    // 5. Preview Modal
+    function previewReport(tab) {
+        let filterVal = document.getElementById('filter-' + tab).value;
+        let data = dbData[tab];
+        let filtered = data.filter(r => (tab==='open' ? r[0]===filterVal : getCleanDate(r[0])===filterVal));
         
-        pdiData.forEach(r => {
-            let rd=getCleanDate(r[0]);
-            if(rd>=from && rd<=to) {
-                let ln="L"+r[1], fl=(r[1]<=8?"Floor 1":(r[1]<=16?"Floor 2":"Basement"));
-                let off=Number(r[7]||0), pass=Number(r[8]||0);
-                let fail = off - pass;
+        if(!filtered.length) return alert("No data for selection");
 
-                dOffer+=off; pQty+=pass; fQty+=fail;
-                
-                if(!dates[rd]) dates[rd]={p:0,t:0}; dates[rd].t+=off; dates[rd].p+=pass;
-                if(!lines[ln]) lines[ln]={p:0,t:0}; lines[ln].t+=off; lines[ln].p+=pass;
-                if(!floors[fl]) floors[fl]={p:0,t:0}; floors[fl].t+=off; floors[fl].p+=pass;
-                
-                if(fail>0 && r[9]) defects[r[9]]=(defects[r[9]]||0)+fail;
-            }
-        });
-        
-        document.getElementById('d_total_qty').innerText=dOffer;
-        document.getElementById('d_passed_qty').innerText=pQty;
-        document.getElementById('d_rejected_qty').innerText=fQty;
-        document.getElementById('d_pass_rate').innerText=dOffer?((pQty/dOffer)*100).toFixed(1)+"%":"0%";
-        
-        drawChart('ch_trend', Object.keys(dates).map(d=>[d.substr(5), (dates[d].t?dates[d].p/dates[d].t:0)*100]), 'Daily Pass %');
-        drawChart('ch_line', Object.keys(lines).map(l=>[l, (lines[l].t?lines[l].p/lines[l].t:0)*100]), 'Line Pass %');
-        drawChart('ch_floor', Object.keys(floors).map(f=>[f, (floors[f].t?floors[f].p/floors[f].t:0)*100]), 'Floor Pass %');
-        drawChart('ch_defects', Object.keys(defects).map(d=>[d, defects[d]]), 'Defect Count');
-    }
-
-    function drawChart(id, arr, title) {
-        let dt = new google.visualization.DataTable(); dt.addColumn('string','Label'); dt.addColumn('number','Value'); dt.addRows(arr);
-        new google.visualization.ColumnChart(document.getElementById(id)).draw(dt, {title:title, legend:'none'});
-    }
-
-    // 3. Closure Report
-    function runClosureReport() {
-        let f1=document.getElementById('list_f1'), f2=document.getElementById('list_f2'), fb=document.getElementById('list_fb');
-        f1.innerHTML=f2.innerHTML=fb.innerHTML="";
-        
-        pdiData.forEach(r => {
-            let fail = (r[7] - r[8]);
-            // If fail > 0, it's a rejection/pending issue
-            if(fail > 0) {
-                let fl=(r[1]<=8?"Floor 1":(r[1]<=16?"Floor 2":"Basement"));
-                let h = `<div class="ticket"><div class="d-flex justify-content-between fw-bold"><span>${r[5]||"No ID"}</span><span class="text-danger">L${r[1]}</span></div><div class="small">${r[2]}</div><div class="text-danger small fw-bold">Failed: ${fail} (${r[9]||"N/A"})</div></div>`;
-                if(fl=='Floor 1') f1.innerHTML+=h; else if(fl=='Floor 2') f2.innerHTML+=h; else fb.innerHTML+=h;
-            }
-        });
-    }
-
-    // 4. Preview Modal
-    function showDaySummary() {
-        let fd=document.getElementById('recentFilter').value;
-        let d = pdiData.filter(r=>getCleanDate(r[0])===fd);
-        if(!d.length) return alert("No Data for selected date");
-        
-        let h = `<h5 class="text-center mb-3">Date: ${fd}</h5>
+        let h = `<h5 class="text-center mb-3 text-uppercase">${tab} Summary: ${filterVal}</h5>
                  <table class="table table-bordered table-striped text-center">
-                 <thead class="table-dark"><tr><th>Line</th><th>Model</th><th>Offer</th><th>Pass</th><th>Fail</th><th>Reason</th></tr></thead><tbody>`;
+                 <thead class="table-dark">`;
         
-        let tOff=0, tPass=0;
-        d.forEach(r=>{
-            let f = r[7]-r[8];
-            tOff+=Number(r[7]); tPass+=Number(r[8]);
-            h+=`<tr><td>${r[1]}</td><td>${r[2]}</td><td>${r[7]}</td><td>${r[8]}</td><td class="${f>0?'text-danger fw-bold':''}">${f}</td><td>${r[9]||""}</td></tr>`;
-        });
-        h+=`<tr class="table-secondary fw-bold"><td colspan="2">TOTAL</td><td>${tOff}</td><td>${tPass}</td><td>${tOff-tPass}</td><td></td></tr></tbody></table>`;
+        let sumQty = 0;
+
+        if(tab==='prod') {
+            h+=`<tr><th>Line</th><th>Model</th><th>Color</th><th>Qty</th></tr></thead><tbody>`;
+            filtered.forEach(r=>{ sumQty+=Number(r[6]); h+=`<tr><td>${r[1]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[6]}</td></tr>`; });
+        } else if(tab==='disp') {
+            h+=`<tr><th>Model</th><th>Color</th><th>Qty</th></tr></thead><tbody>`;
+            filtered.forEach(r=>{ sumQty+=Number(r[4]); h+=`<tr><td>${r[1]}</td><td>${r[2]}</td><td>${r[4]}</td></tr>`; });
+        } else if(tab==='open') {
+             h+=`<tr><th>Type</th><th>Model</th><th>Color</th><th>Qty</th></tr></thead><tbody>`;
+             filtered.forEach(r=>{ 
+                 let q = r[1]==='PDI'?r[6]:r[9];
+                 sumQty+=Number(q); 
+                 h+=`<tr><td>${r[1]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${q}</td></tr>`; 
+             });
+        }
         
+        h+=`<tr class="table-secondary fw-bold"><td colspan="${tab==='disp'?2:3}">TOTAL</td><td>${sumQty}</td></tr></tbody></table>`;
         document.getElementById('summaryBody').innerHTML=h;
         new bootstrap.Modal(document.getElementById('summaryModal')).show();
     }
 
-    // Export & Helpers
-    function exportTableToExcel(tid, fname) {
-        let wb = XLSX.utils.table_to_book(document.getElementById(tid), {sheet:"Sheet1"});
-        XLSX.writeFile(wb, fname+".xlsx");
-    }
-    function downloadQueue(tbodyId, filename) {
-        let t=document.getElementById(tbodyId); if(t.rows.length==0)return alert("No data");
-        let wb=XLSX.utils.book_new(), ws=XLSX.utils.table_to_sheet(t);
-        XLSX.utils.book_append_sheet(wb, ws, "Sheet1"); XLSX.writeFile(wb, filename+".xlsx");
-    }
-    function downloadPDF() {
-        const el = document.getElementById('pdf-content');
-        html2pdf().set({ margin: 10, filename: 'PDI_Report.pdf', jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' } }).from(el).save();
-    }
 
+    // ================= PDI LOGIC =================
+    // (Re-using generic PDI functions from previous, just hooking buttons)
+    function addPdiQueue() {
+        let form = document.getElementById('form-pdi');
+        if(!form.checkValidity()) { form.reportValidity(); return; }
+        let fd = new FormData(form);
+        let row = { date: fd.get('date'), line: fd.get('line'), model: fd.get('model'), color: fd.get('color'), partCode: fd.get('partCode'), lotId: fd.get('lotId'), lotType: fd.get('lotType'), pdiOffer: fd.get('pdiOffer'), pdiPass: fd.get('pdiPass'), defectReason: fd.get('defectReason') };
+        
+        let editIdx = document.getElementById('pdiEditIndex').value;
+        if(editIdx !== "") { submitPdiEdit(row, editIdx); return; }
+
+        queueData.pdi.push(row); renderPdiQueue();
+        document.getElementById('pdi-lot').value=""; document.getElementById('off').value=""; document.getElementById('pas').value=""; document.getElementById('fal').value=""; document.getElementById('pdi-rsn').value="";
+    }
+    function renderPdiQueue() { let tb=document.getElementById('queue-pdi'); tb.innerHTML=""; queueData.pdi.forEach((r,i)=>tb.innerHTML+=`<tr><td>${r.line}</td><td>${r.model}</td><td>${r.color}</td><td>${r.lotId}</td><td>${r.pdiPass}/${r.pdiOffer}</td><td><button class="btn btn-sm btn-danger" onclick="queueData.pdi.splice(${i},1);renderPdiQueue()">X</button></td></tr>`); }
+    function submitPdiQueue() {
+        if(!queueData.pdi.length) return alert("Empty");
+        toggleLoader(true,"Saving...");
+        let rows = queueData.pdi.map(r => [r.date, r.line, r.model, r.color, r.partCode, r.lotId, r.lotType, r.pdiOffer, r.pdiPass, r.defectReason]);
+        fetch(URL_PDI, { method: 'POST', body: JSON.stringify({ action: 'save', data: rows }) }).then(r=>r.json()).then(async ()=>{
+             queueData.pdi=[]; renderPdiQueue();
+             let ref=await fetch(URL_PDI).then(x=>x.json()); pdiData=ref.data||[]; if(pdiData[0][0]==='Date')pdiData.shift(); renderRecentTable();
+             toggleLoader(false); alert("Saved!");
+        });
+    }
+    function renderRecentTable() {
+        let tb = document.getElementById('crudTable'); tb.innerHTML="";
+        let fd = document.getElementById('recentFilter').value;
+        pdiData.slice().reverse().forEach(r=>{
+            if(getCleanDate(r[0])===fd){
+                let idx = pdiData.indexOf(r);
+                let fail = (r[7]-r[8]);
+                tb.innerHTML += `<tr><td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[5]}</td><td>${r[8]}/${r[7]}</td><td>${fail>0?fail:0}</td><td><button class="btn btn-sm p-0 me-2 text-primary" onclick="editPdiSaved(${idx})"><i class="bi bi-pencil-square"></i></button><button class="btn btn-sm p-0 text-danger" onclick="deletePdiSaved(${idx})"><i class="bi bi-trash"></i></button></td></tr>`;
+            }
+        });
+    }
+    function editPdiSaved(idx){
+        let r=pdiData[idx];
+        document.getElementById('pdi-date').value=getCleanDate(r[0]); document.getElementById('pdi-line').value=r[1]; document.getElementById('pdi-m').value=r[2]; filterC('pdi'); document.getElementById('pdi-c').value=r[3]; document.getElementById('pdi-p').value=r[4]; document.getElementById('pdi-lot').value=r[5]; document.getElementById('pdi-type').value=r[6]; document.getElementById('off').value=r[7]; document.getElementById('pas').value=r[8]; document.getElementById('pdi-rsn').value=r[9]||""; calcP();
+        document.getElementById('pdiEditIndex').value=idx+2;
+        document.getElementById('btnAddPdi').innerText="Update Record"; document.getElementById('btnCancelEdit').classList.remove('hidden'); document.getElementById('pdi-card-container').scrollIntoView();
+    }
+    function cancelPdiEdit(){ document.getElementById('form-pdi').reset(); document.getElementById('pdiEditIndex').value=""; document.getElementById('btnAddPdi').innerText="+ Add to Pending"; document.getElementById('btnCancelEdit').classList.add('hidden'); }
+    function submitPdiEdit(r,idx){
+        toggleLoader(true,"Updating...");
+        let arr=[r.date,r.line,r.model,r.color,r.partCode,r.lotId,r.lotType,r.pdiOffer,r.pdiPass,r.defectReason];
+        fetch(URL_PDI,{method:'POST',body:JSON.stringify({action:'edit',rowIndex:parseInt(idx),data:arr})}).then(x=>x.json()).then(async()=>{
+            let ref=await fetch(URL_PDI).then(j=>j.json()); pdiData=ref.data||[]; if(pdiData[0][0]==='Date')pdiData.shift(); renderRecentTable(); cancelPdiEdit(); toggleLoader(false); alert("Updated");
+        });
+    }
+    async function deletePdiSaved(idx){ if(!confirm("Delete?"))return; toggleLoader(true,"Deleting..."); await fetch(URL_PDI,{method:'POST',body:JSON.stringify({action:'delete',rowIndex:idx+2})}); let ref=await fetch(URL_PDI).then(x=>x.json()); pdiData=ref.data||[]; if(pdiData[0][0]==='Date')pdiData.shift(); renderRecentTable(); toggleLoader(false); }
+    
+    // Dashboards for PDI
+    function runPdiAnalysis() {
+        let from=document.getElementById('dashFrom').value, to=document.getElementById('dashTo').value;
+        let doff=0, dpass=0, dfail=0, dates={}, lines={}, floors={}, defects={};
+        pdiData.forEach(r=>{
+            let d=getCleanDate(r[0]);
+            if(d>=from && d<=to){
+                let o=Number(r[7]||0), p=Number(r[8]||0), f=o-p;
+                doff+=o; dpass+=p; dfail+=f;
+                if(!dates[d])dates[d]={o:0,p:0}; dates[d].o+=o; dates[d].p+=p;
+                let ln="L"+r[1]; if(!lines[ln])lines[ln]={o:0,p:0}; lines[ln].o+=o; lines[ln].p+=p;
+                let fl=(r[1]<=8?"F1":(r[1]<=16?"F2":"Base")); if(!floors[fl])floors[fl]={o:0,p:0}; floors[fl].o+=o; floors[fl].p+=p;
+                if(f>0 && r[9]) defects[r[9]]=(defects[r[9]]||0)+f;
+            }
+        });
+        document.getElementById('d_total_qty').innerText=doff; document.getElementById('d_passed_qty').innerText=dpass; document.getElementById('d_rejected_qty').innerText=dfail; document.getElementById('d_pass_rate').innerText=doff?((dpass/doff)*100).toFixed(1)+"%":"0%";
+        drawChart('ch_trend',Object.keys(dates).map(k=>[k.substr(5),(dates[k].p/dates[k].o)*100]),'Daily %');
+        drawChart('ch_line',Object.keys(lines).map(k=>[k,(lines[k].p/lines[k].o)*100]),'Line %');
+        drawChart('ch_floor',Object.keys(floors).map(k=>[k,(floors[k].p/floors[k].o)*100]),'Floor %');
+        drawChart('ch_defects',Object.keys(defects).map(k=>[k,defects[k]]), 'Defects');
+    }
+    function drawChart(id, arr, title) { let dt=new google.visualization.DataTable(); dt.addColumn('string','L'); dt.addColumn('number','V'); dt.addRows(arr); new google.visualization.ColumnChart(document.getElementById(id)).draw(dt,{title:title,legend:'none'}); }
+    
+    // Helpers
+    function exportTableToExcel(tid, fname) { let wb=XLSX.utils.table_to_book(document.getElementById(tid),{sheet:"Sheet1"}); XLSX.writeFile(wb,fname+".xlsx"); }
+    function downloadPDF() { html2pdf().set({margin:10,filename:'Report.pdf',jsPDF:{unit:'mm',format:'a4',orientation:'landscape'}}).from(document.getElementById('pdf-content')).save(); }
 </script>
 </body>
 </html>
