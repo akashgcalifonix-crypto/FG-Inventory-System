@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Integrated System (Final Updated)</title>
+    <title>Integrated System (Final Stable)</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -31,6 +31,31 @@
         .floor-badge { font-size: 0.8rem; padding: 4px 8px; border-radius: 4px; color: white; font-weight: bold; }
         .bg-f1 { background-color: #28a745; } .bg-f2 { background-color: #ffc107; color: black; } .bg-base { background-color: #dc3545; }
         .filter-group { display: flex; align-items: center; gap: 5px; background: #fff; padding: 5px; border: 1px solid #ccc; border-radius: 5px; }
+
+        /* --- NEW PDI REPORT STYLES (2X FONT & CARDS) --- */
+        .report-2x { font-size: 1.4rem !important; } /* Base font size increased */
+        .report-card { 
+            background: white; 
+            border-radius: 15px; 
+            padding: 25px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+            text-align: center;
+            border-top: 5px solid #ccc;
+            margin-bottom: 20px;
+        }
+        .rc-total { border-top-color: #000; }
+        .rc-pass { border-top-color: #10b981; }
+        .rc-fail { border-top-color: #ef4444; }
+        .rc-rate { border-top-color: #0d6efd; }
+        
+        .rc-num { font-size: 3.5rem; font-weight: 800; line-height: 1.2; } /* BIG NUMBERS */
+        .rc-label { font-size: 1.2rem; font-weight: bold; color: #666; text-transform: uppercase; }
+        .rc-sub { font-size: 1rem; color: #999; }
+        
+        .report-header { background: #e9ecef; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: center; font-weight: bold; font-size: 1.5rem; }
+        .table-report th { background-color: #f8f9fa; text-transform: uppercase; font-size: 1.1rem; color: #555; vertical-align: middle; }
+        .table-report td { font-size: 1.2rem; vertical-align: middle; font-weight: 500; }
+        .badge-lg { font-size: 1.1rem; padding: 8px 15px; }
     </style>
 </head>
 <body>
@@ -701,25 +726,173 @@
         }
     }
 
-    // --- PDI PREVIEW REPORT (Updated Format) ---
+    // --- PDI PREVIEW REPORT (SCREENSHOT REPLICA - 2X FONT) ---
     function showDaySummary(){ 
-        let f=document.getElementById('pdi-from').value; 
-        let t=document.getElementById('pdi-to').value;
-        let d=pdiData.filter(r=>{ let dt=getCleanDate(r[0]); return dt >= f && dt <= t; });
+        let f = document.getElementById('pdi-from').value; 
+        let t = document.getElementById('pdi-to').value;
+        
+        // Filter Data by Date
+        let d = pdiData.filter(r => { let dt = getCleanDate(r[0]); return dt >= f && dt <= t; });
         
         if(!d.length) return alert("No Data in Range"); 
-        
-        let h=`<h5 class='text-center mb-3 text-success'>PDI Report: ${f} to ${t}</h5>
-        <div class="table-responsive">
-            <table class='table table-bordered table-striped text-center align-middle'>
-                <thead class='table-dark'><tr><th>Date</th><th>Line</th><th>Model</th><th>Lot ID</th><th>Offer</th><th>Pass</th><th>Fail</th><th>Reason</th></tr></thead>
+
+        // --- CALCULATIONS ---
+        let stats = {
+            totalQty: 0, totalPass: 0, totalFail: 0,
+            totalLots: 0, passedLots: 0, rejectedLots: 0,
+            floors: {
+                'Floor 1': { lots:0, passLots:0, qty:0, passQty:0 },
+                'Floor 2': { lots:0, passLots:0, qty:0, passQty:0 },
+                'Basement': { lots:0, passLots:0, qty:0, passQty:0 }
+            }
+        };
+
+        let rejectedList = [];
+
+        d.forEach(r => {
+            let ln = parseInt(r[1]);
+            let floor = (ln >= 1 && ln <= 8) ? "Floor 1" : (ln >= 9 && ln <= 16) ? "Floor 2" : "Basement";
+            let offer = Number(r[7] || 0);
+            let pass = Number(r[8] || 0);
+            let fail = offer - pass;
+            let lotID = r[5] || "N/A";
+
+            // Global Totals
+            stats.totalQty += offer;
+            stats.totalPass += pass;
+            stats.totalFail += fail;
+            stats.totalLots++;
+
+            // Lot Status
+            if(fail > 0) {
+                stats.rejectedLots++;
+                rejectedList.push({ line: r[1], model: r[2], id: lotID, defect: r[9], date: fmtDate(r[0]) });
+            } else {
+                stats.passedLots++;
+                stats.floors[floor].passLots++; // Only count passed lots here
+            }
+
+            // Floor Stats
+            stats.floors[floor].lots++;
+            stats.floors[floor].qty += offer;
+            stats.floors[floor].passQty += pass;
+        });
+
+        let passRate = stats.totalQty ? ((stats.totalPass / stats.totalQty) * 100).toFixed(2) : "0.00";
+
+        // --- HTML GENERATION (Matching Screenshot) ---
+        let html = `
+        <div class="report-2x container-fluid">
+            <!-- Header -->
+            <div class="report-header">Date: ${fmtDate(f)} ${f!==t ? ' to '+fmtDate(t) : ''}</div>
+
+            <!-- Top Cards -->
+            <div class="row g-4 mb-5">
+                <div class="col-md-3">
+                    <div class="report-card rc-total">
+                        <div class="rc-num text-dark">${stats.totalQty}</div>
+                        <div class="rc-label">TOTAL UNITS</div>
+                        <div class="rc-sub">(Lots: ${stats.totalLots})</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="report-card rc-pass">
+                        <div class="rc-num text-success">${stats.totalPass}</div>
+                        <div class="rc-label">PASSED UNITS</div>
+                        <div class="rc-sub">(Lots: ${stats.passedLots})</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="report-card rc-fail">
+                        <div class="rc-num text-danger">${stats.totalFail}</div>
+                        <div class="rc-label">REJECTED UNITS</div>
+                        <div class="rc-sub">(Lots: ${stats.rejectedLots})</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="report-card rc-rate">
+                        <div class="rc-num text-primary">${passRate}%</div>
+                        <div class="rc-label">PASS RATE</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Floor Wise Table -->
+            <h4 class="fw-bold text-secondary mb-3 text-uppercase">Floor Wise Performance</h4>
+            <table class="table table-bordered table-report text-center bg-white mb-5 shadow-sm">
+                <thead>
+                    <tr>
+                        <th>Floor Name</th>
+                        <th>Lots</th>
+                        <th>Passed Lots</th>
+                        <th>Total Qty</th>
+                        <th>Pass Qty</th>
+                        <th>Rate %</th>
+                    </tr>
+                </thead>
                 <tbody>`;
-        d.forEach(r=>{ 
-            let fail = r[7]-r[8]; 
-            h+=`<tr><td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[5]}</td><td>${r[7]}</td><td class="text-success fw-bold">${r[8]}</td><td class="${fail>0?'text-danger fw-bold':''}">${fail}</td><td>${r[9]}</td></tr>`; 
-        }); 
-        h += `</tbody></table></div>`; 
-        document.getElementById('summaryBody').innerHTML=h; 
+        
+        // Loop Floors
+        for(let fName in stats.floors) {
+            let fl = stats.floors[fName];
+            if(fl.qty > 0 || fl.lots > 0) { // Only show active floors
+                let frate = fl.qty ? ((fl.passQty / fl.qty) * 100).toFixed(2) : "0.00";
+                let badgeClass = frate >= 95 ? 'bg-success' : (frate >= 90 ? 'bg-warning text-dark' : 'bg-danger');
+                html += `<tr>
+                    <td class="fw-bold text-start ps-4">${fName}</td>
+                    <td>${fl.lots}</td>
+                    <td>${fl.passLots}</td>
+                    <td>${fl.qty}</td>
+                    <td>${fl.passQty}</td>
+                    <td><span class="badge ${badgeClass} badge-lg">${frate}%</span></td>
+                </tr>`;
+            }
+        }
+        // Grand Total Row
+        html += `<tr class="table-light fw-bold" style="border-top: 2px solid #000;">
+                    <td class="text-start ps-4">GRAND TOTAL</td>
+                    <td>${stats.totalLots}</td>
+                    <td>${stats.passedLots}</td>
+                    <td>${stats.totalQty}</td>
+                    <td>${stats.totalPass}</td>
+                    <td>${passRate}%</td>
+                </tr>
+                </tbody>
+            </table>
+
+            <!-- Rejected List -->
+            <h4 class="fw-bold text-danger mb-3 text-uppercase">Rejected Lots (Raw Data)</h4>
+            <div class="table-responsive">
+                <table class="table table-hover table-report text-center bg-white shadow-sm">
+                    <thead>
+                        <tr>
+                            <th>Line</th>
+                            <th>Model</th>
+                            <th>ID</th>
+                            <th>Defect</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+        
+        if(rejectedList.length > 0) {
+            rejectedList.forEach(r => {
+                html += `<tr>
+                    <td>L${r.line}</td>
+                    <td>${r.model}</td>
+                    <td class="fw-bold">${r.id}</td>
+                    <td class="text-danger fw-bold text-start">${r.defect || "N/A"}</td>
+                    <td>${r.date}</td>
+                </tr>`;
+            });
+        } else {
+            html += `<tr><td colspan="5" class="text-success py-4">No Rejections Found! Great Work.</td></tr>`;
+        }
+
+        html += `</tbody></table></div></div>`;
+        
+        // Show Modal
+        document.getElementById('summaryBody').innerHTML = html; 
         new bootstrap.Modal(document.getElementById('summaryModal')).show(); 
     }
 
