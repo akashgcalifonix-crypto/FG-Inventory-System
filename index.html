@@ -15,12 +15,11 @@
     <style>
         :root { --primary: #0f172a; --secondary: #334155; --accent: #0d6efd; --success: #10b981; --danger: #ef4444; }
         
-        /* --- 1. GLOBAL FONT SIZE INCREASE (LARGE) --- */
         body { 
             background-color: #f4f6f9; 
             font-family: 'Segoe UI', sans-serif; 
             padding-bottom: 80px; 
-            font-size: 1.35rem; /* Significantly Larger */
+            font-size: 1.35rem; 
         } 
         
         .hidden { display: none !important; }
@@ -31,7 +30,6 @@
         .nav-main .nav-link { color: rgba(255,255,255,0.9); font-weight: 700; margin-right: 20px; cursor: pointer; font-size: 1.4rem; } 
         .nav-main .nav-link.active { background-color: var(--accent); color: white !important; }
         
-        /* FULL WIDTH CONTAINER */
         .container-fluid { max-width: 100% !important; padding-left: 40px; padding-right: 40px; } 
 
         /* CARDS & FORMS */
@@ -40,7 +38,7 @@
         .form-control, .form-select { font-size: 1.3rem; padding: 12px; border-radius: 8px; } 
         .btn { font-size: 1.3rem; padding: 12px 25px; font-weight: 700; border-radius: 8px; } 
 
-        /* TABLES - LARGE */
+        /* TABLES */
         .table th { background-color: #343a40; color: white; vertical-align: middle; font-size: 1.35rem; padding: 15px; }
         .table td { font-size: 1.35rem; vertical-align: middle; padding: 12px; }
         
@@ -48,7 +46,6 @@
         .btn-excel { background-color: #198754; color: white; border: none; } .btn-excel:hover { background-color: #157347; color: white; }
         .btn-action { font-size: 1.4rem; padding: 5px 12px; margin: 0 2px; cursor: pointer; }
         
-        /* SUB NAV */
         .sub-nav .nav-link { font-size: 1.3rem; padding: 15px 30px; border: 2px solid #e0e0e0; background: white; margin-right: 10px; border-radius: 40px; font-weight: 600; }
         .sub-nav .nav-link.active { background-color: var(--secondary); color: white; border-color: var(--secondary); }
         
@@ -57,20 +54,13 @@
         .bg-f1 { background-color: #28a745; } .bg-f2 { background-color: #ffc107; color: black; } .bg-base { background-color: #dc3545; }
         .filter-group { display: flex; align-items: center; gap: 15px; background: #fff; padding: 12px; border: 2px solid #ddd; border-radius: 8px; }
 
-        /* --- PDI REPORT STYLES (LARGE) --- */
+        /* REPORTS */
         .report-2x { font-size: 1.6rem !important; }
-        .report-card { 
-            background: white; border-radius: 15px; padding: 30px; 
-            box-shadow: 0 6px 18px rgba(0,0,0,0.12); text-align: center;
-            border-top: 8px solid #ccc; margin-bottom: 30px;
-        }
-        .rc-total { border-top-color: #000; } .rc-pass { border-top-color: #10b981; }
-        .rc-fail { border-top-color: #ef4444; } .rc-rate { border-top-color: #0d6efd; }
-        
+        .report-card { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 6px 18px rgba(0,0,0,0.12); text-align: center; border-top: 8px solid #ccc; margin-bottom: 30px; }
+        .rc-total { border-top-color: #000; } .rc-pass { border-top-color: #10b981; } .rc-fail { border-top-color: #ef4444; } .rc-rate { border-top-color: #0d6efd; }
         .rc-num { font-size: 4.5rem; font-weight: 800; line-height: 1.1; margin-bottom: 10px; }
         .rc-label { font-size: 1.5rem; font-weight: 800; color: #555; text-transform: uppercase; }
         .rc-sub { font-size: 1.2rem; color: #888; }
-        
         .report-header { background: #e9ecef; padding: 25px; border-radius: 12px; margin-bottom: 30px; text-align: center; font-weight: 800; font-size: 2rem; color: #333; }
         .table-report th { font-size: 1.4rem; padding: 18px; text-transform: uppercase; letter-spacing: 0.5px; }
         .table-report td { font-size: 1.5rem; padding: 18px; font-weight: 500; }
@@ -99,7 +89,6 @@
     </ul>
 </div>
 
-<!-- FULL WIDTH CONTAINER -->
 <div class="container-fluid">
 
     <!-- 1. PRODUCTION TAB -->
@@ -109,7 +98,6 @@
             <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#prod-perf">📊 Performance</a></li>
         </ul>
         <div class="tab-content">
-            <!-- Production Entry -->
             <div class="tab-pane fade show active" id="prod-entry">
                 <div class="card p-4">
                     <h3 class="text-secondary fw-bold border-bottom pb-3 mb-4">Daily Production Entry</h3>
@@ -123,7 +111,10 @@
                             <div class="col-md-2"><label class="form-label">FG Qty</label><input type="number" name="fgQty" id="prod-qty" class="form-control" required></div>
                             <div class="col-12"><label class="text-muted fs-5">Part Code:</label><input type="text" name="partCode" id="prod-p" class="form-control bg-light" readonly></div>
                         </div>
-                        <div class="d-flex gap-3 mt-5"><button type="button" class="btn btn-warning w-100 py-3" id="btnAddProd" onclick="addQueue('prod')">+ Add to Queue</button><button type="button" class="btn btn-secondary w-100 hidden py-3" id="btnCancelProd" onclick="cancelEdit('prod')">Cancel Edit</button></div>
+                        <div class="d-flex gap-3 mt-5">
+                            <button type="button" class="btn btn-warning w-100 py-3" id="btnAddProd" onclick="addQueue('prod')">+ Add to Queue</button>
+                            <button type="button" class="btn btn-secondary w-100 hidden py-3" id="btnCancelProd" onclick="cancelEdit('prod')">Cancel Edit</button>
+                        </div>
                     </form>
                     <div class="mt-5"><table class="table table-bordered mb-2"><tbody id="queue-prod"></tbody></table><button class="btn btn-primary w-100 py-3" onclick="submitQueue('prod', 'Production')">Save Queue to DB</button></div>
                 </div>
@@ -140,7 +131,6 @@
                 </div>
             </div>
             
-            <!-- Production Performance -->
             <div class="tab-pane fade" id="prod-perf">
                 <div class="card p-4 mb-4">
                     <div class="row g-4 align-items-end">
@@ -203,7 +193,10 @@
                             <div class="col-md-1"><label class="form-label">Fail</label><input type="text" id="fal" class="form-control bg-light" readonly></div>
                             <div class="col-md-9"><label class="form-label">Defect Reason</label><input type="text" name="defectReason" id="pdi-rsn" class="form-control"></div>
                         </div>
-                        <div class="d-flex gap-3 mt-5"><button type="button" class="btn btn-warning w-100 py-3" id="btnAddPdi" onclick="addPdiQueue()">+ Add Pending</button><button type="button" class="btn btn-secondary w-100 hidden py-3" id="btnCancelEdit" onclick="cancelPdiEdit()">Cancel Edit</button></div>
+                        <div class="d-flex gap-3 mt-5">
+                            <button type="button" class="btn btn-warning w-100 py-3" id="btnAddPdi" onclick="addPdiQueue()">+ Add Pending</button>
+                            <button type="button" class="btn btn-secondary w-100 hidden py-3" id="btnCancelEdit" onclick="cancelPdiEdit()">Cancel Edit</button>
+                        </div>
                     </form>
                     <div class="mt-5"><table class="table table-bordered mb-2"><tbody id="queue-pdi"></tbody></table><button class="btn btn-primary w-100 py-3" onclick="submitPdiQueue()">Save All Pending</button></div>
                 </div>
@@ -217,7 +210,26 @@
                             <button class="btn btn-excel" onclick="exportTableToExcel('tbl-pdi-db', 'PDI_Data')">Excel</button>
                         </div>
                     </div>
-                    <div class="table-responsive" style="max-height: 600px;"><table class="table table-bordered text-center table-hover" id="tbl-pdi-db"><thead class="table-light sticky-top"><tr><th>Date</th><th>Model</th><th>Lot ID</th><th>Type</th><th>Pass/Offer</th><th>Fail</th><th>Actions</th></tr></thead><tbody id="crudTable"></tbody></table></div>
+                    <!-- Updated Table Structure -->
+                    <div class="table-responsive" style="max-height: 600px;">
+                        <table class="table table-bordered text-center table-hover" id="tbl-pdi-db">
+                            <thead class="table-light sticky-top">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Line</th>
+                                    <th>Model</th>
+                                    <th>Color</th>
+                                    <th>Lot ID</th>
+                                    <th>Type</th>
+                                    <th>Pass/Offer</th>
+                                    <th>Fail</th>
+                                    <th>Defect</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="crudTable"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
             <div class="tab-pane fade" id="pdi-perf">
@@ -247,7 +259,10 @@
                             <div class="col-md-3"><label class="form-label">Qty</label><input type="number" name="dispatchQty" id="disp-qty" class="form-control" required></div>
                             <div class="col-12"><label class="text-muted fs-5">Part Code:</label><input type="text" name="partCode" id="disp-p" class="form-control bg-light" readonly></div>
                         </div>
-                        <div class="d-flex gap-3 mt-5"><button type="button" class="btn btn-warning w-100 py-3" id="btnAddDisp" onclick="addQueue('disp')">Add</button><button type="button" class="btn btn-secondary w-100 hidden py-3" id="btnCancelDisp" onclick="cancelEdit('disp')">Cancel</button></div>
+                        <div class="d-flex gap-3 mt-5">
+                            <button type="button" class="btn btn-warning w-100 py-3" id="btnAddDisp" onclick="addQueue('disp')">Add</button>
+                            <button type="button" class="btn btn-secondary w-100 hidden py-3" id="btnCancelDisp" onclick="cancelEdit('disp')">Cancel</button>
+                        </div>
                     </form>
                     <div class="mt-5"><table class="table table-bordered mb-2"><tbody id="queue-disp"></tbody></table><button class="btn btn-success w-100 py-3" onclick="submitQueue('disp', 'Dispatch')">Save</button></div>
                 </div>
@@ -291,7 +306,10 @@
                             <div class="col-12"><input type="text" name="partCode" id="open-p" class="form-control bg-light" readonly placeholder="Part Code"></div>
                             <input type="hidden" name="reworkReason">
                         </div>
-                        <div class="d-flex gap-3 mt-5"><button type="button" class="btn btn-info w-100 text-white py-3" id="btnAddOpen" onclick="addQueue('open')">Add</button><button type="button" class="btn btn-secondary w-100 hidden py-3" id="btnCancelOpen" onclick="cancelEdit('open')">Cancel</button></div>
+                        <div class="d-flex gap-3 mt-5">
+                            <button type="button" class="btn btn-info w-100 text-white py-3" id="btnAddOpen" onclick="addQueue('open')">Add</button>
+                            <button type="button" class="btn btn-secondary w-100 hidden py-3" id="btnCancelOpen" onclick="cancelEdit('open')">Cancel</button>
+                        </div>
                     </form>
                     <div class="mt-5"><table class="table table-bordered mb-2"><tbody id="queue-open"></tbody></table><button class="btn btn-dark w-100 py-3" onclick="submitQueue('open', 'Opening')">Save</button></div>
                 </div>
@@ -389,6 +407,23 @@
 
     function safeLen(arr){ return arr ? arr.length : 0; }
 
+    // --- UPDATED DATE HELPER TO FIX SHIFTING ---
+    function getCleanDate(iso){
+        if(!iso) return "";
+        // If already formatted like 2025-12, return it
+        if(typeof iso === 'string' && iso.length === 7) return iso;
+        // If already formatted like 2025-12-28, return it
+        if(typeof iso === 'string' && iso.length === 10) return iso;
+        
+        // Handle ISO Date Objects (Prevent Timezone shift)
+        let d = new Date(iso);
+        // Manually format to YYYY-MM-DD using local time concept
+        let year = d.getFullYear();
+        let month = (d.getMonth() + 1).toString().padStart(2, '0');
+        let day = d.getDate().toString().padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
     function submitQueue(tab, type) {
         if (!queueData[tab].length) return alert("Queue is empty!");
         toggleLoader(true);
@@ -423,17 +458,6 @@
         let mm = document.getElementById('pp-filter-model');
         mm.innerHTML = '<option value="">All Models</option>';
         models.forEach(m => mm.innerHTML += `<option value="${m}">${m}</option>`);
-    }
-
-    // --- HELPER FOR SAFE DATE ---
-    function getCleanDate(iso){
-        if(!iso) return "";
-        if(typeof iso === 'string' && iso.length === 7) return iso; // YYYY-MM
-        if(typeof iso === 'string' && iso.length === 10) return iso; // YYYY-MM-DD
-        let d = new Date(iso);
-        // Add 12 hours to avoid timezone shifting to previous day
-        d.setHours(12);
-        return d.toLocaleDateString('en-CA'); 
     }
 
     function runProdPerf(mode) {
@@ -503,9 +527,7 @@
             let mth = document.getElementById('open-perf-month').value;
             if(!dbData.open) return;
             let filtered = dbData.open.filter(r => {
-                // FIXED OPENING MONTH FILTER LOGIC
-                let rd = r[0]; // Format YYYY-MM
-                if(rd instanceof Date) rd = rd.toISOString().substring(0,7);
+                let rd = getCleanDate(r[0]).substring(0, 7);
                 return rd === mth;
             });
             let pdiTot = 0, dispTot = 0, pdiMap = {}, dispMap = {}; 
@@ -626,12 +648,11 @@
         data.slice().reverse().forEach((r, idx)=>{ 
             if(!r) return; 
             let realIdx = data.length - 1 - idx; 
-            let rowDate = tab==='open' ? r[0] : getCleanDate(r[0]);
+            let rowDate = getCleanDate(r[0]);
             
-            // For Opening, r[0] is often YYYY-MM. 
-            if(tab === 'open' && r[0] instanceof Date) {
-               // If data came as date object, convert to YYYY-MM
-               rowDate = r[0].toISOString().substring(0,7);
+            // For Opening, handle YYYY-MM
+            if(tab === 'open') {
+               rowDate = rowDate.substring(0, 7);
             }
 
             if(rowDate >= from && rowDate <= to) { 
@@ -642,6 +663,7 @@
         }); 
     }
     
+    // --- UPDATED PDI TABLE TO SHOW ALL DETAILS ---
     function renderRecentTable(){ 
         let tb=document.getElementById('crudTable'); tb.innerHTML=""; 
         let from = document.getElementById('pdi-from').value;
@@ -650,12 +672,29 @@
         pdiData.slice().reverse().forEach((r,idx)=>{ 
             if(!r) return; 
             let realIdx = pdiData.length - 1 - idx; 
-            // FIXED PDI DATE MISMATCH
             let d = getCleanDate(r[0]);
             if(d >= from && d <= to) 
-                tb.innerHTML+=`<tr><td>${fmtDate(r[0])}</td><td>${r[2]}</td><td>${r[5]}</td><td>${r[8]}/${r[7]}</td><td>${r[7]-r[8]}</td><td><button class="btn btn-sm btn-link p-0 btn-action" onclick="viewPdiDetail(${realIdx})"><i class="bi bi-eye"></i></button> <button class="btn btn-sm btn-link p-0 mx-1 btn-action" onclick="editPdiDB(${realIdx})"><i class="bi bi-pencil-square"></i></button> <button class="btn btn-sm btn-link text-danger p-0 btn-action" onclick="deletePdiSaved(${realIdx})"><i class="bi bi-trash"></i></button></td></tr>`; 
+                // Added missing columns: Line(r1), Color(r3), Defect(r9)
+                tb.innerHTML+=`<tr>
+                    <td>${fmtDate(r[0])}</td>
+                    <td>${r[1]}</td>
+                    <td>${r[2]}</td>
+                    <td>${r[3]}</td>
+                    <td>${r[5]}</td>
+                    <td>${r[6]}</td>
+                    <td>${r[8]}/${r[7]}</td>
+                    <td class="text-danger fw-bold">${r[7]-r[8]}</td>
+                    <td class="small text-muted">${r[9]||'-'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-link p-0 btn-action" onclick="viewPdiDetail(${realIdx})"><i class="bi bi-eye"></i></button> 
+                        <button class="btn btn-sm btn-link p-0 mx-1 btn-action" onclick="editPdiDB(${realIdx})"><i class="bi bi-pencil-square"></i></button> 
+                        <button class="btn btn-sm btn-link text-danger p-0 btn-action" onclick="deletePdiSaved(${realIdx})"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>`; 
         }); 
     }
+
+    // --- UPDATED EDIT FUNCTIONS WITH SCROLL AND BUTTON STATE ---
 
     function editDB(tab, idx){ 
         if(!dbData[tab] || !dbData[tab][idx]) return;
@@ -675,6 +714,7 @@
             document.getElementById('prod-p').value=r[5]; 
             document.getElementById('prod-qty').value=r[6]; 
             document.getElementById('btnAddProd').innerText = "Update Queue"; // Visual change
+            document.getElementById('btnAddProd').classList.replace('btn-warning', 'btn-primary');
         } 
         if(tab=='disp'){ 
             document.getElementById('disp-date').value=getCleanDate(r[0]); 
@@ -684,11 +724,11 @@
             document.getElementById('disp-p').value=r[3]; 
             document.getElementById('disp-qty').value=r[4]; 
             document.getElementById('btnAddDisp').innerText = "Update Queue"; // Visual change
+            document.getElementById('btnAddDisp').classList.replace('btn-warning', 'btn-primary');
         } 
         if(tab=='open'){ 
             // Fix: Handle Date object for month input
-            let mVal = r[0];
-            if(mVal instanceof Date) mVal = mVal.toISOString().substring(0,7);
+            let mVal = getCleanDate(r[0]).substring(0, 7);
             document.getElementById('open-month').value=mVal; 
             
             document.getElementById('open-type').value=r[1]; 
@@ -701,6 +741,7 @@
             if(r[1]=='PDI'){document.getElementById('open-qpdi').value=r[6];document.getElementById('open-qrew').value=r[7];}
             else{document.getElementById('open-qdisp').value=r[9];} 
             document.getElementById('btnAddOpen').innerText = "Update Queue"; // Visual change
+            document.getElementById('btnAddOpen').classList.replace('btn-info', 'btn-primary');
         } 
         document.getElementById('btnCancel'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.remove('hidden'); 
     }
@@ -722,8 +763,16 @@
     function cancelEdit(tab){ 
         document.getElementById('form-'+tab).reset(); 
         document.getElementById('editIdx-'+tab).value=""; 
+        
         let btnId = tab=='prod'?'btnAddProd':(tab=='disp'?'btnAddDisp':'btnAddOpen');
-        document.getElementById(btnId).innerText = tab=='disp'?'Add':(tab=='open'?'Add':'+ Add to Queue');
+        let btnText = tab=='disp'?'Add':(tab=='open'?'Add':'+ Add to Queue');
+        let btnEl = document.getElementById(btnId);
+        
+        btnEl.innerText = btnText;
+        btnEl.classList.remove('btn-primary');
+        if(tab=='prod' || tab=='disp') btnEl.classList.add('btn-warning');
+        if(tab=='open') btnEl.classList.add('btn-info');
+
         document.getElementById('btnCancel'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.add('hidden'); 
     }
     
@@ -759,6 +808,7 @@
         document.getElementById('off').value=r[7]; 
         document.getElementById('pas').value=r[8]; 
         document.getElementById('btnAddPdi').innerText = "Update Entry";
+        document.getElementById('btnAddPdi').classList.replace('btn-warning', 'btn-primary');
         document.getElementById('btnCancelEdit').classList.remove('hidden'); 
     }
     
@@ -772,7 +822,9 @@
     function cancelPdiEdit(){ 
         document.getElementById('form-pdi').reset(); 
         document.getElementById('pdiEditIndex').value=""; 
-        document.getElementById('btnAddPdi').innerText = "+ Add Pending";
+        let btn = document.getElementById('btnAddPdi');
+        btn.innerText = "+ Add Pending";
+        btn.classList.replace('btn-primary', 'btn-warning');
         document.getElementById('btnCancelEdit').classList.add('hidden'); 
     }
     
@@ -844,7 +896,13 @@
         });
 
         let passRate = stats.totalQty ? ((stats.totalPass / stats.totalQty) * 100).toFixed(2) : "0.00";
-        let html = `<div class="report-2x container-fluid"><div class="report-header">Date: ${fmtDate(f)} ${f!==t ? ' to '+fmtDate(t) : ''}</div>
+        // --- ADDED LOGO TO PREVIEW ---
+        let html = `<div class="report-2x container-fluid">
+            <div class="d-flex justify-content-center align-items-center mb-4">
+                 <img src="https://i.postimg.cc/5y7SN4xc/logo.png" style="height:80px;" class="me-3">
+                 <h2 class="fw-bold m-0 text-primary">Daily PDI Report</h2>
+            </div>
+            <div class="report-header">Date: ${fmtDate(f)} ${f!==t ? ' to '+fmtDate(t) : ''}</div>
             <div class="row g-4 mb-5">
                 <div class="col-md-3"><div class="report-card rc-total"><div class="rc-num text-dark">${stats.totalQty}</div><div class="rc-label">TOTAL UNITS</div><div class="rc-sub">(Lots: ${stats.totalLots})</div></div></div>
                 <div class="col-md-3"><div class="report-card rc-pass"><div class="rc-num text-success">${stats.totalPass}</div><div class="rc-label">PASSED UNITS</div><div class="rc-sub">(Lots: ${stats.passedLots})</div></div></div>
