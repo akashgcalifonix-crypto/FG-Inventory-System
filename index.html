@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Integrated System (Final Stable)</title>
+    <title>Integrated System (Updated)</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -30,6 +30,7 @@
         .stat-box { background: white; border-radius: 8px; padding: 15px; text-align: center; border-bottom: 4px solid #ccc; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .floor-badge { font-size: 0.8rem; padding: 4px 8px; border-radius: 4px; color: white; font-weight: bold; }
         .bg-f1 { background-color: #28a745; } .bg-f2 { background-color: #ffc107; color: black; } .bg-base { background-color: #dc3545; }
+        .filter-group { display: flex; align-items: center; gap: 5px; background: #fff; padding: 5px; border: 1px solid #ccc; border-radius: 5px; }
     </style>
 </head>
 <body>
@@ -81,12 +82,19 @@
                     <div class="mt-4"><table class="table table-bordered mb-2"><tbody id="queue-prod"></tbody></table><button class="btn btn-primary w-100 py-2 fw-bold" onclick="submitQueue('prod', 'Production')">Save Queue to DB</button></div>
                 </div>
                 <div class="card p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3"><h5 class="fw-bold text-primary m-0">Recent Production Data</h5><div class="d-flex gap-2"><input type="date" id="filter-prod" class="form-control w-auto" onchange="renderDBTable('prod')"><button class="btn btn-dark" onclick="previewReport('prod')"><i class="bi bi-eye"></i> Preview</button><button class="btn btn-excel" onclick="exportTableToExcel('tbl-prod-db', 'Production_Data')"><i class="bi bi-file-earmark-excel"></i> Excel</button></div></div>
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                        <h5 class="fw-bold text-primary m-0">Recent Production Data</h5>
+                        <div class="filter-group">
+                            <small class="fw-bold">From:</small> <input type="date" id="filter-prod-from" class="form-control form-control-sm w-auto" onchange="renderDBTable('prod')">
+                            <small class="fw-bold">To:</small> <input type="date" id="filter-prod-to" class="form-control form-control-sm w-auto" onchange="renderDBTable('prod')">
+                            <button class="btn btn-excel btn-sm" onclick="exportTableToExcel('tbl-prod-db', 'Production_Data')"><i class="bi bi-file-earmark-excel"></i></button>
+                        </div>
+                    </div>
                     <div class="table-responsive" style="max-height: 500px;"><table class="table table-bordered text-center table-hover" id="tbl-prod-db"><thead class="table-light sticky-top"><tr><th>Date</th><th>Line</th><th>Model</th><th>Color</th><th>Part</th><th>Qty</th><th>Actions</th></tr></thead><tbody id="db-prod"></tbody></table></div>
                 </div>
             </div>
             <div class="tab-pane fade" id="prod-perf">
-                <div class="card p-4 mb-3"><div class="row g-3 align-items-end"><div class="col-md-3"><label class="form-label">From Date</label><input type="date" id="prod-from" class="form-control"></div><div class="col-md-3"><label class="form-label">To Date</label><input type="date" id="prod-to" class="form-control"></div><div class="col-md-2"><button class="btn btn-primary w-100 fw-bold py-2" onclick="calcPerf('prod')">Show Analysis</button></div></div></div>
+                <div class="card p-4 mb-3"><div class="row g-3 align-items-end"><div class="col-md-3"><label class="form-label">From Date</label><input type="date" id="prod-from" class="form-control"></div><div class="col-md-3"><label class="form-label">To Date</label><input type="date" id="prod-to" class="form-control"></div><div class="col-md-4"><div class="d-flex gap-2"><button class="btn btn-primary w-100 fw-bold py-2" onclick="calcPerf('prod')">Show Analysis</button> <button class="btn btn-excel w-100 fw-bold py-2" onclick="exportPerformance('prod')">Excel</button></div></div></div></div>
                 <div id="res-prod-perf"></div>
             </div>
         </div>
@@ -123,7 +131,14 @@
                     <div class="mt-4"><table class="table table-bordered mb-2"><tbody id="queue-pdi"></tbody></table><button class="btn btn-primary w-100 py-2 fw-bold" onclick="submitPdiQueue()">Save All Pending</button></div>
                 </div>
                 <div class="card p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3"><h5 class="fw-bold text-success m-0">Recent PDI Data</h5><div class="d-flex gap-2"><input type="date" id="recentFilter" class="form-control w-auto" onchange="renderRecentTable()"><button class="btn btn-dark" onclick="showDaySummary()"><i class="bi bi-eye"></i> Preview</button><button class="btn btn-excel" onclick="exportTableToExcel('tbl-pdi-db', 'PDI_Data')">Excel</button></div></div>
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                        <h5 class="fw-bold text-success m-0">Recent PDI Data</h5>
+                        <div class="filter-group">
+                            <small class="fw-bold">From:</small> <input type="date" id="pdi-from" class="form-control form-control-sm w-auto" onchange="renderRecentTable()">
+                            <small class="fw-bold">To:</small> <input type="date" id="pdi-to" class="form-control form-control-sm w-auto" onchange="renderRecentTable()">
+                            <button class="btn btn-excel btn-sm" onclick="exportTableToExcel('tbl-pdi-db', 'PDI_Data')">Excel</button>
+                        </div>
+                    </div>
                     <div class="table-responsive" style="max-height: 500px;"><table class="table table-bordered text-center table-hover" id="tbl-pdi-db"><thead class="table-light sticky-top"><tr><th>Date</th><th>Model</th><th>Lot ID</th><th>Type</th><th>Pass/Offer</th><th>Fail</th><th>Actions</th></tr></thead><tbody id="crudTable"></tbody></table></div>
                 </div>
             </div>
@@ -158,7 +173,14 @@
                     <div class="mt-4"><table class="table table-bordered mb-2"><tbody id="queue-disp"></tbody></table><button class="btn btn-success w-100 py-2 fw-bold" onclick="submitQueue('disp', 'Dispatch')">Save</button></div>
                 </div>
                 <div class="card p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3"><h5 class="fw-bold m-0">Recent Dispatch</h5><div class="d-flex gap-2"><input type="date" id="filter-disp" class="form-control w-auto" onchange="renderDBTable('disp')"><button class="btn btn-dark" onclick="previewReport('disp')"><i class="bi bi-eye"></i> Preview</button><button class="btn btn-excel" onclick="exportTableToExcel('tbl-disp-db', 'Dispatch_Data')">Excel</button></div></div>
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                        <h5 class="fw-bold m-0">Recent Dispatch</h5>
+                        <div class="filter-group">
+                            <small class="fw-bold">From:</small> <input type="date" id="filter-disp-from" class="form-control form-control-sm w-auto" onchange="renderDBTable('disp')">
+                            <small class="fw-bold">To:</small> <input type="date" id="filter-disp-to" class="form-control form-control-sm w-auto" onchange="renderDBTable('disp')">
+                            <button class="btn btn-excel btn-sm" onclick="exportTableToExcel('tbl-disp-db', 'Dispatch_Data')">Excel</button>
+                        </div>
+                    </div>
                     <div class="table-responsive"><table class="table table-bordered text-center table-hover" id="tbl-disp-db"><thead class="table-light"><tr><th>Date</th><th>Model</th><th>Color</th><th>Part</th><th>Qty</th><th>Actions</th></tr></thead><tbody id="db-disp"></tbody></table></div>
                 </div>
             </div>
@@ -195,7 +217,14 @@
                     <div class="mt-4"><table class="table table-bordered mb-2"><tbody id="queue-open"></tbody></table><button class="btn btn-dark w-100 py-2 fw-bold" onclick="submitQueue('open', 'Opening')">Save</button></div>
                 </div>
                 <div class="card p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3"><h5 class="fw-bold m-0">Recent Opening</h5><div class="d-flex gap-2"><input type="month" id="filter-open" class="form-control w-auto" onchange="renderDBTable('open')"><button class="btn btn-dark" onclick="previewReport('open')"><i class="bi bi-eye"></i> Preview</button><button class="btn btn-excel" onclick="exportTableToExcel('tbl-open-db', 'Opening_Data')">Excel</button></div></div>
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                        <h5 class="fw-bold m-0">Recent Opening</h5>
+                        <div class="filter-group">
+                            <small class="fw-bold">From:</small> <input type="month" id="filter-open-from" class="form-control form-control-sm w-auto" onchange="renderDBTable('open')">
+                            <small class="fw-bold">To:</small> <input type="month" id="filter-open-to" class="form-control form-control-sm w-auto" onchange="renderDBTable('open')">
+                            <button class="btn btn-excel btn-sm" onclick="exportTableToExcel('tbl-open-db', 'Opening_Data')">Excel</button>
+                        </div>
+                    </div>
                     <div class="table-responsive"><table class="table table-bordered text-center table-hover" id="tbl-open-db"><thead class="table-light"><tr><th>Month</th><th>Type</th><th>Model</th><th>Part</th><th>Qty</th><th>Actions</th></tr></thead><tbody id="db-open"></tbody></table></div>
                 </div>
             </div>
@@ -212,10 +241,20 @@
             <ul class="nav nav-tabs mb-3"><li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#d-line">📊 Line Live (Detailed)</a></li><li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#d-master">📈 Master Sheet</a></li></ul>
             <div class="tab-content">
                 <div class="tab-pane fade show active" id="d-line">
-                    <div class="d-flex justify-content-start align-items-center mb-3 gap-3 p-3 bg-white rounded shadow-sm border"><label class="fw-bold fs-5">Filter Line:</label><input type="number" id="dashLineInput" placeholder="1-24" class="form-control w-auto"><button class="btn btn-dark" onclick="renderDash1()">Show</button></div>
+                    <div class="d-flex justify-content-between align-items-center mb-3 gap-3 p-3 bg-white rounded shadow-sm border">
+                        <div class="d-flex gap-2 align-items-center">
+                            <label class="fw-bold fs-5">Filter Line:</label>
+                            <input type="number" id="dashLineInput" placeholder="1-24" class="form-control w-auto">
+                            <button class="btn btn-dark" onclick="renderDash1()">Show</button>
+                        </div>
+                        <button class="btn btn-excel" onclick="exportTableToExcel('tbl-dash1', 'Line_Live_Report')"><i class="bi bi-file-earmark-excel"></i> Download Excel</button>
+                    </div>
                     <div class="table-responsive"><table class="table table-bordered text-center table-dash" id="tbl-dash1"><thead class="table-dark"><tr><th rowspan="2">Model</th><th rowspan="2">Color</th><th colspan="3" class="bg-primary">Input</th><th colspan="5" class="bg-success">PDI PASS</th><th colspan="4" class="bg-warning text-dark">Balances</th></tr><tr><th>Opn PDI</th><th>Opn Rew</th><th>FG Out</th><th>Fresh</th><th>Warr</th><th>Mkt</th><th>OldFG</th><th>Rew</th><th class="bg-info text-white">Bal(PDI)</th><th>OldFG Bal</th><th>For Rework</th><th>Reason</th></tr></thead><tbody id="dash1-res"></tbody></table></div>
                 </div>
                 <div class="tab-pane fade" id="d-master">
+                    <div class="d-flex justify-content-end p-2 mb-2">
+                         <button class="btn btn-excel" onclick="exportTableToExcel('tbl-dash2', 'Master_Sheet_Report')"><i class="bi bi-file-earmark-excel"></i> Download Excel</button>
+                    </div>
                     <div class="table-responsive"><table class="table table-bordered table-striped text-center table-dash" id="tbl-dash2"><thead class="table-dark"><tr><th>Model</th><th>Color</th><th>Opn(PDI)+Opn(Rew)</th><th>FG Out</th><th>PDI Pass (Total)</th><th>Opn(Disp)</th><th>Dispatched</th><th class="bg-primary">Bal(PDI)</th><th class="bg-success">Bal(Disp)</th></tr></thead><tbody id="master-body"></tbody></table></div>
                 </div>
             </div>
@@ -234,7 +273,7 @@
     // ***************************************************************
     // IMPORTANT: REPLACE THIS URL WITH YOUR NEW DEPLOYMENT URL
     // ***************************************************************
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx_b0br1-CCp7Z1q9b0ElRJnH5gtAwbILhkGgDsRiD0O6YFzelESPLB4GVc-CFcQMuvbg/exec"; 
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz_v98RjsENHzxZopAjkPBXdagXII_rA8vQICgGRwh92isZ4eBpHhYERrROZVmq8A0noA/exec"; 
     
     // We use the same URL for both because the script handles both logics
     const INV_URL = WEB_APP_URL;
@@ -247,8 +286,9 @@
     window.onload = function() {
         let today = new Date().toLocaleDateString('en-CA');
         let curMonth = today.substring(0, 7);
-        ['filter-prod','filter-disp','recentFilter','pdi-date', 'prod-date', 'disp-date', 'dashFrom', 'dashTo', 'prod-from', 'prod-to', 'disp-from', 'disp-to'].forEach(id=>{ let e=document.getElementById(id); if(e)e.value=today; });
-        ['filter-open', 'open-month', 'open-perf-month'].forEach(id=>{ let e=document.getElementById(id); if(e)e.value=curMonth; });
+        // Set Defaults for Date Inputs
+        ['filter-prod-from','filter-prod-to','filter-disp-from','filter-disp-to','pdi-from','pdi-to','pdi-date', 'prod-date', 'disp-date', 'dashFrom', 'dashTo', 'prod-from', 'prod-to', 'disp-from', 'disp-to'].forEach(id=>{ let e=document.getElementById(id); if(e)e.value=today; });
+        ['filter-open-from', 'filter-open-to', 'open-month', 'open-perf-month'].forEach(id=>{ let e=document.getElementById(id); if(e)e.value=curMonth; });
         
         toggleLoader(true);
         fetch(INV_URL + "?action=getMasters").then(r=>r.json()).then(d=>{
@@ -257,171 +297,91 @@
         }).then(r=>r.json()).then(d=>{
             dbData.prod=d.prod||[]; dbData.disp=d.disp||[]; dbData.open=d.open||[];
             renderDBTable('prod'); renderDBTable('disp'); renderDBTable('open');
+            // Auto Load Reports to fix "function not working"
+            setTimeout(()=>{ renderDash1(); renderDash2(); }, 1000); 
             return fetch(PDI_URL);
         }).then(r=>r.json()).then(d=>{
             pdiData = d.data || []; if(pdiData[0] && pdiData[0][0]==="Date") pdiData.shift();
-            renderRecentTable(); toggleLoader(false);
+            renderRecentTable(); 
+            // Re-render reports once PDI data is here
+            setTimeout(()=>{ renderDash1(); renderDash2(); }, 500);
+            toggleLoader(false);
         }).catch(e=>{ console.error(e); toggleLoader(false); alert("Connection Error. Check URL."); });
     };
 
     // --- SAFETY CHECK ---
     function safeLen(arr){ return arr ? arr.length : 0; }
 
-    // --- SUBMIT QUEUE FUNCTION (THE FIX) ---
+    // --- SUBMIT QUEUE FUNCTION ---
     function submitQueue(tab, type) {
         if (!queueData[tab].length) return alert("Queue is empty!");
-        
         toggleLoader(true);
-
-        // DATA CONVERSION: Convert Objects to Arrays based on Tab
         let dataToSend = [];
-
         if (tab === 'prod') {
-            // Production Sheet Columns: Date, Line, Floor, Model, Color, Part, Qty
             dataToSend = queueData[tab].map(r => {
                 let ln = parseInt(r.line);
                 let floor = (ln >= 1 && ln <= 8) ? "1st Floor" : (ln >= 9 && ln <= 16) ? "2nd Floor" : "Basement";
                 return [r.date, r.line, floor, r.model, r.color, r.partCode, r.fgQty];
             });
-        } 
-        else if (tab === 'disp') {
-            // Dispatch Sheet Columns: Date, Model, Color, Part, Qty
-            dataToSend = queueData[tab].map(r => {
-                return [r.date, r.model, r.color, r.partCode, r.dispatchQty];
-            });
-        } 
-        else if (tab === 'open') {
-            // Opening Sheet Columns: Month, Type, Line, Model, Color, Part, PDI_Opn, Rew_Opn, Reason, Disp_Opn
-            dataToSend = queueData[tab].map(r => {
-                return [
-                    r.month, 
-                    r.openType, 
-                    r.line || "", 
-                    r.model, 
-                    r.color, 
-                    r.partCode, 
-                    r.pdiOpenQty || 0, 
-                    r.reworkOpenQty || 0, 
-                    r.reworkReason || "", 
-                    r.dispatchOpenQty || 0
-                ];
-            });
+        } else if (tab === 'disp') {
+            dataToSend = queueData[tab].map(r => [r.date, r.model, r.color, r.partCode, r.dispatchQty]);
+        } else if (tab === 'open') {
+            dataToSend = queueData[tab].map(r => [r.month, r.openType, r.line || "", r.model, r.color, r.partCode, r.pdiOpenQty || 0, r.reworkOpenQty || 0, r.reworkReason || "", r.dispatchOpenQty || 0]);
         }
-
-        fetch(INV_URL, {
-            method: 'POST',
-            body: JSON.stringify({
-                type: type,      // "Production", "Dispatch", or "Opening"
-                data: dataToSend // Now sending arrays
-            })
-        })
-        .then(r => r.json())
-        .then(d => {
-            if (d.status == 'success') {
-                alert("Saved Successfully!");
-                queueData[tab] = [];
-                renderQueue(tab);
-                window.onload(); 
-            } else {
-                alert("Error: " + d.message);
-            }
+        fetch(INV_URL, { method: 'POST', body: JSON.stringify({ type: type, data: dataToSend }) })
+        .then(r => r.json()).then(d => {
+            if (d.status == 'success') { alert("Saved Successfully!"); queueData[tab] = []; renderQueue(tab); window.onload(); } else { alert("Error: " + d.message); }
             toggleLoader(false);
-        })
-        .catch(e => {
-            console.error(e);
-            alert("Connection Failed");
-            toggleLoader(false);
-        });
+        }).catch(e => { console.error(e); alert("Connection Failed"); toggleLoader(false); });
     }
 
     // --- PERFORMANCE LOGIC ---
     function calcPerf(tab) {
         let h = "";
-        
         if (tab === 'prod') {
             let from = document.getElementById('prod-from').value;
             let to = document.getElementById('prod-to').value;
             if(!dbData.prod) return;
             let filtered = dbData.prod.filter(r => { let d = getCleanDate(r[0]); return d >= from && d <= to; });
-            
             let total = 0, fMap = {}, lMap = {}, mMap = {};
             filtered.forEach(r => {
-                let q = Number(r[6]||0);
-                total += q;
+                let q = Number(r[6]||0); total += q;
                 let ln = Number(r[1]||0);
                 let floor = (ln>=1 && ln<=8) ? "1st Floor" : (ln>=9 && ln<=16) ? "2nd Floor" : "Basement";
-                
-                fMap[floor] = (fMap[floor] || 0) + q;
-                lMap[ln] = (lMap[ln] || 0) + q;
-                mMap[r[3]] = (mMap[r[3]] || 0) + q;
+                fMap[floor] = (fMap[floor] || 0) + q; lMap[ln] = (lMap[ln] || 0) + q; mMap[r[3]] = (mMap[r[3]] || 0) + q;
             });
-            
             let fRows="", lRows="", mRows="";
             for(let k in fMap) fRows += `<tr><td>${k}</td><td>${fMap[k]}</td></tr>`;
             for(let k in lMap) lRows += `<tr><td>Line ${k}</td><td>${lMap[k]}</td></tr>`;
             for(let k in mMap) mRows += `<tr><td>${k}</td><td>${mMap[k]}</td></tr>`;
-
-            h = `<div class="row g-3 mb-4">
-                    <div class="col-md-12"><div class="stat-box border-dark"><h2 class="fw-bold">${total}</h2><div class="text-muted">TOTAL PRODUCTION</div></div></div>
-                 </div>
-                 <div class="row g-4">
-                    <div class="col-md-4"><h5 class="text-center fw-bold">Floor Wise</h5><table class="table table-bordered text-center table-striped"><thead class="table-dark"><tr><th>Floor</th><th>Qty</th></tr></thead><tbody>${fRows}</tbody></table></div>
-                    <div class="col-md-4"><h5 class="text-center fw-bold">Line Wise</h5><table class="table table-bordered text-center table-striped"><thead class="table-dark"><tr><th>Line</th><th>Qty</th></tr></thead><tbody>${lRows}</tbody></table></div>
-                    <div class="col-md-4"><h5 class="text-center fw-bold">Model Wise</h5><table class="table table-bordered text-center table-striped"><thead class="table-dark"><tr><th>Model</th><th>Qty</th></tr></thead><tbody>${mRows}</tbody></table></div>
-                 </div>`;
+            h = `<div class="row g-3 mb-4"><div class="col-md-12"><div class="stat-box border-dark"><h2 class="fw-bold">${total}</h2><div class="text-muted">TOTAL PRODUCTION</div></div></div></div>
+                 <div id="perf-tables" class="row g-4"><div class="col-md-4"><h5 class="text-center fw-bold">Floor Wise</h5><table class="table table-bordered text-center table-striped"><thead class="table-dark"><tr><th>Floor</th><th>Qty</th></tr></thead><tbody>${fRows}</tbody></table></div>
+                 <div class="col-md-4"><h5 class="text-center fw-bold">Line Wise</h5><table class="table table-bordered text-center table-striped"><thead class="table-dark"><tr><th>Line</th><th>Qty</th></tr></thead><tbody>${lRows}</tbody></table></div>
+                 <div class="col-md-4"><h5 class="text-center fw-bold">Model Wise</h5><table class="table table-bordered text-center table-striped"><thead class="table-dark"><tr><th>Model</th><th>Qty</th></tr></thead><tbody>${mRows}</tbody></table></div></div>`;
             document.getElementById('res-prod-perf').innerHTML = h;
-
         } else if (tab === 'disp') {
-            let from = document.getElementById('disp-from').value;
-            let to = document.getElementById('disp-to').value;
+            let from = document.getElementById('disp-from').value; let to = document.getElementById('disp-to').value;
             if(!dbData.disp) return;
             let filtered = dbData.disp.filter(r => { let d = getCleanDate(r[0]); return d >= from && d <= to; });
-            
-            let total = 0, mMap = {};
-            filtered.forEach(r => {
-                let q = Number(r[4]||0);
-                total += q;
-                mMap[r[1]] = (mMap[r[1]] || 0) + q;
-            });
-            
-            let mRows = "";
-            for(let k in mMap) mRows += `<tr><td>${k}</td><td>${mMap[k]}</td></tr>`;
-            
+            let total = 0, mMap = {}; filtered.forEach(r => { let q = Number(r[4]||0); total += q; mMap[r[1]] = (mMap[r[1]] || 0) + q; });
+            let mRows = ""; for(let k in mMap) mRows += `<tr><td>${k}</td><td>${mMap[k]}</td></tr>`;
             h = `<div class="row g-3 mb-4"><div class="col-md-12"><div class="stat-box border-primary"><h2 class="fw-bold text-primary">${total}</h2><div class="text-muted">TOTAL DISPATCHED</div></div></div></div>
-                 <h5 class="text-center fw-bold">Model Wise Dispatch</h5>
-                 <table class="table table-bordered text-center table-striped w-50 mx-auto"><thead class="table-dark"><tr><th>Model</th><th>Qty</th></tr></thead><tbody>${mRows}</tbody></table>`;
+                 <h5 class="text-center fw-bold">Model Wise Dispatch</h5><table class="table table-bordered text-center table-striped w-50 mx-auto"><thead class="table-dark"><tr><th>Model</th><th>Qty</th></tr></thead><tbody>${mRows}</tbody></table>`;
             document.getElementById('res-disp-perf').innerHTML = h;
-
         } else if (tab === 'open') {
             let mth = document.getElementById('open-perf-month').value;
             if(!dbData.open) return;
             let filtered = dbData.open.filter(r => r[0] === mth);
-            
-            let pdiTot = 0, dispTot = 0;
-            let pdiMap = {}, dispMap = {}; 
-
+            let pdiTot = 0, dispTot = 0, pdiMap = {}, dispMap = {}; 
             filtered.forEach(r => {
-                if(r[1] === 'PDI') {
-                    let q = Number(r[6]||0); pdiTot += q;
-                    pdiMap[r[3]] = (pdiMap[r[3]] || 0) + q;
-                } else {
-                    let q = Number(r[9]||0); dispTot += q;
-                    dispMap[r[3]] = (dispMap[r[3]] || 0) + q;
-                }
+                if(r[1] === 'PDI') { let q = Number(r[6]||0); pdiTot += q; pdiMap[r[3]] = (pdiMap[r[3]] || 0) + q; } 
+                else { let q = Number(r[9]||0); dispTot += q; dispMap[r[3]] = (dispMap[r[3]] || 0) + q; }
             });
-
-            let pRow="", dRow="";
-            for(let k in pdiMap) pRow += `<tr><td>${k}</td><td>${pdiMap[k]}</td></tr>`;
-            for(let k in dispMap) dRow += `<tr><td>${k}</td><td>${dispMap[k]}</td></tr>`;
-
-            h = `<div class="row g-3 mb-4">
-                    <div class="col-md-6"><div class="stat-box border-info"><h2 class="fw-bold text-info">${pdiTot}</h2><div class="text-muted">Total PDI Opening</div></div></div>
-                    <div class="col-md-6"><div class="stat-box border-dark"><h2 class="fw-bold text-dark">${dispTot}</h2><div class="text-muted">Total Dispatch Opening</div></div></div>
-                 </div>
-                 <div class="row">
-                    <div class="col-md-6"><h6 class="text-center">PDI Opening (Model-wise)</h6><table class="table table-bordered text-center"><thead class="table-secondary"><tr><th>Model</th><th>Qty</th></tr></thead><tbody>${pRow}</tbody></table></div>
-                    <div class="col-md-6"><h6 class="text-center">Dispatch Opening (Model-wise)</h6><table class="table table-bordered text-center"><thead class="table-secondary"><tr><th>Model</th><th>Qty</th></tr></thead><tbody>${dRow}</tbody></table></div>
-                 </div>`;
+            let pRow="", dRow=""; for(let k in pdiMap) pRow += `<tr><td>${k}</td><td>${pdiMap[k]}</td></tr>`; for(let k in dispMap) dRow += `<tr><td>${k}</td><td>${dispMap[k]}</td></tr>`;
+            h = `<div class="row g-3 mb-4"><div class="col-md-6"><div class="stat-box border-info"><h2 class="fw-bold text-info">${pdiTot}</h2><div class="text-muted">Total PDI Opening</div></div></div>
+                 <div class="col-md-6"><div class="stat-box border-dark"><h2 class="fw-bold text-dark">${dispTot}</h2><div class="text-muted">Total Dispatch Opening</div></div></div></div>
+                 <div class="row"><div class="col-md-6"><h6 class="text-center">PDI Opening (Model-wise)</h6><table class="table table-bordered text-center"><thead class="table-secondary"><tr><th>Model</th><th>Qty</th></tr></thead><tbody>${pRow}</tbody></table></div>
+                 <div class="col-md-6"><h6 class="text-center">Dispatch Opening (Model-wise)</h6><table class="table table-bordered text-center"><thead class="table-secondary"><tr><th>Model</th><th>Qty</th></tr></thead><tbody>${dRow}</tbody></table></div></div>`;
             document.getElementById('res-open-perf').innerHTML = h;
         }
     }
@@ -455,17 +415,23 @@
         new bootstrap.Modal(document.getElementById('detailModal')).show();
     }
 
-    // --- DASHBOARD LOGIC ---
+    // --- DASHBOARD LOGIC (Line & Master) ---
     function renderDash1() {
+        // Fix for "Not Working": Ensure map is created safely
         let selectedLine = document.getElementById('dashLineInput').value;
         let map = {};
-        const get = (m,c) => { let k=m+"|"+c; if(!map[k]) map[k]={m,c, opn_pdi:0, opn_rew:0, fg:0, pass_fresh:0, offer_fresh:0, pass_war:0, offer_war:0, pass_mkt:0, offer_mkt:0, pass_oldfg:0, offer_oldfg:0, pass_rew:0, offer_rew:0, fail_fresh:0, fail_war:0, fail_mkt:0, fail_oldfg:0, fail_reasons:[], lot_tracking: {} }; return map[k]; };
+        const get = (m,c) => { 
+            let k = m + "|" + c; 
+            if(!map[k]) map[k] = { m:m, c:c, opn_pdi:0, opn_rew:0, fg:0, pass_fresh:0, offer_fresh:0, pass_war:0, offer_war:0, pass_mkt:0, offer_mkt:0, pass_oldfg:0, offer_oldfg:0, pass_rew:0, offer_rew:0, fail_fresh:0, fail_war:0, fail_mkt:0, fail_oldfg:0, fail_reasons:[], lot_tracking: {} }; 
+            return map[k]; 
+        };
 
         if(dbData.open) dbData.open.forEach(r => { if(selectedLine && r[2] != selectedLine) return; if(r[1]=='PDI') { let o=get(r[3],r[4]); o.opn_pdi+=Number(r[6]||0); o.opn_rew+=Number(r[7]||0); } });
         if(dbData.prod) dbData.prod.forEach(r => { if(selectedLine && r[1] != selectedLine) return; get(r[3],r[4]).fg += Number(r[6]||0); });
         if(pdiData) pdiData.forEach(r => {
             if(selectedLine && r[1] != selectedLine) return;
-            let o = get(r[2], r[3]); let type = r[6], offer = Number(r[7]||0), pass = Number(r[8]||0), fail = offer - pass, lotID = r[5], reason = r[9];
+            let o = get(r[2], r[3]); 
+            let type = r[6], offer = Number(r[7]||0), pass = Number(r[8]||0), fail = offer - pass, lotID = r[5], reason = r[9];
             if(type === 'Fresh') { o.pass_fresh += pass; o.offer_fresh += offer; o.fail_fresh += fail; } else if(type === 'Warranty') { o.pass_war += pass; o.offer_war += offer; o.fail_war += fail; } else if(type === 'Market Return') { o.pass_mkt += pass; o.offer_mkt += offer; o.fail_mkt += fail; } else if(type === 'Old FG') { o.pass_oldfg += pass; o.offer_oldfg += offer; o.fail_oldfg += fail; } else if(type === 'Rework') { o.pass_rew += pass; o.offer_rew += offer; }
             if(type !== 'Old FG') { if(fail > 0) { if(!o.lot_tracking[lotID]) o.lot_tracking[lotID]=0; o.lot_tracking[lotID] += fail; if(reason) o.fail_reasons.push(reason); } if(type === 'Rework' && pass > 0 && o.lot_tracking[lotID]) { o.lot_tracking[lotID] -= pass; if(o.lot_tracking[lotID] <= 0) delete o.lot_tracking[lotID]; } }
         });
@@ -494,7 +460,7 @@
     }
 
     // --- HELPERS ---
-    function switchMainTab(id) { document.querySelectorAll('.main-view').forEach(e=>e.classList.add('hidden')); document.getElementById('view-'+id).classList.remove('hidden'); document.querySelectorAll('.nav-main .nav-link').forEach(e=>e.classList.remove('active')); event.target.classList.add('active'); }
+    function switchMainTab(id) { document.querySelectorAll('.main-view').forEach(e=>e.classList.add('hidden')); document.getElementById('view-'+id).classList.remove('hidden'); document.querySelectorAll('.nav-main .nav-link').forEach(e=>e.classList.remove('active')); event.target.classList.add('active'); if(id=='dash'){ renderDash1(); renderDash2(); }}
     function switchPdiSub(sub, btn) { ['entry','dash','close'].forEach(t => document.getElementById('pdi-sub-'+t).classList.add('hidden')); document.getElementById('pdi-sub-'+sub).classList.remove('hidden'); btn.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('active', 'btn-outline-primary', 'btn-outline-dark', 'btn-outline-danger')); btn.classList.add('active'); if(sub==='entry') btn.classList.add('btn-outline-primary'); if(sub==='dash') { btn.classList.add('btn-outline-dark'); runPdiAnalysis(); } if(sub==='close') { btn.classList.add('btn-outline-danger'); runClosureReport(); } }
     function toggleLoader(s){ document.getElementById('global-loader').style.display = s?'flex':'none'; }
     function populateModels(ids){ if(!masterData.length)return; let m=[...new Set(masterData.map(r=>r[1]))].sort(); ids.forEach(x=>{ let s=document.getElementById(x+'-m'); s.innerHTML='<option value="">Select</option>'; m.forEach(v=>s.innerHTML+=`<option value="${v}">${v}</option>`) }); }
@@ -505,7 +471,6 @@
     function fmtDate(iso){ if(!iso)return ""; let d=new Date(iso); return d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0'); }
     function getCleanDate(iso){ if(!iso)return ""; return new Date(iso).toLocaleDateString('en-CA'); }
     function checkFloor(i,id){ let v=parseInt(i.value),e=document.getElementById(id); e.className="floor-badge"; if(v>=1&&v<=8){e.innerText="1st";e.classList.add("bg-f1");}else if(v>=9&&v<=16){e.innerText="2nd";e.classList.add("bg-f2");}else if(v>=17&&v<=24){e.innerText="Base";e.classList.add("bg-base");}else e.classList.add("hidden"); }
-
     function addQueue(tab) { let form=document.getElementById('form-'+tab); if(document.getElementById('editIdx-'+tab).value!="") { submitEdit(tab); return; } if(!form.checkValidity()){ form.reportValidity(); return; } let fd=Object.fromEntries(new FormData(form)); queueData[tab].push(fd); renderQueue(tab); form.reset(); document.getElementById(tab+'-date').value=new Date().toLocaleDateString('en-CA'); }
     function renderQueue(tab) { let tb=document.getElementById('queue-'+tab); tb.innerHTML=""; queueData[tab].forEach((i,x)=>{ let row = tab=='prod' ? `<td>${i.date}</td><td>${i.line}</td><td>${i.model}</td><td>${i.color}</td><td>${i.fgQty}</td>` : tab=='disp' ? `<td>${i.date}</td><td>${i.model}</td><td>${i.color}</td><td>${i.dispatchQty}</td>` : `<td>${i.openType}</td><td>${i.model}</td><td>${i.color}</td><td>${i.openType=='PDI'?i.pdiOpenQty:i.dispatchOpenQty}</td>`; tb.innerHTML+=`<tr>${row}<td><button class="btn btn-sm btn-danger btn-action" onclick="queueData['${tab}'].splice(${x},1);renderQueue('${tab}')"><i class="bi bi-x-lg"></i></button></td></tr>`; }); }
     
@@ -514,9 +479,46 @@
     function renderPdiQueue(){ let tb=document.getElementById('queue-pdi'); tb.innerHTML=""; queueData.pdi.forEach((r,i)=>tb.innerHTML+=`<tr><td>${r.lotId}</td><td>${r.model}</td><td>${r.pdiPass}/${r.pdiOffer}</td><td>${r.pdiOffer-r.pdiPass}</td><td><button class="btn btn-sm btn-danger btn-action" onclick="queueData.pdi.splice(${i},1);renderPdiQueue()"><i class="bi bi-x-lg"></i></button></td></tr>`); }
     function submitPdiQueue(){ if(!queueData.pdi.length)return; toggleLoader(true); let rows = queueData.pdi.map(r=>[r.date, r.line, r.model, r.color, r.partCode, r.lotId, r.lotType, r.pdiOffer, r.pdiPass, r.defectReason]); fetch(PDI_URL, {method:'POST', body:JSON.stringify({action:'save', data:rows})}).then(r=>r.json()).then(d=>{ alert("Saved"); queueData.pdi=[]; renderPdiQueue(); window.onload(); toggleLoader(false); }); }
 
-    // --- RENDER TABLES ---
-    function renderDBTable(tab) { let tb=document.getElementById('db-'+tab); tb.innerHTML=""; let fd=document.getElementById('filter-'+tab).value; let data = dbData[tab]; if(!data || data.length===0) { tb.innerHTML="<tr><td colspan='8'>No data found</td></tr>"; return; } data.slice().reverse().forEach((r, idx)=>{ if(!r) return; let realIdx = data.length - 1 - idx; if((tab=='open'?r[0]:getCleanDate(r[0])) === fd) { let row = tab=='prod' ? `<td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td>` : tab=='disp' ? `<td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td>` : `<td>${r[0]}</td><td>${r[1]}</td><td>${r[3]}</td><td>${r[5]}</td><td>${r[1]=='PDI'?r[6]:r[9]}</td>`; tb.innerHTML += `<tr>${row}<td><button class="btn btn-sm btn-link p-0 btn-action" onclick="viewDetail('${tab}', ${realIdx})"><i class="bi bi-eye"></i></button> <button class="btn btn-sm btn-link p-0 mx-1 btn-action" onclick="editDB('${tab}',${realIdx})"><i class="bi bi-pencil-square"></i></button> <button class="btn btn-sm btn-link text-danger p-0 btn-action" onclick="delDB('${tab}',${realIdx})"><i class="bi bi-trash"></i></button></td></tr>`; } }); }
-    function renderRecentTable(){ let tb=document.getElementById('crudTable'); tb.innerHTML=""; let fd=document.getElementById('recentFilter').value; pdiData.slice().reverse().forEach((r,idx)=>{ if(!r) return; let realIdx = pdiData.length - 1 - idx; if(getCleanDate(r[0])===fd) tb.innerHTML+=`<tr><td>${fmtDate(r[0])}</td><td>${r[2]}</td><td>${r[5]}</td><td>${r[8]}/${r[7]}</td><td>${r[7]-r[8]}</td><td><button class="btn btn-sm btn-link p-0 btn-action" onclick="viewPdiDetail(${realIdx})"><i class="bi bi-eye"></i></button> <button class="btn btn-sm btn-link p-0 mx-1 btn-action" onclick="editPdiDB(${realIdx})"><i class="bi bi-pencil-square"></i></button> <button class="btn btn-sm btn-link text-danger p-0 btn-action" onclick="deletePdiSaved(${realIdx})"><i class="bi bi-trash"></i></button></td></tr>`; }); }
+    // --- RENDER TABLES (UPDATED WITH FROM-TO FILTER) ---
+    function renderDBTable(tab) { 
+        let tb=document.getElementById('db-'+tab); tb.innerHTML=""; 
+        let data = dbData[tab]; if(!data || data.length===0) { tb.innerHTML="<tr><td colspan='8'>No data found</td></tr>"; return; } 
+        
+        let from, to;
+        if(tab==='open') {
+             from = document.getElementById('filter-open-from').value;
+             to = document.getElementById('filter-open-to').value;
+        } else {
+             from = document.getElementById('filter-'+tab+'-from').value;
+             to = document.getElementById('filter-'+tab+'-to').value;
+        }
+
+        data.slice().reverse().forEach((r, idx)=>{ 
+            if(!r) return; 
+            let realIdx = data.length - 1 - idx; 
+            let rowDate = tab==='open' ? r[0] : getCleanDate(r[0]);
+            
+            // Range Logic
+            if(rowDate >= from && rowDate <= to) { 
+                let row = tab=='prod' ? `<td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td>` : tab=='disp' ? `<td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td>` : `<td>${r[0]}</td><td>${r[1]}</td><td>${r[3]}</td><td>${r[5]}</td><td>${r[1]=='PDI'?r[6]:r[9]}</td>`; 
+                tb.innerHTML += `<tr>${row}<td><button class="btn btn-sm btn-link p-0 btn-action" onclick="viewDetail('${tab}', ${realIdx})"><i class="bi bi-eye"></i></button> <button class="btn btn-sm btn-link p-0 mx-1 btn-action" onclick="editDB('${tab}',${realIdx})"><i class="bi bi-pencil-square"></i></button> <button class="btn btn-sm btn-link text-danger p-0 btn-action" onclick="delDB('${tab}',${realIdx})"><i class="bi bi-trash"></i></button></td></tr>`; 
+            } 
+        }); 
+    }
+    
+    function renderRecentTable(){ 
+        let tb=document.getElementById('crudTable'); tb.innerHTML=""; 
+        let from = document.getElementById('pdi-from').value;
+        let to = document.getElementById('pdi-to').value;
+        
+        pdiData.slice().reverse().forEach((r,idx)=>{ 
+            if(!r) return; 
+            let realIdx = pdiData.length - 1 - idx; 
+            let d = getCleanDate(r[0]);
+            if(d >= from && d <= to) 
+                tb.innerHTML+=`<tr><td>${fmtDate(r[0])}</td><td>${r[2]}</td><td>${r[5]}</td><td>${r[8]}/${r[7]}</td><td>${r[7]-r[8]}</td><td><button class="btn btn-sm btn-link p-0 btn-action" onclick="viewPdiDetail(${realIdx})"><i class="bi bi-eye"></i></button> <button class="btn btn-sm btn-link p-0 mx-1 btn-action" onclick="editPdiDB(${realIdx})"><i class="bi bi-pencil-square"></i></button> <button class="btn btn-sm btn-link text-danger p-0 btn-action" onclick="deletePdiSaved(${realIdx})"><i class="bi bi-trash"></i></button></td></tr>`; 
+        }); 
+    }
 
     // --- EDIT & DELETE ---
     function editDB(tab, idx){ let r=dbData[tab][idx]; document.getElementById('editIdx-'+tab).value=idx+2; if(tab=='prod'){ document.getElementById('prod-date').value=getCleanDate(r[0]); document.getElementById('prod-line').value=r[1]; document.getElementById('prod-m').value=r[3]; filterC('prod'); document.getElementById('prod-c').value=r[4]; document.getElementById('prod-p').value=r[5]; document.getElementById('prod-qty').value=r[6]; } if(tab=='disp'){ document.getElementById('disp-date').value=getCleanDate(r[0]); document.getElementById('disp-m').value=r[1]; filterC('disp'); document.getElementById('disp-c').value=r[2]; document.getElementById('disp-p').value=r[3]; document.getElementById('disp-qty').value=r[4]; } if(tab=='open'){ document.getElementById('open-month').value=r[0]; document.getElementById('open-type').value=r[1]; toggleOp(r[1]); document.getElementById('open-line').value=r[2]; document.getElementById('open-m').value=r[3]; filterC('open'); document.getElementById('open-c').value=r[4]; document.getElementById('open-p').value=r[5]; if(r[1]=='PDI'){document.getElementById('open-qpdi').value=r[6];document.getElementById('open-qrew').value=r[7];}else{document.getElementById('open-qdisp').value=r[9];} } document.getElementById('btnCancel'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.remove('hidden'); }
@@ -530,30 +532,26 @@
     function cancelPdiEdit(){ document.getElementById('form-pdi').reset(); document.getElementById('pdiEditIndex').value=""; document.getElementById('btnCancelEdit').classList.add('hidden'); }
     async function deletePdiSaved(idx){ if(!confirm("Delete?"))return; toggleLoader(true); await fetch(PDI_URL,{method:'POST',body:JSON.stringify({action:'delete',rowIndex:idx+2})}); window.onload(); }
     
-    // --- REPORTING ---
-    function previewReport(tab){ 
-        let f=document.getElementById('filter-'+tab).value;
-        if(!dbData[tab]) return alert("No Data Loaded");
-        let d=dbData[tab].filter(r=>(tab=='open'?r[0]:getCleanDate(r[0]))===f); 
-        if(!d.length) return alert("No data"); 
-        let h=`<h5 class='text-center mb-3 text-primary'>Daily Summary: ${f}</h5><div class="table-responsive"><table class='table table-bordered table-striped text-center align-middle'><thead class='table-dark'>`;
-        if(tab==='prod') { h+=`<tr><th>Line</th><th>Model</th><th>Color</th><th>Part</th><th>Qty</th></tr></thead><tbody>`; d.forEach(r=>{ h+=`<tr><td>${r[1]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td class="fw-bold">${r[6]}</td></tr>`; }); } 
-        else if(tab==='disp') { h+=`<tr><th>Model</th><th>Color</th><th>Part</th><th>Qty</th></tr></thead><tbody>`; d.forEach(r=>{ h+=`<tr><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td class="fw-bold">${r[4]}</td></tr>`; }); } 
-        else if(tab==='open') { h+=`<tr><th>Type</th><th>Model</th><th>Line</th><th>Qty</th></tr></thead><tbody>`; d.forEach(r=>{ h+=`<tr><td>${r[1]}</td><td>${r[3]}</td><td>${r[2]}</td><td class="fw-bold">${r[1]=='PDI'?r[6]:r[9]}</td></tr>`; }); }
-        h += `</tbody></table></div>`; document.getElementById('summaryBody').innerHTML=h; new bootstrap.Modal(document.getElementById('summaryModal')).show(); 
-    }
-
-    function showDaySummary(){ 
-        let f=document.getElementById('recentFilter').value; 
-        let d=pdiData.filter(r=>getCleanDate(r[0])===f); 
-        if(!d.length) return alert("No Data"); 
-        let h=`<h5 class='text-center mb-3 text-success'>PDI Report: ${f}</h5><div class="table-responsive"><table class='table table-bordered table-striped text-center align-middle'><thead class='table-dark'><tr><th>Line</th><th>Model</th><th>Lot</th><th>Offer</th><th>Pass</th><th>Fail</th></tr></thead><tbody>`;
-        d.forEach(r=>{ let fail = r[7]-r[8]; h+=`<tr><td>${r[1]}</td><td>${r[2]}</td><td>${r[5]}</td><td>${r[7]}</td><td class="text-success fw-bold">${r[8]}</td><td class="${fail>0?'text-danger fw-bold':''}">${fail}</td></tr>`; }); 
-        h += `</tbody></table></div>`; document.getElementById('summaryBody').innerHTML=h; new bootstrap.Modal(document.getElementById('summaryModal')).show(); 
-    }
-
     function exportTableToExcel(tid, fname) { let wb=XLSX.utils.table_to_book(document.getElementById(tid),{sheet:"Sheet1"}); XLSX.writeFile(wb,fname+".xlsx"); }
     function downloadPDF() { html2pdf().set({margin:10,filename:'Report.pdf',jsPDF:{unit:'mm',format:'a4',orientation:'landscape'}}).from(document.getElementById('pdf-content')).save(); }
+    function exportPerformance(tab) {
+        if(tab === 'prod') {
+             // Create a temporary container
+             let tempDiv = document.createElement('div');
+             let h = document.getElementById('res-prod-perf').innerHTML;
+             tempDiv.innerHTML = h;
+             // Extract tables
+             let tables = tempDiv.getElementsByTagName('table');
+             if(tables.length === 0) return alert("No analysis to export");
+             
+             let wb = XLSX.utils.book_new();
+             XLSX.utils.book_append_sheet(wb, XLSX.utils.table_to_sheet(tables[0]), "Floor_Wise");
+             if(tables[1]) XLSX.utils.book_append_sheet(wb, XLSX.utils.table_to_sheet(tables[1]), "Line_Wise");
+             if(tables[2]) XLSX.utils.book_append_sheet(wb, XLSX.utils.table_to_sheet(tables[2]), "Model_Wise");
+             XLSX.writeFile(wb, "Production_Performance.xlsx");
+        }
+    }
+    
     function runPdiAnalysis(){
         let from=document.getElementById('dashFrom').value, to=document.getElementById('dashTo').value;
         let doff=0, dpass=0, dfail=0, dates={}, lines={}, floors={}, defects={};
