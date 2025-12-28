@@ -231,8 +231,14 @@
 <div class="modal fade" id="detailModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header bg-primary text-white"><h5 class="modal-title">Full Details</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body bg-light p-4" id="detailBody"></div></div></div></div>
 
 <script>
-    const INV_URL = "https://script.google.com/macros/s/AKfycbyozlGZSTvAzIpoTREYBArp0kot91k8SiYevCjxN2gB6I4_85FmB95lngcJMbXsCNl1mw/exec";
-    const PDI_URL = "https://script.google.com/macros/s/AKfycbyozlGZSTvAzIpoTREYBArp0kot91k8SiYevCjxN2gB6I4_85FmB95lngcJMbXsCNl1mw/exec";
+    // ***************************************************************
+    // IMPORTANT: REPLACE THIS URL WITH YOUR NEW DEPLOYMENT URL
+    // ***************************************************************
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx_b0br1-CCp7Z1q9b0ElRJnH5gtAwbILhkGgDsRiD0O6YFzelESPLB4GVc-CFcQMuvbg/exec"; 
+    
+    // We use the same URL for both because the script handles both logics
+    const INV_URL = WEB_APP_URL;
+    const PDI_URL = WEB_APP_URL;
     
     let masterData=[], queueData={prod:[],disp:[],open:[],pdi:[]}, pdiData=[], dbData={prod:[],disp:[],open:[]};
 
@@ -253,15 +259,82 @@
             renderDBTable('prod'); renderDBTable('disp'); renderDBTable('open');
             return fetch(PDI_URL);
         }).then(r=>r.json()).then(d=>{
-            pdiData = d.data || []; if(pdiData[0][0]==="Date") pdiData.shift();
+            pdiData = d.data || []; if(pdiData[0] && pdiData[0][0]==="Date") pdiData.shift();
             renderRecentTable(); toggleLoader(false);
-        }).catch(e=>{ console.error(e); toggleLoader(false); alert("Connection Error"); });
+        }).catch(e=>{ console.error(e); toggleLoader(false); alert("Connection Error. Check URL."); });
     };
 
-    // --- SAFETY CHECK FOR EMPTY DATA ---
+    // --- SAFETY CHECK ---
     function safeLen(arr){ return arr ? arr.length : 0; }
 
-    // --- ENHANCED PERFORMANCE LOGIC ---
+    // --- SUBMIT QUEUE FUNCTION (THE FIX) ---
+    function submitQueue(tab, type) {
+        if (!queueData[tab].length) return alert("Queue is empty!");
+        
+        toggleLoader(true);
+
+        // DATA CONVERSION: Convert Objects to Arrays based on Tab
+        let dataToSend = [];
+
+        if (tab === 'prod') {
+            // Production Sheet Columns: Date, Line, Floor, Model, Color, Part, Qty
+            dataToSend = queueData[tab].map(r => {
+                let ln = parseInt(r.line);
+                let floor = (ln >= 1 && ln <= 8) ? "1st Floor" : (ln >= 9 && ln <= 16) ? "2nd Floor" : "Basement";
+                return [r.date, r.line, floor, r.model, r.color, r.partCode, r.fgQty];
+            });
+        } 
+        else if (tab === 'disp') {
+            // Dispatch Sheet Columns: Date, Model, Color, Part, Qty
+            dataToSend = queueData[tab].map(r => {
+                return [r.date, r.model, r.color, r.partCode, r.dispatchQty];
+            });
+        } 
+        else if (tab === 'open') {
+            // Opening Sheet Columns: Month, Type, Line, Model, Color, Part, PDI_Opn, Rew_Opn, Reason, Disp_Opn
+            dataToSend = queueData[tab].map(r => {
+                return [
+                    r.month, 
+                    r.openType, 
+                    r.line || "", 
+                    r.model, 
+                    r.color, 
+                    r.partCode, 
+                    r.pdiOpenQty || 0, 
+                    r.reworkOpenQty || 0, 
+                    r.reworkReason || "", 
+                    r.dispatchOpenQty || 0
+                ];
+            });
+        }
+
+        fetch(INV_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                type: type,      // "Production", "Dispatch", or "Opening"
+                data: dataToSend // Now sending arrays
+            })
+        })
+        .then(r => r.json())
+        .then(d => {
+            if (d.status == 'success') {
+                alert("Saved Successfully!");
+                queueData[tab] = [];
+                renderQueue(tab);
+                window.onload(); 
+            } else {
+                alert("Error: " + d.message);
+            }
+            toggleLoader(false);
+        })
+        .catch(e => {
+            console.error(e);
+            alert("Connection Failed");
+            toggleLoader(false);
+        });
+    }
+
+    // --- PERFORMANCE LOGIC ---
     function calcPerf(tab) {
         let h = "";
         
@@ -382,7 +455,7 @@
         new bootstrap.Modal(document.getElementById('detailModal')).show();
     }
 
-    // --- CORE DASHBOARD LOGIC (Line/Master) ---
+    // --- DASHBOARD LOGIC ---
     function renderDash1() {
         let selectedLine = document.getElementById('dashLineInput').value;
         let map = {};
@@ -435,23 +508,29 @@
 
     function addQueue(tab) { let form=document.getElementById('form-'+tab); if(document.getElementById('editIdx-'+tab).value!="") { submitEdit(tab); return; } if(!form.checkValidity()){ form.reportValidity(); return; } let fd=Object.fromEntries(new FormData(form)); queueData[tab].push(fd); renderQueue(tab); form.reset(); document.getElementById(tab+'-date').value=new Date().toLocaleDateString('en-CA'); }
     function renderQueue(tab) { let tb=document.getElementById('queue-'+tab); tb.innerHTML=""; queueData[tab].forEach((i,x)=>{ let row = tab=='prod' ? `<td>${i.date}</td><td>${i.line}</td><td>${i.model}</td><td>${i.color}</td><td>${i.fgQty}</td>` : tab=='disp' ? `<td>${i.date}</td><td>${i.model}</td><td>${i.color}</td><td>${i.dispatchQty}</td>` : `<td>${i.openType}</td><td>${i.model}</td><td>${i.color}</td><td>${i.openType=='PDI'?i.pdiOpenQty:i.dispatchOpenQty}</td>`; tb.innerHTML+=`<tr>${row}<td><button class="btn btn-sm btn-danger btn-action" onclick="queueData['${tab}'].splice(${x},1);renderQueue('${tab}')"><i class="bi bi-x-lg"></i></button></td></tr>`; }); }
-    function submitQueue(tab,type) { if(!queueData[tab].length)return alert("Empty"); toggleLoader(true); fetch(INV_URL, {method:'POST', body:JSON.stringify({type:type, data:queueData[tab]})}).then(r=>r.json()).then(async d=>{ if(d.status=='success'){ alert("Saved"); queueData[tab]=[]; renderQueue(tab); window.onload(); } else alert(d.message); toggleLoader(false); }); }
+    
+    // --- PDI SPECIFIC ---
     function addPdiQueue(){ let form=document.getElementById('form-pdi'); if(!form.checkValidity()){ form.reportValidity(); return; } if(document.getElementById('pdiEditIndex').value!==""){ submitPdiEdit(); return; } let fd=new FormData(form), r={date:fd.get('date'), line:fd.get('line'), model:fd.get('model'), color:fd.get('color'), partCode:fd.get('partCode'), lotId:fd.get('lotId'), lotType:fd.get('lotType'), pdiOffer:fd.get('pdiOffer'), pdiPass:fd.get('pdiPass'), defectReason:fd.get('defectReason')}; queueData.pdi.push(r); renderPdiQueue(); form.reset(); document.getElementById('pdi-date').value=new Date().toLocaleDateString('en-CA'); }
     function renderPdiQueue(){ let tb=document.getElementById('queue-pdi'); tb.innerHTML=""; queueData.pdi.forEach((r,i)=>tb.innerHTML+=`<tr><td>${r.lotId}</td><td>${r.model}</td><td>${r.pdiPass}/${r.pdiOffer}</td><td>${r.pdiOffer-r.pdiPass}</td><td><button class="btn btn-sm btn-danger btn-action" onclick="queueData.pdi.splice(${i},1);renderPdiQueue()"><i class="bi bi-x-lg"></i></button></td></tr>`); }
     function submitPdiQueue(){ if(!queueData.pdi.length)return; toggleLoader(true); let rows = queueData.pdi.map(r=>[r.date, r.line, r.model, r.color, r.partCode, r.lotId, r.lotType, r.pdiOffer, r.pdiPass, r.defectReason]); fetch(PDI_URL, {method:'POST', body:JSON.stringify({action:'save', data:rows})}).then(r=>r.json()).then(d=>{ alert("Saved"); queueData.pdi=[]; renderPdiQueue(); window.onload(); toggleLoader(false); }); }
 
+    // --- RENDER TABLES ---
     function renderDBTable(tab) { let tb=document.getElementById('db-'+tab); tb.innerHTML=""; let fd=document.getElementById('filter-'+tab).value; let data = dbData[tab]; if(!data || data.length===0) { tb.innerHTML="<tr><td colspan='8'>No data found</td></tr>"; return; } data.slice().reverse().forEach((r, idx)=>{ if(!r) return; let realIdx = data.length - 1 - idx; if((tab=='open'?r[0]:getCleanDate(r[0])) === fd) { let row = tab=='prod' ? `<td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td>` : tab=='disp' ? `<td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td>` : `<td>${r[0]}</td><td>${r[1]}</td><td>${r[3]}</td><td>${r[5]}</td><td>${r[1]=='PDI'?r[6]:r[9]}</td>`; tb.innerHTML += `<tr>${row}<td><button class="btn btn-sm btn-link p-0 btn-action" onclick="viewDetail('${tab}', ${realIdx})"><i class="bi bi-eye"></i></button> <button class="btn btn-sm btn-link p-0 mx-1 btn-action" onclick="editDB('${tab}',${realIdx})"><i class="bi bi-pencil-square"></i></button> <button class="btn btn-sm btn-link text-danger p-0 btn-action" onclick="delDB('${tab}',${realIdx})"><i class="bi bi-trash"></i></button></td></tr>`; } }); }
     function renderRecentTable(){ let tb=document.getElementById('crudTable'); tb.innerHTML=""; let fd=document.getElementById('recentFilter').value; pdiData.slice().reverse().forEach((r,idx)=>{ if(!r) return; let realIdx = pdiData.length - 1 - idx; if(getCleanDate(r[0])===fd) tb.innerHTML+=`<tr><td>${fmtDate(r[0])}</td><td>${r[2]}</td><td>${r[5]}</td><td>${r[8]}/${r[7]}</td><td>${r[7]-r[8]}</td><td><button class="btn btn-sm btn-link p-0 btn-action" onclick="viewPdiDetail(${realIdx})"><i class="bi bi-eye"></i></button> <button class="btn btn-sm btn-link p-0 mx-1 btn-action" onclick="editPdiDB(${realIdx})"><i class="bi bi-pencil-square"></i></button> <button class="btn btn-sm btn-link text-danger p-0 btn-action" onclick="deletePdiSaved(${realIdx})"><i class="bi bi-trash"></i></button></td></tr>`; }); }
 
+    // --- EDIT & DELETE ---
     function editDB(tab, idx){ let r=dbData[tab][idx]; document.getElementById('editIdx-'+tab).value=idx+2; if(tab=='prod'){ document.getElementById('prod-date').value=getCleanDate(r[0]); document.getElementById('prod-line').value=r[1]; document.getElementById('prod-m').value=r[3]; filterC('prod'); document.getElementById('prod-c').value=r[4]; document.getElementById('prod-p').value=r[5]; document.getElementById('prod-qty').value=r[6]; } if(tab=='disp'){ document.getElementById('disp-date').value=getCleanDate(r[0]); document.getElementById('disp-m').value=r[1]; filterC('disp'); document.getElementById('disp-c').value=r[2]; document.getElementById('disp-p').value=r[3]; document.getElementById('disp-qty').value=r[4]; } if(tab=='open'){ document.getElementById('open-month').value=r[0]; document.getElementById('open-type').value=r[1]; toggleOp(r[1]); document.getElementById('open-line').value=r[2]; document.getElementById('open-m').value=r[3]; filterC('open'); document.getElementById('open-c').value=r[4]; document.getElementById('open-p').value=r[5]; if(r[1]=='PDI'){document.getElementById('open-qpdi').value=r[6];document.getElementById('open-qrew').value=r[7];}else{document.getElementById('open-qdisp').value=r[9];} } document.getElementById('btnCancel'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.remove('hidden'); }
     function submitEdit(tab){ let form=document.getElementById('form-'+tab), idx=document.getElementById('editIdx-'+tab).value, fd=new FormData(form); let arr=[]; if(tab=='prod') arr=[fd.get('date'), fd.get('line'), "NA", fd.get('model'), fd.get('color'), fd.get('partCode'), fd.get('fgQty')]; if(tab=='disp') arr=[fd.get('date'), fd.get('model'), fd.get('color'), fd.get('partCode'), fd.get('dispatchQty')]; if(tab=='open') arr=[fd.get('month'), fd.get('openType'), fd.get('line'), fd.get('model'), fd.get('color'), fd.get('partCode'), fd.get('pdiOpenQty'), fd.get('reworkOpenQty'), fd.get('reworkReason'), fd.get('dispatchOpenQty')]; let type=(tab=='prod'?'Production':(tab=='disp'?'Dispatch':'Opening')); toggleLoader(true); fetch(INV_URL, {method:'POST', body:JSON.stringify({action:'edit', type:type, rowIndex:parseInt(idx), data:arr})}).then(r=>r.json()).then(d=>{ alert("Updated"); cancelEdit(tab); window.onload(); }); }
     function cancelEdit(tab){ document.getElementById('form-'+tab).reset(); document.getElementById('editIdx-'+tab).value=""; document.getElementById('btnCancel'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.add('hidden'); }
     function delDB(tab, idx){ if(confirm("Delete?")){ toggleLoader(true); let type=(tab=='prod'?'Production':(tab=='disp'?'Dispatch':'Opening')); fetch(INV_URL, {method:'POST', body:JSON.stringify({action:'delete', type:type, rowIndex:idx+2})}).then(r=>r.json()).then(d=>{ alert("Deleted"); window.onload(); }); } }
+    
+    // --- PDI EDIT/DELETE ---
     function editPdiDB(idx){ let r=pdiData[idx]; document.getElementById('pdiEditIndex').value=idx+2; document.getElementById('pdi-date').value=getCleanDate(r[0]); document.getElementById('pdi-line').value=r[1]; document.getElementById('pdi-m').value=r[2]; filterC('pdi'); document.getElementById('pdi-c').value=r[3]; document.getElementById('pdi-p').value=r[4]; document.getElementById('pdi-lot').value=r[5]; document.getElementById('pdi-type').value=r[6]; document.getElementById('off').value=r[7]; document.getElementById('pas').value=r[8]; document.getElementById('btnCancelEdit').classList.remove('hidden'); }
     function submitPdiEdit(){ let form=document.getElementById('form-pdi'), idx=document.getElementById('pdiEditIndex').value, fd=new FormData(form); let arr=[fd.get('date'), fd.get('line'), fd.get('model'), fd.get('color'), fd.get('partCode'), fd.get('lotId'), fd.get('lotType'), fd.get('pdiOffer'), fd.get('pdiPass'), fd.get('defectReason')]; toggleLoader(true); fetch(PDI_URL, {method:'POST', body:JSON.stringify({action:'edit', rowIndex:parseInt(idx), data:arr})}).then(r=>r.json()).then(d=>{ alert("Updated"); cancelPdiEdit(); window.onload(); }); }
     function cancelPdiEdit(){ document.getElementById('form-pdi').reset(); document.getElementById('pdiEditIndex').value=""; document.getElementById('btnCancelEdit').classList.add('hidden'); }
     async function deletePdiSaved(idx){ if(!confirm("Delete?"))return; toggleLoader(true); await fetch(PDI_URL,{method:'POST',body:JSON.stringify({action:'delete',rowIndex:idx+2})}); window.onload(); }
     
+    // --- REPORTING ---
     function previewReport(tab){ 
         let f=document.getElementById('filter-'+tab).value;
         if(!dbData[tab]) return alert("No Data Loaded");
