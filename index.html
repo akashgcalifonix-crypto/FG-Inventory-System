@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Integrated System (Big Font & Full Features)</title>
+    <title>Integrated System (Pro Performance)</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -13,40 +13,26 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>
-        /* --- BIGGER FONT THEME --- */
         :root { --primary: #0f172a; --secondary: #334155; --accent: #0d6efd; --success: #10b981; --danger: #ef4444; }
-        
-        /* Base Font Size Increased */
         body { background-color: #f4f6f9; font-family: 'Segoe UI', sans-serif; padding-bottom: 60px; font-size: 1.05rem; } 
-        
         .hidden { display: none !important; }
         .loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.95); z-index:9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
         
-        /* Larger Headers & Nav */
         .main-header { background: var(--primary); padding: 15px 25px; color: white; margin-bottom: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .nav-main .nav-link { color: rgba(255,255,255,0.8); font-weight: 600; margin-right: 10px; cursor: pointer; font-size: 1.1rem; }
         .nav-main .nav-link.active { background-color: var(--accent); color: white !important; }
         
-        /* Larger Cards & Forms */
         .card { border: none; border-radius: 12px; box-shadow: 0 3px 8px rgba(0,0,0,0.08); margin-bottom: 25px; }
-        .form-label { font-weight: 600; color: #444; }
-        .form-control, .form-select { padding: 10px; font-size: 1rem; }
+        .table th { background-color: #343a40; color: white; vertical-align: middle; }
         
-        /* Larger Tables */
-        .table th { background-color: #343a40; color: white; font-size: 1rem; text-transform: uppercase; vertical-align: middle; padding: 12px; }
-        .table td { font-size: 1rem; vertical-align: middle; font-weight: 500; padding: 10px; }
-        
-        /* Badges & Icons */
-        .floor-badge { font-size: 0.85rem; padding: 5px 10px; border-radius: 10px; color: white; margin-left: 5px; }
-        .bg-f1 { background: #28a745; } .bg-f2 { background: #ffc107; color: black; } .bg-base { background: #dc3545; }
         .app-logo { height: 50px; background: white; padding: 4px; border-radius: 6px; }
         .btn-excel { background-color: #198754; color: white; border: none; } .btn-excel:hover { background-color: #157347; color: white; }
-        
-        /* Action Buttons in Table */
         .btn-action { font-size: 1.1rem; padding: 2px 8px; }
         
         .sub-nav .nav-link { font-size: 1rem; padding: 10px 20px; border: 1px solid #ddd; background: white; margin-right: 5px; border-radius: 30px; }
         .sub-nav .nav-link.active { background-color: var(--secondary); color: white; border-color: var(--secondary); }
+        
+        .stat-box { background: white; border-radius: 8px; padding: 15px; text-align: center; border-bottom: 4px solid #ccc; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
     </style>
 </head>
 <body>
@@ -67,7 +53,7 @@
         <li class="nav-item"><a class="nav-link" onclick="switchMainTab('pdi-master')">PDI Master</a></li>
         <li class="nav-item"><a class="nav-link" onclick="switchMainTab('disp')">Dispatch</a></li>
         <li class="nav-item"><a class="nav-link" onclick="switchMainTab('open')">Opening</a></li>
-        <li class="nav-item"><a class="nav-link" onclick="switchMainTab('dash')">Reports</a></li>
+        <li class="nav-item"><a class="nav-link" onclick="switchMainTab('dash')">Live Reports</a></li>
     </ul>
 </div>
 
@@ -76,8 +62,8 @@
     <!-- 1. PRODUCTION TAB -->
     <div id="view-prod" class="main-view">
         <ul class="nav nav-pills sub-nav mb-3">
-            <li class="nav-item"><a class="nav-link active" data-bs-toggle="pill" href="#prod-entry"><i class="bi bi-pencil-square"></i> Data Entry</a></li>
-            <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#prod-perf"><i class="bi bi-bar-chart-line"></i> Performance</a></li>
+            <li class="nav-item"><a class="nav-link active" data-bs-toggle="pill" href="#prod-entry">📝 Data Entry</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#prod-perf">📊 Performance Analysis</a></li>
         </ul>
 
         <div class="tab-content">
@@ -89,7 +75,7 @@
                         <input type="hidden" id="editIdx-prod" value="">
                         <div class="row g-3">
                             <div class="col-md-2"><label class="form-label">Date</label><input type="date" name="date" id="prod-date" class="form-control" required></div>
-                            <div class="col-md-2"><label class="form-label">Line</label><input type="number" name="line" id="prod-line" class="form-control" min="1" max="24" oninput="checkFloor(this, 'bdg-p')" required><span id="bdg-p" class="floor-badge hidden"></span></div>
+                            <div class="col-md-2"><label class="form-label">Line</label><input type="number" name="line" id="prod-line" class="form-control" min="1" max="24" required></div>
                             <div class="col-md-3"><label class="form-label">Model</label><select name="model" id="prod-m" class="form-select" onchange="filterC('prod')" required></select></div>
                             <div class="col-md-3"><label class="form-label">Color</label><select name="color" id="prod-c" class="form-select" onchange="fillP('prod')" required></select></div>
                             <div class="col-md-2"><label class="form-label">FG Qty</label><input type="number" name="fgQty" id="prod-qty" class="form-control" required></div>
@@ -100,7 +86,7 @@
                             <button type="button" class="btn btn-secondary w-100 hidden py-2" id="btnCancelProd" onclick="cancelEdit('prod')">Cancel Edit</button>
                         </div>
                     </form>
-                    <div class="mt-4"><table class="table table-bordered mb-2"><thead class="table-light"><tr><th>Date</th><th>Line</th><th>Model</th><th>Color</th><th>Qty</th><th>Act</th></tr></thead><tbody id="queue-prod"></tbody></table><button class="btn btn-primary w-100 py-2 fw-bold" onclick="submitQueue('prod', 'Production')">Save Queue to DB</button></div>
+                    <div class="mt-4"><table class="table table-bordered mb-2"><thead class="table-light"><tr><th>Date</th><th>Line</th><th>Model</th><th>Qty</th><th>Act</th></tr></thead><tbody id="queue-prod"></tbody></table><button class="btn btn-primary w-100 py-2 fw-bold" onclick="submitQueue('prod', 'Production')">Save Queue to DB</button></div>
                 </div>
                 
                 <div class="card p-4">
@@ -139,7 +125,7 @@
     <div id="view-pdi-master" class="main-view hidden">
         <ul class="nav nav-pills sub-nav mb-3">
             <li class="nav-item"><a class="nav-link active" data-bs-toggle="pill" href="#pdi-entry">📝 Entry</a></li>
-            <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#pdi-perf">📊 Performance</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#pdi-perf">📈 Performance</a></li>
             <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#pdi-close">✅ Closure</a></li>
         </ul>
 
@@ -151,7 +137,7 @@
                         <input type="hidden" id="pdiEditIndex" value="">
                         <div class="row g-3">
                             <div class="col-md-2"><label class="form-label">Date</label><input type="date" name="date" id="pdi-date" class="form-control" required></div>
-                            <div class="col-md-1"><label class="form-label">Line</label><input type="number" name="line" id="pdi-line" class="form-control" oninput="checkFloor(this, 'bdg-d')" required><span id="bdg-d" class="floor-badge hidden"></span></div>
+                            <div class="col-md-1"><label class="form-label">Line</label><input type="number" name="line" id="pdi-line" class="form-control" required></div>
                             <div class="col-md-2"><label class="form-label">Model</label><select name="model" id="pdi-m" class="form-select" onchange="filterC('pdi')" required></select></div>
                             <div class="col-md-2"><label class="form-label">Color</label><select name="color" id="pdi-c" class="form-select" onchange="fillP('pdi')" required></select></div>
                             <div class="col-md-2"><label class="form-label">Lot ID</label><input type="text" name="lotId" id="pdi-lot" class="form-control"></div>
@@ -181,7 +167,7 @@
                     </div>
                     <div class="table-responsive" style="max-height: 500px;">
                         <table class="table table-bordered text-center table-hover" id="tbl-pdi-db">
-                            <thead class="table-light sticky-top"><tr><th>Date</th><th>Model</th><th>Lot ID</th><th>Type</th><th>Pass/Offer</th><th>Fail</th><th>Actions</th></tr></thead>
+                            <thead class="table-light sticky-top"><tr><th>Date</th><th>Line</th><th>Model</th><th>Lot ID</th><th>Pass/Offer</th><th>Fail</th><th>Actions</th></tr></thead>
                             <tbody id="crudTable"></tbody>
                         </table>
                     </div>
@@ -190,19 +176,18 @@
 
             <!-- PDI Performance -->
             <div class="tab-pane fade" id="pdi-perf">
-                <div class="card p-4 mb-3"><div class="row g-3 align-items-end"><div class="col-md-3"><label class="form-label">From</label><input type="date" id="dashFrom" class="form-control"></div><div class="col-md-3"><label class="form-label">To</label><input type="date" id="dashTo" class="form-control"></div><div class="col-md-2"><button class="btn btn-primary w-100 py-2" onclick="runPdiAnalysis()">Analyze</button></div><div class="col-md-2"><button class="btn btn-danger w-100 py-2" onclick="downloadPDF()"><i class="bi bi-file-pdf"></i> PDF</button></div></div></div>
+                <div class="card p-4 mb-3"><div class="row g-3 align-items-end"><div class="col-md-3"><label class="form-label">From</label><input type="date" id="dashFrom" class="form-control"></div><div class="col-md-3"><label class="form-label">To</label><input type="date" id="dashTo" class="form-control"></div><div class="col-md-2"><button class="btn btn-primary w-100 py-2" onclick="runPdiAnalysis()">Analyze</button></div></div></div>
                 <div id="pdf-content">
-                    <div class="row g-3 mb-4"><div class="col-md-3"><div class="stat-card border-dark"><h2 class="fw-bold" id="d_total_qty">0</h2><div class="text-muted">TOTAL OFFER</div></div></div><div class="col-md-3"><div class="stat-card border-success"><h2 class="fw-bold text-success" id="d_passed_qty">0</h2><div class="text-muted">PASSED</div></div></div><div class="col-md-3"><div class="stat-card border-danger"><h2 class="fw-bold text-danger" id="d_rejected_qty">0</h2><div class="text-muted">FAILED</div></div></div><div class="col-md-3"><div class="stat-card border-primary"><h2 class="fw-bold text-primary" id="d_pass_rate">0%</h2><div class="text-muted">PASS RATE</div></div></div></div>
+                    <div class="row g-3 mb-4"><div class="col-md-3"><div class="stat-box border-dark"><h2 class="fw-bold" id="d_total_qty">0</h2><small>TOTAL OFFER</small></div></div><div class="col-md-3"><div class="stat-box border-success"><h2 class="fw-bold text-success" id="d_passed_qty">0</h2><small>PASSED</small></div></div><div class="col-md-3"><div class="stat-box border-danger"><h2 class="fw-bold text-danger" id="d_rejected_qty">0</h2><small>FAILED</small></div></div><div class="col-md-3"><div class="stat-box border-primary"><h2 class="fw-bold text-primary" id="d_pass_rate">0%</h2><small>PASS RATE</small></div></div></div>
                     <div class="row g-3"><div class="col-md-6"><div class="card p-3"><div id="ch_trend" style="height:350px"></div></div></div><div class="col-md-6"><div class="card p-3"><div id="ch_line" style="height:350px"></div></div></div><div class="col-md-6"><div class="card p-3"><div id="ch_floor" style="height:350px"></div></div></div><div class="col-md-6"><div class="card p-3"><div id="ch_defects" style="height:350px"></div></div></div></div>
                 </div>
             </div>
 
-            <!-- Closure -->
             <div class="tab-pane fade" id="pdi-close">
                 <div class="row g-4">
-                    <div class="col-md-4"><div class="card p-4 bg-light h-100"><h5 class="text-primary fw-bold text-center border-bottom pb-3">1st Floor Pending</h5><div id="list_f1"></div></div></div>
-                    <div class="col-md-4"><div class="card p-4 bg-light h-100"><h5 class="text-warning text-dark fw-bold text-center border-bottom pb-3">2nd Floor Pending</h5><div id="list_f2"></div></div></div>
-                    <div class="col-md-4"><div class="card p-4 bg-light h-100"><h5 class="text-danger fw-bold text-center border-bottom pb-3">Basement Pending</h5><div id="list_fb"></div></div></div>
+                    <div class="col-md-4"><div class="card p-4 bg-light h-100"><h5 class="text-primary text-center">1st Floor Pending</h5><div id="list_f1"></div></div></div>
+                    <div class="col-md-4"><div class="card p-4 bg-light h-100"><h5 class="text-warning text-center">2nd Floor Pending</h5><div id="list_f2"></div></div></div>
+                    <div class="col-md-4"><div class="card p-4 bg-light h-100"><h5 class="text-danger text-center">Basement Pending</h5><div id="list_fb"></div></div></div>
                 </div>
             </div>
         </div>
@@ -239,7 +224,6 @@
                     <div class="table-responsive"><table class="table table-bordered text-center table-hover" id="tbl-disp-db"><thead class="table-light"><tr><th>Date</th><th>Model</th><th>Color</th><th>Part</th><th>Qty</th><th>Actions</th></tr></thead><tbody id="db-disp"></tbody></table></div>
                 </div>
             </div>
-            <!-- Dispatch Perf -->
             <div class="tab-pane fade" id="disp-perf">
                 <div class="card p-4 mb-3"><div class="row g-3 align-items-end"><div class="col-md-3"><label class="form-label">From</label><input type="date" id="disp-from" class="form-control"></div><div class="col-md-3"><label class="form-label">To</label><input type="date" id="disp-to" class="form-control"></div><div class="col-md-2"><button class="btn btn-primary w-100 py-2" onclick="calcPerf('disp')">Analyze</button></div></div></div>
                 <div id="res-disp-perf"></div>
@@ -283,7 +267,6 @@
                     <div class="table-responsive"><table class="table table-bordered text-center table-hover" id="tbl-open-db"><thead class="table-light"><tr><th>Month</th><th>Type</th><th>Model</th><th>Part</th><th>Qty</th><th>Actions</th></tr></thead><tbody id="db-open"></tbody></table></div>
                 </div>
             </div>
-            <!-- Open Perf -->
             <div class="tab-pane fade" id="open-perf">
                 <div class="card p-4 mb-3"><div class="row"><div class="col-md-4"><label class="form-label">Select Month</label><input type="month" id="open-perf-month" class="form-control"></div><div class="col-md-2"><br><button class="btn btn-primary w-100 py-2" onclick="calcPerf('open')">Analyze</button></div></div></div>
                 <div id="res-open-perf"></div>
@@ -291,7 +274,7 @@
         </div>
     </div>
 
-    <!-- 5. LIVE REPORTS (Balance) -->
+    <!-- 5. LIVE REPORTS -->
     <div id="view-dash" class="main-view hidden">
         <div class="card p-3">
             <ul class="nav nav-tabs mb-3">
@@ -312,8 +295,11 @@
 
 </div>
 
-<!-- DETAILED PREVIEW MODAL -->
-<div class="modal fade" id="detailModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header bg-primary text-white"><div class="d-flex align-items-center"><img src="https://i.postimg.cc/5y7SN4xc/logo.png" class="app-logo me-2" style="height:30px;"><h5 class="modal-title">Detailed Entry View</h5></div><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body bg-light p-4" id="detailBody" style="font-size: 1.1rem;"></div></div></div></div>
+<!-- PREVIEW MODAL -->
+<div class="modal fade" id="summaryModal" tabindex="-1"><div class="modal-dialog modal-xl"><div class="modal-content"><div class="modal-header bg-primary text-white"><div class="d-flex align-items-center"><img src="https://i.postimg.cc/5y7SN4xc/logo.png" class="app-logo me-2"><h5 class="modal-title">Report</h5></div><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body bg-light" id="summaryBody"></div></div></div></div>
+
+<!-- DETAIL MODAL -->
+<div class="modal fade" id="detailModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header bg-primary text-white"><h5 class="modal-title">Full Details</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body bg-light p-4" id="detailBody"></div></div></div></div>
 
 <script>
     const INV_URL = "https://script.google.com/macros/s/AKfycbwSmKVcnxS3vFGCVnrrm0j_D8Cg67EcqSoi7kWF5p_X9w6_zau7U4WTNBFrsY6PiGKXCg/exec";
@@ -343,77 +329,103 @@
         }).catch(e=>{ console.error(e); toggleLoader(false); alert("Connection Error"); });
     };
 
-    // --- GENERIC PERFORMANCE LOGIC ---
+    // --- ENHANCED PERFORMANCE LOGIC ---
     function calcPerf(tab) {
         let h = "";
+        
         if (tab === 'prod') {
             let from = document.getElementById('prod-from').value;
             let to = document.getElementById('prod-to').value;
             let filtered = dbData.prod.filter(r => { let d = getCleanDate(r[0]); return d >= from && d <= to; });
             
-            let total = 0, f1 = 0, f2 = 0, base = 0;
+            let total = 0, fMap = {}, lMap = {}, mMap = {};
             filtered.forEach(r => {
                 let q = Number(r[6]||0);
                 total += q;
                 let ln = Number(r[1]||0);
-                if(ln>=1 && ln<=8) f1 += q;
-                else if(ln>=9 && ln<=16) f2 += q;
-                else base += q;
+                let floor = (ln>=1 && ln<=8) ? "1st Floor" : (ln>=9 && ln<=16) ? "2nd Floor" : "Basement";
+                
+                fMap[floor] = (fMap[floor] || 0) + q;
+                lMap[ln] = (lMap[ln] || 0) + q;
+                mMap[r[3]] = (mMap[r[3]] || 0) + q;
             });
             
+            // Build Tables
+            let fRows="", lRows="", mRows="";
+            for(let k in fMap) fRows += `<tr><td>${k}</td><td>${fMap[k]}</td></tr>`;
+            for(let k in lMap) lRows += `<tr><td>Line ${k}</td><td>${lMap[k]}</td></tr>`;
+            for(let k in mMap) mRows += `<tr><td>${k}</td><td>${mMap[k]}</td></tr>`;
+
             h = `<div class="row g-3 mb-4">
-                    <div class="col-md-3"><div class="stat-card border-dark bg-white"><h1 class="fw-bold">${total}</h1><small class="text-muted fw-bold">TOTAL PRODUCTION</small></div></div>
-                    <div class="col-md-3"><div class="stat-card border-success bg-white"><h1 class="text-success fw-bold">${f1}</h1><small class="text-muted fw-bold">1ST FLOOR</small></div></div>
-                    <div class="col-md-3"><div class="stat-card border-warning bg-white"><h1 class="text-warning fw-bold">${f2}</h1><small class="text-muted fw-bold">2ND FLOOR</small></div></div>
-                    <div class="col-md-3"><div class="stat-card border-danger bg-white"><h1 class="text-danger fw-bold">${base}</h1><small class="text-muted fw-bold">BASEMENT</small></div></div>
+                    <div class="col-md-12"><div class="stat-box border-dark"><h2 class="fw-bold">${total}</h2><div class="text-muted">TOTAL PRODUCTION</div></div></div>
                  </div>
-                 <h5 class="fw-bold mt-4">Detailed Floor Breakdown</h5>
-                 <table class="table table-bordered text-center table-striped fs-5"><thead class="table-dark"><tr><th>Floor</th><th>Production Qty</th></tr></thead><tbody><tr><td>1st Floor</td><td>${f1}</td></tr><tr><td>2nd Floor</td><td>${f2}</td></tr><tr><td>Basement</td><td>${base}</td></tr></tbody></table>`;
+                 <div class="row g-4">
+                    <div class="col-md-4"><h5 class="text-center fw-bold">Floor Wise</h5><table class="table table-bordered text-center table-striped"><thead class="table-dark"><tr><th>Floor</th><th>Qty</th></tr></thead><tbody>${fRows}</tbody></table></div>
+                    <div class="col-md-4"><h5 class="text-center fw-bold">Line Wise</h5><table class="table table-bordered text-center table-striped"><thead class="table-dark"><tr><th>Line</th><th>Qty</th></tr></thead><tbody>${lRows}</tbody></table></div>
+                    <div class="col-md-4"><h5 class="text-center fw-bold">Model Wise</h5><table class="table table-bordered text-center table-striped"><thead class="table-dark"><tr><th>Model</th><th>Qty</th></tr></thead><tbody>${mRows}</tbody></table></div>
+                 </div>`;
             document.getElementById('res-prod-perf').innerHTML = h;
+
         } else if (tab === 'disp') {
             let from = document.getElementById('disp-from').value;
             let to = document.getElementById('disp-to').value;
             let filtered = dbData.disp.filter(r => { let d = getCleanDate(r[0]); return d >= from && d <= to; });
             
-            let total = 0, modelMap = {};
+            let total = 0, mMap = {};
             filtered.forEach(r => {
                 let q = Number(r[4]||0);
                 total += q;
-                let m = r[1];
-                modelMap[m] = (modelMap[m] || 0) + q;
+                mMap[r[1]] = (mMap[r[1]] || 0) + q;
             });
             
-            let rows = "";
-            for(let m in modelMap) rows += `<tr><td>${m}</td><td>${modelMap[m]}</td></tr>`;
+            let mRows = "";
+            for(let k in mMap) mRows += `<tr><td>${k}</td><td>${mMap[k]}</td></tr>`;
             
-            h = `<div class="row g-3 mb-4"><div class="col-md-12"><div class="stat-card border-primary bg-white"><h1 class="text-primary fw-bold">${total}</h1><small class="text-muted fw-bold">TOTAL DISPATCHED</small></div></div></div>
-                 <h5 class="fw-bold mt-4">Model Wise Dispatch</h5>
-                 <table class="table table-bordered text-center table-striped fs-5"><thead class="table-dark"><tr><th>Model</th><th>Qty</th></tr></thead><tbody>${rows}</tbody></table>`;
+            h = `<div class="row g-3 mb-4"><div class="col-md-12"><div class="stat-box border-primary"><h2 class="fw-bold text-primary">${total}</h2><div class="text-muted">TOTAL DISPATCHED</div></div></div></div>
+                 <h5 class="text-center fw-bold">Model Wise Dispatch</h5>
+                 <table class="table table-bordered text-center table-striped w-50 mx-auto"><thead class="table-dark"><tr><th>Model</th><th>Qty</th></tr></thead><tbody>${mRows}</tbody></table>`;
             document.getElementById('res-disp-perf').innerHTML = h;
+
         } else if (tab === 'open') {
             let mth = document.getElementById('open-perf-month').value;
             let filtered = dbData.open.filter(r => r[0] === mth);
             
-            let pdiOp = 0, dispOp = 0;
+            let pdiTot = 0, dispTot = 0;
+            let pdiMap = {}, dispMap = {}; // Model Wise
+
             filtered.forEach(r => {
-                if(r[1] === 'PDI') pdiOp += Number(r[6]||0);
-                else dispOp += Number(r[9]||0);
+                if(r[1] === 'PDI') {
+                    let q = Number(r[6]||0); pdiTot += q;
+                    pdiMap[r[3]] = (pdiMap[r[3]] || 0) + q;
+                } else {
+                    let q = Number(r[9]||0); dispTot += q;
+                    dispMap[r[3]] = (dispMap[r[3]] || 0) + q;
+                }
             });
-            
-            h = `<div class="row g-3"><div class="col-md-6"><div class="stat-card border-info bg-white"><h1 class="text-info fw-bold">${pdiOp}</h1><small class="text-muted fw-bold">TOTAL PDI OPENING</small></div></div><div class="col-md-6"><div class="stat-card border-dark bg-white"><h1 class="text-dark fw-bold">${dispOp}</h1><small class="text-muted fw-bold">TOTAL DISPATCH OPENING</small></div></div></div>`;
+
+            let pRow="", dRow="";
+            for(let k in pdiMap) pRow += `<tr><td>${k}</td><td>${pdiMap[k]}</td></tr>`;
+            for(let k in dispMap) dRow += `<tr><td>${k}</td><td>${dispMap[k]}</td></tr>`;
+
+            h = `<div class="row g-3 mb-4">
+                    <div class="col-md-6"><div class="stat-box border-info"><h2 class="fw-bold text-info">${pdiTot}</h2><div class="text-muted">Total PDI Opening</div></div></div>
+                    <div class="col-md-6"><div class="stat-box border-dark"><h2 class="fw-bold text-dark">${dispTot}</h2><div class="text-muted">Total Dispatch Opening</div></div></div>
+                 </div>
+                 <div class="row">
+                    <div class="col-md-6"><h6 class="text-center">PDI Opening (Model-wise)</h6><table class="table table-bordered text-center"><thead class="table-secondary"><tr><th>Model</th><th>Qty</th></tr></thead><tbody>${pRow}</tbody></table></div>
+                    <div class="col-md-6"><h6 class="text-center">Dispatch Opening (Model-wise)</h6><table class="table table-bordered text-center"><thead class="table-secondary"><tr><th>Model</th><th>Qty</th></tr></thead><tbody>${dRow}</tbody></table></div>
+                 </div>`;
             document.getElementById('res-open-perf').innerHTML = h;
         }
     }
 
-    // --- VIEW DETAIL LOGIC ---
+    // --- VIEW DETAIL ---
     function viewDetail(tab, idx) {
         let r = dbData[tab][idx];
-        let h = `<table class="table table-bordered table-striped">`;
-        if(tab==='prod') {
-            h += `<tr><th>Date</th><td>${fmtDate(r[0])}</td></tr><tr><th>Line</th><td>${r[1]}</td></tr><tr><th>Floor</th><td>${r[2]}</td></tr><tr><th>Model</th><td>${r[3]}</td></tr><tr><th>Color</th><td>${r[4]}</td></tr><tr><th>Part Code</th><td>${r[5]}</td></tr><tr><th>Quantity</th><td class="fw-bold fs-4">${r[6]}</td></tr>`;
-        } else if(tab==='disp') {
-            h += `<tr><th>Date</th><td>${fmtDate(r[0])}</td></tr><tr><th>Model</th><td>${r[1]}</td></tr><tr><th>Color</th><td>${r[2]}</td></tr><tr><th>Part Code</th><td>${r[3]}</td></tr><tr><th>Quantity</th><td class="fw-bold fs-4">${r[4]}</td></tr>`;
-        } else if(tab==='open') {
+        let h = `<table class="table table-bordered table-striped fs-5">`;
+        if(tab==='prod') h += `<tr><th>Date</th><td>${fmtDate(r[0])}</td></tr><tr><th>Line</th><td>${r[1]}</td></tr><tr><th>Floor</th><td>${r[2]}</td></tr><tr><th>Model</th><td>${r[3]}</td></tr><tr><th>Color</th><td>${r[4]}</td></tr><tr><th>Part Code</th><td>${r[5]}</td></tr><tr><th>Quantity</th><td class="fw-bold">${r[6]}</td></tr>`;
+        else if(tab==='disp') h += `<tr><th>Date</th><td>${fmtDate(r[0])}</td></tr><tr><th>Model</th><td>${r[1]}</td></tr><tr><th>Color</th><td>${r[2]}</td></tr><tr><th>Part Code</th><td>${r[3]}</td></tr><tr><th>Quantity</th><td class="fw-bold">${r[4]}</td></tr>`;
+        else if(tab==='open') {
             h += `<tr><th>Month</th><td>${r[0]}</td></tr><tr><th>Type</th><td>${r[1]}</td></tr><tr><th>Line</th><td>${r[2]}</td></tr><tr><th>Model</th><td>${r[3]}</td></tr><tr><th>Color</th><td>${r[4]}</td></tr><tr><th>Part Code</th><td>${r[5]}</td></tr>`;
             if(r[1]=='PDI') h+= `<tr><th>PDI Open</th><td>${r[6]}</td></tr><tr><th>Rework Open</th><td>${r[7]}</td></tr><tr><th>Reason</th><td>${r[8]}</td></tr>`;
             else h+= `<tr><th>Dispatch Open</th><td>${r[9]}</td></tr>`;
@@ -425,24 +437,16 @@
 
     function viewPdiDetail(idx) {
         let r = pdiData[idx];
-        let h = `<table class="table table-bordered table-striped">
-            <tr><th>Date</th><td>${fmtDate(r[0])}</td></tr>
-            <tr><th>Line</th><td>${r[1]}</td></tr>
-            <tr><th>Model</th><td>${r[2]}</td></tr>
-            <tr><th>Color</th><td>${r[3]}</td></tr>
-            <tr><th>Part Code</th><td>${r[4]}</td></tr>
-            <tr><th>Lot ID</th><td class="fw-bold">${r[5]}</td></tr>
-            <tr><th>Type</th><td>${r[6]}</td></tr>
-            <tr><th>Offer Qty</th><td>${r[7]}</td></tr>
-            <tr><th>Pass Qty</th><td class="text-success fw-bold">${r[8]}</td></tr>
-            <tr><th>Fail Qty</th><td class="text-danger fw-bold">${r[7]-r[8]}</td></tr>
-            <tr><th>Reason</th><td>${r[9]}</td></tr>
+        let h = `<table class="table table-bordered table-striped fs-5">
+            <tr><th>Date</th><td>${fmtDate(r[0])}</td></tr><tr><th>Line</th><td>${r[1]}</td></tr><tr><th>Model</th><td>${r[2]}</td></tr><tr><th>Color</th><td>${r[3]}</td></tr><tr><th>Part Code</th><td>${r[4]}</td></tr>
+            <tr><th>Lot ID</th><td class="fw-bold">${r[5]}</td></tr><tr><th>Type</th><td>${r[6]}</td></tr><tr><th>Offer Qty</th><td>${r[7]}</td></tr><tr><th>Pass Qty</th><td class="text-success fw-bold">${r[8]}</td></tr>
+            <tr><th>Fail Qty</th><td class="text-danger fw-bold">${r[7]-r[8]}</td></tr><tr><th>Reason</th><td>${r[9]}</td></tr>
         </table>`;
         document.getElementById('detailBody').innerHTML = h;
         new bootstrap.Modal(document.getElementById('detailModal')).show();
     }
 
-    // --- DASHBOARD LOGIC (SAME AS BEFORE) ---
+    // --- CORE LOGIC (DASHBOARDS) ---
     function renderDash1() {
         let selectedLine = document.getElementById('dashLineInput').value;
         let map = {};
@@ -480,22 +484,7 @@
         document.getElementById('master-body').innerHTML = h;
     }
 
-    // --- PDI CHARTS ---
-    function runPdiAnalysis() {
-        let from=document.getElementById('dashFrom').value, to=document.getElementById('dashTo').value;
-        let doff=0, dpass=0, dfail=0, dates={}, lines={}, floors={}, defects={};
-        pdiData.forEach(r=>{ let d=getCleanDate(r[0]); if(d>=from && d<=to){ let o=Number(r[7]||0), p=Number(r[8]||0), f=o-p; doff+=o; dpass+=p; dfail+=f; if(!dates[d])dates[d]={o:0,p:0}; dates[d].o+=o; dates[d].p+=p; let ln="L"+r[1]; if(!lines[ln])lines[ln]={o:0,p:0}; lines[ln].o+=o; lines[ln].p+=p; let fl=(r[1]<=8?"F1":(r[1]<=16?"F2":"Base")); if(!floors[fl])floors[fl]={o:0,p:0}; floors[fl].o+=o; floors[fl].p+=p; if(f>0 && r[9]) defects[r[9]]=(defects[r[9]]||0)+f; } });
-        document.getElementById('d_total_qty').innerText=doff; document.getElementById('d_passed_qty').innerText=dpass; document.getElementById('d_rejected_qty').innerText=dfail; document.getElementById('d_pass_rate').innerText=doff?((dpass/doff)*100).toFixed(1)+"%":"0%";
-        drawChart('ch_trend',Object.keys(dates).map(k=>[k.substr(5),(dates[k].p/dates[k].o)*100]),'Daily %'); drawChart('ch_line',Object.keys(lines).map(k=>[k,(lines[k].p/lines[k].o)*100]),'Line %'); drawChart('ch_floor',Object.keys(floors).map(k=>[k,(floors[k].p/floors[k].o)*100]),'Floor %'); drawChart('ch_defects',Object.keys(defects).map(k=>[k,defects[k]]), 'Defects');
-    }
-    function drawChart(id, arr, title) { let dt=new google.visualization.DataTable(); dt.addColumn('string','L'); dt.addColumn('number','V'); dt.addRows(arr); new google.visualization.ColumnChart(document.getElementById(id)).draw(dt,{title:title,legend:'none'}); }
-
-    function runClosureReport() {
-        let f1=document.getElementById('list_f1'), f2=document.getElementById('list_f2'), fb=document.getElementById('list_fb'); f1.innerHTML=f2.innerHTML=fb.innerHTML="";
-        pdiData.forEach(r => { let fail = (r[7] - r[8]); if(fail > 0) { let fl=(r[1]<=8?"Floor 1":(r[1]<=16?"Floor 2":"Basement")); let h = `<div class="ticket"><div class="d-flex justify-content-between fw-bold"><span>${r[5]||"No ID"}</span><span class="text-danger">L${r[1]}</span></div><div class="small">${r[2]}</div><div class="text-danger small fw-bold">Failed: ${fail} (${r[9]||"N/A"})</div></div>`; if(fl=='Floor 1') f1.innerHTML+=h; else if(fl=='Floor 2') f2.innerHTML+=h; else fb.innerHTML+=h; } });
-    }
-
-    // --- UTILS & HELPERS ---
+    // --- HELPERS ---
     function switchMainTab(id) { document.querySelectorAll('.main-view').forEach(e=>e.classList.add('hidden')); document.getElementById('view-'+id).classList.remove('hidden'); document.querySelectorAll('.nav-main .nav-link').forEach(e=>e.classList.remove('active')); event.target.classList.add('active'); }
     function switchPdiSub(sub, btn) { ['entry','dash','close'].forEach(t => document.getElementById('pdi-sub-'+t).classList.add('hidden')); document.getElementById('pdi-sub-'+sub).classList.remove('hidden'); btn.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('active', 'btn-outline-primary', 'btn-outline-dark', 'btn-outline-danger')); btn.classList.add('active'); if(sub==='entry') btn.classList.add('btn-outline-primary'); if(sub==='dash') { btn.classList.add('btn-outline-dark'); runPdiAnalysis(); } if(sub==='close') { btn.classList.add('btn-outline-danger'); runClosureReport(); } }
     function toggleLoader(s){ document.getElementById('global-loader').style.display = s?'flex':'none'; }
@@ -515,7 +504,7 @@
     function renderPdiQueue(){ let tb=document.getElementById('queue-pdi'); tb.innerHTML=""; queueData.pdi.forEach((r,i)=>tb.innerHTML+=`<tr><td>${r.lotId}</td><td>${r.model}</td><td>${r.pdiPass}/${r.pdiOffer}</td><td>${r.pdiOffer-r.pdiPass}</td><td><button class="btn btn-sm btn-danger btn-action" onclick="queueData.pdi.splice(${i},1);renderPdiQueue()"><i class="bi bi-x-lg"></i></button></td></tr>`); }
     function submitPdiQueue(){ if(!queueData.pdi.length)return; toggleLoader(true); let rows = queueData.pdi.map(r=>[r.date, r.line, r.model, r.color, r.partCode, r.lotId, r.lotType, r.pdiOffer, r.pdiPass, r.defectReason]); fetch(PDI_URL, {method:'POST', body:JSON.stringify({action:'save', data:rows})}).then(r=>r.json()).then(d=>{ alert("Saved"); queueData.pdi=[]; renderPdiQueue(); window.onload(); toggleLoader(false); }); }
 
-    function renderDBTable(tab) { let tb=document.getElementById('db-'+tab); tb.innerHTML=""; let fd=document.getElementById('filter-'+tab).value; let data = dbData[tab]; if(!data) return; data.slice().reverse().forEach((r, idx)=>{ let realIdx = data.length - 1 - idx; if((tab=='open'?r[0]:getCleanDate(r[0])) === fd) { let row = tab=='prod' ? `<td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td>` : tab=='disp' ? `<td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td>` : `<td>${r[0]}</td><td>${r[1]}</td><td>${r[3]}</td><td>${r[5]}</td><td>${r[1]=='PDI'?r[6]:r[9]}</td>`; tb.innerHTML += `<tr>${row}<td><button class="btn btn-sm btn-link p-0 btn-action" onclick="viewDetail('${tab}', ${realIdx})"><i class="bi bi-eye"></i></button> <button class="btn btn-sm btn-link p-0 mx-1 btn-action" onclick="editDB('${tab}',${realIdx})"><i class="bi bi-pencil-square"></i></button> <button class="btn btn-sm btn-link text-danger p-0 btn-action" onclick="delDB('${tab}',${realIdx})"><i class="bi bi-trash"></i></button></td></tr>`; } }); }
+    function renderDBTable(tab) { let tb=document.getElementById('db-'+tab); tb.innerHTML=""; let fd=document.getElementById('filter-'+tab).value; let data = dbData[tab]; if(!data) return; data.slice().reverse().forEach((r, idx)=>{ let realIdx = data.length - 1 - idx; if((tab=='open'?r[0]:getCleanDate(r[0])) === fd) { let row = tab=='prod' ? `<td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[3]}</td><td>${r[6]}</td>` : tab=='disp' ? `<td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[4]}</td>` : `<td>${r[0]}</td><td>${r[1]}</td><td>${r[3]}</td><td>${r[1]=='PDI'?r[6]:r[9]}</td>`; tb.innerHTML += `<tr>${row}<td><button class="btn btn-sm btn-link p-0 btn-action" onclick="viewDetail('${tab}', ${realIdx})"><i class="bi bi-eye"></i></button> <button class="btn btn-sm btn-link p-0 mx-1 btn-action" onclick="editDB('${tab}',${realIdx})"><i class="bi bi-pencil-square"></i></button> <button class="btn btn-sm btn-link text-danger p-0 btn-action" onclick="delDB('${tab}',${realIdx})"><i class="bi bi-trash"></i></button></td></tr>`; } }); }
     function renderRecentTable(){ let tb=document.getElementById('crudTable'); tb.innerHTML=""; let fd=document.getElementById('recentFilter').value; pdiData.slice().reverse().forEach((r,idx)=>{ let realIdx = pdiData.length - 1 - idx; if(getCleanDate(r[0])===fd) tb.innerHTML+=`<tr><td>${fmtDate(r[0])}</td><td>${r[2]}</td><td>${r[5]}</td><td>${r[8]}/${r[7]}</td><td>${r[7]-r[8]}</td><td><button class="btn btn-sm btn-link p-0 btn-action" onclick="viewPdiDetail(${realIdx})"><i class="bi bi-eye"></i></button> <button class="btn btn-sm btn-link p-0 mx-1 btn-action" onclick="editPdiDB(${realIdx})"><i class="bi bi-pencil-square"></i></button> <button class="btn btn-sm btn-link text-danger p-0 btn-action" onclick="deletePdiSaved(${realIdx})"><i class="bi bi-trash"></i></button></td></tr>`; }); }
 
     function editDB(tab, idx){ let r=dbData[tab][idx]; document.getElementById('editIdx-'+tab).value=idx+2; if(tab=='prod'){ document.getElementById('prod-date').value=getCleanDate(r[0]); document.getElementById('prod-line').value=r[1]; document.getElementById('prod-m').value=r[3]; filterC('prod'); document.getElementById('prod-c').value=r[4]; document.getElementById('prod-p').value=r[5]; document.getElementById('prod-qty').value=r[6]; } if(tab=='disp'){ document.getElementById('disp-date').value=getCleanDate(r[0]); document.getElementById('disp-m').value=r[1]; filterC('disp'); document.getElementById('disp-c').value=r[2]; document.getElementById('disp-p').value=r[3]; document.getElementById('disp-qty').value=r[4]; } if(tab=='open'){ document.getElementById('open-month').value=r[0]; document.getElementById('open-type').value=r[1]; toggleOp(r[1]); document.getElementById('open-line').value=r[2]; document.getElementById('open-m').value=r[3]; filterC('open'); document.getElementById('open-c').value=r[4]; document.getElementById('open-p').value=r[5]; if(r[1]=='PDI'){document.getElementById('open-qpdi').value=r[6];document.getElementById('open-qrew').value=r[7];}else{document.getElementById('open-qdisp').value=r[9];} } document.getElementById('btnCancel'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.remove('hidden'); }
@@ -526,10 +515,63 @@
     function submitPdiEdit(){ let form=document.getElementById('form-pdi'), idx=document.getElementById('pdiEditIndex').value, fd=new FormData(form); let arr=[fd.get('date'), fd.get('line'), fd.get('model'), fd.get('color'), fd.get('partCode'), fd.get('lotId'), fd.get('lotType'), fd.get('pdiOffer'), fd.get('pdiPass'), fd.get('defectReason')]; toggleLoader(true); fetch(PDI_URL, {method:'POST', body:JSON.stringify({action:'edit', rowIndex:parseInt(idx), data:arr})}).then(r=>r.json()).then(d=>{ alert("Updated"); cancelPdiEdit(); window.onload(); }); }
     function cancelPdiEdit(){ document.getElementById('form-pdi').reset(); document.getElementById('pdiEditIndex').value=""; document.getElementById('btnCancelEdit').classList.add('hidden'); }
     async function deletePdiSaved(idx){ if(!confirm("Delete?"))return; toggleLoader(true); await fetch(PDI_URL,{method:'POST',body:JSON.stringify({action:'delete',rowIndex:idx+2})}); window.onload(); }
-    function previewReport(tab){ let f=document.getElementById('filter-'+tab).value, d=dbData[tab].filter(r=>(tab=='open'?r[0]:getCleanDate(r[0]))===f); if(!d.length)return alert("No data"); let h=`<h5 class='text-center'><img src='https://i.postimg.cc/5y7SN4xc/logo.png' style='height:25px;'> Report: ${f}</h5><table class='table table-bordered text-center'><thead class='table-dark'><tr><th>Model</th><th>Qty</th></tr></thead><tbody>`; d.forEach(r=>{ let q=tab=='prod'?r[6]:tab=='disp'?r[4]:(r[1]=='PDI'?r[6]:r[9]); h+=`<tr><td>${r[3]||r[1]}</td><td>${q}</td></tr>`; }); document.getElementById('summaryBody').innerHTML=h+"</tbody></table>"; new bootstrap.Modal(document.getElementById('summaryModal')).show(); }
-    function showDaySummary(){ let f=document.getElementById('recentFilter').value, d=pdiData.filter(r=>getCleanDate(r[0])===f); if(!d.length)return alert("No Data"); let h=`<h5 class='text-center'><img src='https://i.postimg.cc/5y7SN4xc/logo.png' style='height:25px;'> PDI Report: ${f}</h5><table class='table table-bordered text-center'><thead class='table-dark'><tr><th>Model</th><th>Offer</th><th>Pass</th></tr></thead><tbody>`; d.forEach(r=>{ h+=`<tr><td>${r[2]}</td><td>${r[7]}</td><td>${r[8]}</td></tr>`; }); document.getElementById('summaryBody').innerHTML=h+"</tbody></table>"; new bootstrap.Modal(document.getElementById('summaryModal')).show(); }
+    
+    function previewReport(tab){ 
+        let f=document.getElementById('filter-'+tab).value;
+        let d=dbData[tab].filter(r=>(tab=='open'?r[0]:getCleanDate(r[0]))===f); 
+        if(!d.length) return alert("No data"); 
+        
+        // Detailed Table Generation
+        let h = `<h5 class='text-center mb-3 text-primary'>Daily Summary: ${f}</h5>
+                 <div class="table-responsive"><table class='table table-bordered table-striped text-center align-middle'>
+                 <thead class='table-dark'>`;
+        
+        if(tab==='prod') {
+            h+=`<tr><th>Line</th><th>Model</th><th>Color</th><th>Part</th><th>Qty</th></tr></thead><tbody>`;
+            d.forEach(r=>{ h+=`<tr><td>${r[1]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td class="fw-bold">${r[6]}</td></tr>`; });
+        } else if(tab==='disp') {
+            h+=`<tr><th>Model</th><th>Color</th><th>Part</th><th>Qty</th></tr></thead><tbody>`;
+            d.forEach(r=>{ h+=`<tr><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td class="fw-bold">${r[4]}</td></tr>`; });
+        } else if(tab==='open') {
+            h+=`<tr><th>Type</th><th>Model</th><th>Line</th><th>Qty</th></tr></thead><tbody>`;
+            d.forEach(r=>{ h+=`<tr><td>${r[1]}</td><td>${r[3]}</td><td>${r[2]}</td><td class="fw-bold">${r[1]=='PDI'?r[6]:r[9]}</td></tr>`; });
+        }
+        h += `</tbody></table></div>`;
+        document.getElementById('summaryBody').innerHTML=h; 
+        new bootstrap.Modal(document.getElementById('summaryModal')).show(); 
+    }
+
+    function showDaySummary(){ 
+        let f=document.getElementById('recentFilter').value;
+        let d=pdiData.filter(r=>getCleanDate(r[0])===f); 
+        if(!d.length) return alert("No Data"); 
+        
+        let h=`<h5 class='text-center mb-3 text-success'>PDI Report: ${f}</h5>
+               <div class="table-responsive"><table class='table table-bordered table-striped text-center align-middle'>
+               <thead class='table-dark'><tr><th>Line</th><th>Model</th><th>Lot</th><th>Offer</th><th>Pass</th><th>Fail</th></tr></thead><tbody>`;
+        d.forEach(r=>{ 
+            let fail = r[7]-r[8];
+            h+=`<tr><td>${r[1]}</td><td>${r[2]}</td><td>${r[5]}</td><td>${r[7]}</td><td class="text-success fw-bold">${r[8]}</td><td class="${fail>0?'text-danger fw-bold':''}">${fail}</td></tr>`; 
+        }); 
+        h += `</tbody></table></div>`;
+        document.getElementById('summaryBody').innerHTML=h; 
+        new bootstrap.Modal(document.getElementById('summaryModal')).show(); 
+    }
+
     function exportTableToExcel(tid, fname) { let wb=XLSX.utils.table_to_book(document.getElementById(tid),{sheet:"Sheet1"}); XLSX.writeFile(wb,fname+".xlsx"); }
     function downloadPDF() { html2pdf().set({margin:10,filename:'Report.pdf',jsPDF:{unit:'mm',format:'a4',orientation:'landscape'}}).from(document.getElementById('pdf-content')).save(); }
+    function runPdiAnalysis(){
+        let from=document.getElementById('dashFrom').value, to=document.getElementById('dashTo').value;
+        let doff=0, dpass=0, dfail=0, dates={}, lines={}, floors={}, defects={};
+        pdiData.forEach(r=>{ let d=getCleanDate(r[0]); if(d>=from && d<=to){ let o=Number(r[7]||0), p=Number(r[8]||0), f=o-p; doff+=o; dpass+=p; dfail+=f; if(!dates[d])dates[d]={o:0,p:0}; dates[d].o+=o; dates[d].p+=p; let ln="L"+r[1]; if(!lines[ln])lines[ln]={o:0,p:0}; lines[ln].o+=o; lines[ln].p+=p; let fl=(r[1]<=8?"F1":(r[1]<=16?"F2":"Base")); if(!floors[fl])floors[fl]={o:0,p:0}; floors[fl].o+=o; floors[fl].p+=p; if(f>0 && r[9]) defects[r[9]]=(defects[r[9]]||0)+f; } });
+        document.getElementById('d_total_qty').innerText=doff; document.getElementById('d_passed_qty').innerText=dpass; document.getElementById('d_rejected_qty').innerText=dfail; document.getElementById('d_pass_rate').innerText=doff?((dpass/doff)*100).toFixed(1)+"%":"0%";
+        drawChart('ch_trend',Object.keys(dates).map(k=>[k.substr(5),(dates[k].p/dates[k].o)*100]),'Daily %'); drawChart('ch_line',Object.keys(lines).map(k=>[k,(lines[k].p/lines[k].o)*100]),'Line %'); drawChart('ch_floor',Object.keys(floors).map(k=>[k,(floors[k].p/floors[k].o)*100]),'Floor %'); drawChart('ch_defects',Object.keys(defects).map(k=>[k,defects[k]]), 'Defects');
+    }
+    function drawChart(id, arr, title) { let dt=new google.visualization.DataTable(); dt.addColumn('string','L'); dt.addColumn('number','V'); dt.addRows(arr); new google.visualization.ColumnChart(document.getElementById(id)).draw(dt,{title:title,legend:'none'}); }
+    function runClosureReport(){
+        let f1=document.getElementById('list_f1'), f2=document.getElementById('list_f2'), fb=document.getElementById('list_fb'); f1.innerHTML=f2.innerHTML=fb.innerHTML="";
+        pdiData.forEach(r => { let fail = (r[7] - r[8]); if(fail > 0) { let fl=(r[1]<=8?"Floor 1":(r[1]<=16?"Floor 2":"Basement")); let h = `<div class="ticket"><div class="d-flex justify-content-between fw-bold"><span>${r[5]||"No ID"}</span><span class="text-danger">L${r[1]}</span></div><div class="small">${r[2]}</div><div class="text-danger small fw-bold">Failed: ${fail} (${r[9]||"N/A"})</div></div>`; if(fl=='Floor 1') f1.innerHTML+=h; else if(fl=='Floor 2') f2.innerHTML+=h; else fb.innerHTML+=h; } });
+    }
 </script>
 </body>
 </html>
