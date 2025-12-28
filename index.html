@@ -1,374 +1,577 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Inventory & PDI System</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <style>
-    body { background-color: #f0f2f5; padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    .hidden { display: none !important; }
-    .nav-link { cursor: pointer; font-weight: 500; }
-    .nav-link.active { background-color: #0d6efd !important; color: white !important; }
-    .loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); z-index:9999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #0d6efd;}
-    .floor-badge { font-size: 0.8rem; padding: 5px 10px; border-radius: 12px; color: white; margin-left: 10px; font-weight: bold; }
-    .bg-f1 { background-color: #28a745; } .bg-f2 { background-color: #ffc107; color: black; } .bg-base { background-color: #dc3545; }
-    .logo-container { text-align: center; margin-bottom: 20px; }
-    .logo-img { max-height: 80px; width: auto; }
-    .queue-table th { background-color: #e9ecef; font-size: 0.9em; }
-    .queue-table td { font-size: 0.9em; vertical-align: middle; }
-    .btn-excel { background-color: #198754; color: white; font-weight: bold; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Integrated System (Pro Performance)</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://www.gstatic.com/charts/loader.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        :root { --primary: #0f172a; --secondary: #334155; --accent: #0d6efd; --success: #10b981; --danger: #ef4444; }
+        body { background-color: #f4f6f9; font-family: 'Segoe UI', sans-serif; padding-bottom: 60px; font-size: 1.05rem; } 
+        .hidden { display: none !important; }
+        .loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.95); z-index:9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        
+        .main-header { background: var(--primary); padding: 15px 25px; color: white; margin-bottom: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .nav-main .nav-link { color: rgba(255,255,255,0.8); font-weight: 600; margin-right: 10px; cursor: pointer; font-size: 1.1rem; }
+        .nav-main .nav-link.active { background-color: var(--accent); color: white !important; }
+        
+        .card { border: none; border-radius: 12px; box-shadow: 0 3px 8px rgba(0,0,0,0.08); margin-bottom: 25px; }
+        .table th { background-color: #343a40; color: white; vertical-align: middle; }
+        
+        .app-logo { height: 50px; background: white; padding: 4px; border-radius: 6px; }
+        .btn-excel { background-color: #198754; color: white; border: none; } .btn-excel:hover { background-color: #157347; color: white; }
+        .btn-action { font-size: 1.1rem; padding: 2px 8px; }
+        
+        .sub-nav .nav-link { font-size: 1rem; padding: 10px 20px; border: 1px solid #ddd; background: white; margin-right: 5px; border-radius: 30px; }
+        .sub-nav .nav-link.active { background-color: var(--secondary); color: white; border-color: var(--secondary); }
+        
+        .stat-box { background: white; border-radius: 8px; padding: 15px; text-align: center; border-bottom: 4px solid #ccc; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    </style>
 </head>
 <body>
 
-<div id="loader" class="loading-overlay">
-  <div class="spinner-border mb-3" role="status" style="width: 3rem; height: 3rem;"></div>
-  <h5 id="loader-txt">Loading...</h5>
+<div id="global-loader" class="loading-overlay">
+    <div class="spinner-border text-primary" style="width: 4rem; height: 4rem;"></div>
+    <h4 id="loader-text" class="mt-3 fw-bold text-secondary">Loading System...</h4>
 </div>
 
-<div class="container bg-white p-4 rounded shadow" style="max-width: 1200px;">
-  
-  <div class="logo-container"><img src="https://i.postimg.cc/5y7SN4xc/logo.png" alt="Logo" class="logo-img"></div>
-  <h3 class="text-center text-primary mb-4 fw-bold">Inventory & PDI Master</h3>
+<!-- MAIN HEADER -->
+<div class="main-header d-flex justify-content-between align-items-center sticky-top">
+    <div class="d-flex align-items-center gap-3">
+        <img src="https://i.postimg.cc/5y7SN4xc/logo.png" class="app-logo" alt="Logo">
+        <h3 class="m-0 fw-bold d-none d-md-block">Inventory & PDI Master</h3>
+    </div>
+    <ul class="nav nav-pills nav-main">
+        <li class="nav-item"><a class="nav-link active" onclick="switchMainTab('prod')">Production</a></li>
+        <li class="nav-item"><a class="nav-link" onclick="switchMainTab('pdi-master')">PDI Master</a></li>
+        <li class="nav-item"><a class="nav-link" onclick="switchMainTab('disp')">Dispatch</a></li>
+        <li class="nav-item"><a class="nav-link" onclick="switchMainTab('open')">Opening</a></li>
+        <li class="nav-item"><a class="nav-link" onclick="switchMainTab('dash')">Live Reports</a></li>
+    </ul>
+</div>
 
-  <ul class="nav nav-tabs nav-justified mb-4 shadow-sm rounded">
-    <li class="nav-item"><a class="nav-link active" onclick="showTab('prod')">Production</a></li>
-    <li class="nav-item"><a class="nav-link" onclick="showTab('pdi')">PDI Master</a></li>
-    <li class="nav-item"><a class="nav-link" onclick="showTab('disp')">Dispatch</a></li>
-    <li class="nav-item"><a class="nav-link" onclick="showTab('open')">Opening</a></li>
-    <li class="nav-item"><a class="nav-link text-dark bg-light border-start" onclick="showTab('dash1')">📊 Line Dash</a></li>
-    <li class="nav-item"><a class="nav-link text-dark bg-light" onclick="showTab('dash2')">📈 Master Dash</a></li>
-  </ul>
+<div class="container-fluid px-4" style="max-width: 1800px;">
 
-  <!-- 1. PRODUCTION TAB -->
-  <div id="prod" class="tab-pane">
-    <div class="card p-3 border-0">
-      <h5 class="text-secondary">Production Entry</h5>
-      <form id="form-prod">
-        <div class="row g-3">
-          <div class="col-md-3"><label class="form-label">Date</label><input type="date" name="date" class="form-control" required></div>
-          <div class="col-md-3">
-            <label class="form-label">Line (1-24)</label>
-            <input type="number" name="line" class="form-control" min="1" max="24" oninput="checkFloor(this, 'bdg-p')" required>
-            <span id="bdg-p" class="floor-badge hidden"></span>
-          </div>
-          <div class="col-md-3"><label class="form-label">Model</label><select name="model" id="prod-m" class="form-select" onchange="filterC('prod')" required></select></div>
-          <div class="col-md-3"><label class="form-label">Color</label><select name="color" id="prod-c" class="form-select" onchange="fillP('prod')" required></select></div>
-          <div class="col-md-6"><label class="form-label">Part Code</label><input type="text" name="partCode" id="prod-p" class="form-control bg-light" readonly></div>
-          <div class="col-md-6"><label class="form-label">FG Output (Qty)</label><input type="number" name="fgQty" class="form-control" required></div>
+    <!-- 1. PRODUCTION TAB -->
+    <div id="view-prod" class="main-view">
+        <ul class="nav nav-pills sub-nav mb-3">
+            <li class="nav-item"><a class="nav-link active" data-bs-toggle="pill" href="#prod-entry">📝 Data Entry</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#prod-perf">📊 Performance Analysis</a></li>
+        </ul>
+
+        <div class="tab-content">
+            <!-- Entry Sub-Tab -->
+            <div class="tab-pane fade show active" id="prod-entry">
+                <div class="card p-4">
+                    <h4 class="text-secondary fw-bold border-bottom pb-2 mb-3">Daily Production Entry</h4>
+                    <form id="form-prod">
+                        <input type="hidden" id="editIdx-prod" value="">
+                        <div class="row g-3">
+                            <div class="col-md-2"><label class="form-label">Date</label><input type="date" name="date" id="prod-date" class="form-control" required></div>
+                            <div class="col-md-2"><label class="form-label">Line</label><input type="number" name="line" id="prod-line" class="form-control" min="1" max="24" required></div>
+                            <div class="col-md-3"><label class="form-label">Model</label><select name="model" id="prod-m" class="form-select" onchange="filterC('prod')" required></select></div>
+                            <div class="col-md-3"><label class="form-label">Color</label><select name="color" id="prod-c" class="form-select" onchange="fillP('prod')" required></select></div>
+                            <div class="col-md-2"><label class="form-label">FG Qty</label><input type="number" name="fgQty" id="prod-qty" class="form-control" required></div>
+                            <div class="col-12"><label class="text-muted">Part Code:</label><input type="text" name="partCode" id="prod-p" class="form-control bg-light" readonly></div>
+                        </div>
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="button" class="btn btn-warning w-100 fw-bold py-2" id="btnAddProd" onclick="addQueue('prod')">+ Add to Queue</button>
+                            <button type="button" class="btn btn-secondary w-100 hidden py-2" id="btnCancelProd" onclick="cancelEdit('prod')">Cancel Edit</button>
+                        </div>
+                    </form>
+                    <div class="mt-4"><table class="table table-bordered mb-2"><thead class="table-light"><tr><th>Date</th><th>Line</th><th>Model</th><th>Qty</th><th>Act</th></tr></thead><tbody id="queue-prod"></tbody></table><button class="btn btn-primary w-100 py-2 fw-bold" onclick="submitQueue('prod', 'Production')">Save Queue to DB</button></div>
+                </div>
+                
+                <div class="card p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold text-primary m-0">Recent Production Data</h5>
+                        <div class="d-flex gap-2">
+                            <input type="date" id="filter-prod" class="form-control w-auto" onchange="renderDBTable('prod')">
+                            <button class="btn btn-dark" onclick="previewReport('prod')"><i class="bi bi-eye"></i> Preview</button>
+                            <button class="btn btn-excel" onclick="exportTableToExcel('tbl-prod-db', 'Production_Data')"><i class="bi bi-file-earmark-excel"></i> Excel</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive" style="max-height: 500px;">
+                        <table class="table table-bordered text-center table-hover" id="tbl-prod-db">
+                            <thead class="table-light sticky-top"><tr><th>Date</th><th>Line</th><th>Model</th><th>Color</th><th>Part</th><th>Qty</th><th>Actions</th></tr></thead>
+                            <tbody id="db-prod"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Sub-Tab -->
+            <div class="tab-pane fade" id="prod-perf">
+                <div class="card p-4 mb-3">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-3"><label class="form-label">From Date</label><input type="date" id="prod-from" class="form-control"></div>
+                        <div class="col-md-3"><label class="form-label">To Date</label><input type="date" id="prod-to" class="form-control"></div>
+                        <div class="col-md-2"><button class="btn btn-primary w-100 fw-bold py-2" onclick="calcPerf('prod')">Show Analysis</button></div>
+                    </div>
+                </div>
+                <div id="res-prod-perf"></div>
+            </div>
         </div>
-        <button type="button" class="btn btn-warning mt-3 w-100 fw-bold" onclick="addQueue('prod')">+ Add to Queue</button>
-      </form>
-      
-      <div class="mt-4">
-        <h6 class="text-muted">Pending Entries (Click 'Save' to upload)</h6>
-        <table class="table table-bordered table-sm queue-table" id="table-prod"><thead><tr><th>Date</th><th>Line</th><th>Model</th><th>Color</th><th>Qty</th><th>Action</th></tr></thead><tbody id="queue-prod"></tbody></table>
-        <button class="btn btn-primary w-100 fw-bold" onclick="submitQueue('prod', 'Production')">Save All to Google Sheet</button>
-      </div>
     </div>
-  </div>
 
-  <!-- 2. PDI TAB -->
-  <div id="pdi" class="tab-pane hidden">
-    <div class="card p-3 border-0">
-      <h5 class="text-secondary">PDI Master Entry</h5>
-      <form id="form-pdi">
-        <div class="row g-3">
-          <div class="col-md-3"><label class="form-label">Date</label><input type="date" name="date" class="form-control" required></div>
-          <div class="col-md-3"><label class="form-label">Line</label><input type="number" name="line" class="form-control" min="1" max="24" oninput="checkFloor(this, 'bdg-d')" required><span id="bdg-d" class="floor-badge hidden"></span></div>
-          <div class="col-md-3"><label class="form-label">Model</label><select name="model" id="pdi-m" class="form-select" onchange="filterC('pdi')" required></select></div>
-          <div class="col-md-3"><label class="form-label">Color</label><select name="color" id="pdi-c" class="form-select" onchange="fillP('pdi')" required></select></div>
-          <div class="col-md-4"><label class="form-label">Part Code</label><input type="text" name="partCode" id="pdi-p" class="form-control bg-light" readonly></div>
-          <div class="col-md-4"><label class="form-label">Lot ID</label><input type="text" name="lotId" class="form-control"></div>
-          <div class="col-md-4"><label class="form-label">Lot Type</label><select name="lotType" class="form-select"><option>Fresh</option><option>Rework</option><option>Warranty</option><option>Old FG</option><option>Market Return</option></select></div>
-          <div class="col-md-4"><label class="form-label">Offer Qty</label><input type="number" id="off" name="pdiOffer" class="form-control" oninput="calcP()" required></div>
-          <div class="col-md-4"><label class="form-label">Pass Qty</label><input type="number" id="pas" name="pdiPass" class="form-control" oninput="calcP()" required></div>
-          <div class="col-md-4"><label class="form-label">Fail Qty</label><input type="text" id="fal" class="form-control" readonly></div>
-          <div id="defBox" class="col-12 hidden"><div class="alert alert-danger"><label class="form-label">Reason:</label><input type="text" name="defectReason" class="form-control"></div></div>
+    <!-- 2. PDI MASTER TAB -->
+    <div id="view-pdi-master" class="main-view hidden">
+        <ul class="nav nav-pills sub-nav mb-3">
+            <li class="nav-item"><a class="nav-link active" data-bs-toggle="pill" href="#pdi-entry">📝 Entry</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#pdi-perf">📈 Performance</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#pdi-close">✅ Closure</a></li>
+        </ul>
+
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="pdi-entry">
+                <div class="card p-4" id="pdi-card-container">
+                    <h4 class="text-secondary fw-bold border-bottom pb-2 mb-3">PDI Master Entry</h4>
+                    <form id="form-pdi">
+                        <input type="hidden" id="pdiEditIndex" value="">
+                        <div class="row g-3">
+                            <div class="col-md-2"><label class="form-label">Date</label><input type="date" name="date" id="pdi-date" class="form-control" required></div>
+                            <div class="col-md-1"><label class="form-label">Line</label><input type="number" name="line" id="pdi-line" class="form-control" required></div>
+                            <div class="col-md-2"><label class="form-label">Model</label><select name="model" id="pdi-m" class="form-select" onchange="filterC('pdi')" required></select></div>
+                            <div class="col-md-2"><label class="form-label">Color</label><select name="color" id="pdi-c" class="form-select" onchange="fillP('pdi')" required></select></div>
+                            <div class="col-md-2"><label class="form-label">Lot ID</label><input type="text" name="lotId" id="pdi-lot" class="form-control"></div>
+                            <div class="col-md-2"><label class="form-label">Type</label><select name="lotType" id="pdi-type" class="form-select"><option>Fresh</option><option>Rework</option><option>Warranty</option><option>Old FG</option><option>Market Return</option></select></div>
+                            <div class="col-md-1"><label class="form-label">Offer</label><input type="number" id="off" name="pdiOffer" class="form-control" oninput="calcP()" required></div>
+                            <div class="col-md-1"><label class="form-label">Pass</label><input type="number" id="pas" name="pdiPass" class="form-control" oninput="calcP()" required></div>
+                            <div class="col-md-1"><label class="form-label">Fail</label><input type="text" id="fal" class="form-control bg-light" readonly></div>
+                            <div class="col-md-8"><label class="form-label">Defect Reason</label><input type="text" name="defectReason" id="pdi-rsn" class="form-control"></div>
+                            <div class="col-md-2"><label class="form-label">Part Code</label><input type="text" name="partCode" id="pdi-p" class="form-control bg-light" readonly></div>
+                        </div>
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="button" class="btn btn-warning w-100 fw-bold py-2" id="btnAddPdi" onclick="addPdiQueue()">+ Add Pending</button>
+                            <button type="button" class="btn btn-secondary w-100 hidden py-2" id="btnCancelEdit" onclick="cancelPdiEdit()">Cancel Edit</button>
+                        </div>
+                    </form>
+                    <div class="mt-4"><table class="table table-bordered mb-2"><thead class="table-light"><tr><th>Lot</th><th>Model</th><th>Type</th><th>Pass/Offer</th><th>Fail</th><th>Act</th></tr></thead><tbody id="queue-pdi"></tbody></table><button class="btn btn-primary w-100 py-2 fw-bold" onclick="submitPdiQueue()">Save All Pending</button></div>
+                </div>
+                
+                <div class="card p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold text-success m-0">Recent PDI Data</h5>
+                        <div class="d-flex gap-2">
+                            <input type="date" id="recentFilter" class="form-control w-auto" onchange="renderRecentTable()">
+                            <button class="btn btn-dark" onclick="showDaySummary()"><i class="bi bi-eye"></i> Preview</button>
+                            <button class="btn btn-excel" onclick="exportTableToExcel('tbl-pdi-db', 'PDI_Data')"><i class="bi bi-file-earmark-excel"></i> Excel</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive" style="max-height: 500px;">
+                        <table class="table table-bordered text-center table-hover" id="tbl-pdi-db">
+                            <thead class="table-light sticky-top"><tr><th>Date</th><th>Line</th><th>Model</th><th>Lot ID</th><th>Pass/Offer</th><th>Fail</th><th>Actions</th></tr></thead>
+                            <tbody id="crudTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PDI Performance -->
+            <div class="tab-pane fade" id="pdi-perf">
+                <div class="card p-4 mb-3"><div class="row g-3 align-items-end"><div class="col-md-3"><label class="form-label">From</label><input type="date" id="dashFrom" class="form-control"></div><div class="col-md-3"><label class="form-label">To</label><input type="date" id="dashTo" class="form-control"></div><div class="col-md-2"><button class="btn btn-primary w-100 py-2" onclick="runPdiAnalysis()">Analyze</button></div></div></div>
+                <div id="pdf-content">
+                    <div class="row g-3 mb-4"><div class="col-md-3"><div class="stat-box border-dark"><h2 class="fw-bold" id="d_total_qty">0</h2><small>TOTAL OFFER</small></div></div><div class="col-md-3"><div class="stat-box border-success"><h2 class="fw-bold text-success" id="d_passed_qty">0</h2><small>PASSED</small></div></div><div class="col-md-3"><div class="stat-box border-danger"><h2 class="fw-bold text-danger" id="d_rejected_qty">0</h2><small>FAILED</small></div></div><div class="col-md-3"><div class="stat-box border-primary"><h2 class="fw-bold text-primary" id="d_pass_rate">0%</h2><small>PASS RATE</small></div></div></div>
+                    <div class="row g-3"><div class="col-md-6"><div class="card p-3"><div id="ch_trend" style="height:350px"></div></div></div><div class="col-md-6"><div class="card p-3"><div id="ch_line" style="height:350px"></div></div></div><div class="col-md-6"><div class="card p-3"><div id="ch_floor" style="height:350px"></div></div></div><div class="col-md-6"><div class="card p-3"><div id="ch_defects" style="height:350px"></div></div></div></div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="pdi-close">
+                <div class="row g-4">
+                    <div class="col-md-4"><div class="card p-4 bg-light h-100"><h5 class="text-primary text-center">1st Floor Pending</h5><div id="list_f1"></div></div></div>
+                    <div class="col-md-4"><div class="card p-4 bg-light h-100"><h5 class="text-warning text-center">2nd Floor Pending</h5><div id="list_f2"></div></div></div>
+                    <div class="col-md-4"><div class="card p-4 bg-light h-100"><h5 class="text-danger text-center">Basement Pending</h5><div id="list_fb"></div></div></div>
+                </div>
+            </div>
         </div>
-        <button type="button" class="btn btn-warning mt-3 w-100 fw-bold" onclick="addQueue('pdi')">+ Add to Queue</button>
-      </form>
-      <div class="mt-4">
-        <h6 class="text-muted">Pending PDI Entries</h6>
-        <table class="table table-bordered table-sm queue-table" id="table-pdi"><thead><tr><th>Line</th><th>Model</th><th>Color</th><th>Lot</th><th>Pass/Offer</th><th>Action</th></tr></thead><tbody id="queue-pdi"></tbody></table>
-        <button class="btn btn-primary w-100 fw-bold" onclick="submitQueue('pdi', 'PDI')">Save All PDI Data</button>
-      </div>
     </div>
-  </div>
 
-  <!-- 3. DISPATCH TAB -->
-  <div id="disp" class="tab-pane hidden">
-    <div class="card p-3 border-0">
-      <h5 class="text-secondary">Dispatch Entry</h5>
-      <form id="form-disp">
-        <div class="row g-3">
-          <div class="col-md-3"><label class="form-label">Date</label><input type="date" name="date" class="form-control" required></div>
-          <div class="col-md-3"><label class="form-label">Model</label><select name="model" id="disp-m" class="form-select" onchange="filterC('disp')" required></select></div>
-          <div class="col-md-3"><label class="form-label">Color</label><select name="color" id="disp-c" class="form-select" onchange="fillP('disp')" required></select></div>
-          <div class="col-md-3"><label class="form-label">Part Code</label><input type="text" name="partCode" id="disp-p" class="form-control bg-light" readonly></div>
-          <div class="col-12"><label class="form-label">Dispatch Qty</label><input type="number" name="dispatchQty" class="form-control" required></div>
+    <!-- 3. DISPATCH TAB -->
+    <div id="view-disp" class="main-view hidden">
+        <ul class="nav nav-pills sub-nav mb-3">
+            <li class="nav-item"><a class="nav-link active" data-bs-toggle="pill" href="#disp-entry">📝 Entry</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#disp-perf">📈 Performance</a></li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="disp-entry">
+                <div class="card p-4">
+                    <h4 class="text-secondary fw-bold border-bottom pb-2 mb-3">Dispatch Entry</h4>
+                    <form id="form-disp">
+                        <input type="hidden" id="editIdx-disp" value="">
+                        <div class="row g-3">
+                            <div class="col-md-3"><label class="form-label">Date</label><input type="date" name="date" id="disp-date" class="form-control" required></div>
+                            <div class="col-md-3"><label class="form-label">Model</label><select name="model" id="disp-m" class="form-select" onchange="filterC('disp')" required></select></div>
+                            <div class="col-md-3"><label class="form-label">Color</label><select name="color" id="disp-c" class="form-select" onchange="fillP('disp')" required></select></div>
+                            <div class="col-md-3"><label class="form-label">Qty</label><input type="number" name="dispatchQty" id="disp-qty" class="form-control" required></div>
+                            <div class="col-12"><label class="text-muted">Part Code:</label><input type="text" name="partCode" id="disp-p" class="form-control bg-light" readonly></div>
+                        </div>
+                        <div class="d-flex gap-2 mt-4"><button type="button" class="btn btn-warning w-100 fw-bold py-2" id="btnAddDisp" onclick="addQueue('disp')">Add</button><button type="button" class="btn btn-secondary w-100 hidden py-2" id="btnCancelDisp" onclick="cancelEdit('disp')">Cancel</button></div>
+                    </form>
+                    <div class="mt-4"><table class="table table-bordered mb-2"><tbody id="queue-disp"></tbody></table><button class="btn btn-success w-100 py-2 fw-bold" onclick="submitQueue('disp', 'Dispatch')">Save</button></div>
+                </div>
+                <div class="card p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold m-0">Recent Dispatch</h5>
+                        <div class="d-flex gap-2"><input type="date" id="filter-disp" class="form-control w-auto" onchange="renderDBTable('disp')"><button class="btn btn-dark" onclick="previewReport('disp')"><i class="bi bi-eye"></i> Preview</button><button class="btn btn-excel" onclick="exportTableToExcel('tbl-disp-db', 'Dispatch_Data')"><i class="bi bi-file-earmark-excel"></i> Excel</button></div>
+                    </div>
+                    <div class="table-responsive"><table class="table table-bordered text-center table-hover" id="tbl-disp-db"><thead class="table-light"><tr><th>Date</th><th>Model</th><th>Color</th><th>Part</th><th>Qty</th><th>Actions</th></tr></thead><tbody id="db-disp"></tbody></table></div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="disp-perf">
+                <div class="card p-4 mb-3"><div class="row g-3 align-items-end"><div class="col-md-3"><label class="form-label">From</label><input type="date" id="disp-from" class="form-control"></div><div class="col-md-3"><label class="form-label">To</label><input type="date" id="disp-to" class="form-control"></div><div class="col-md-2"><button class="btn btn-primary w-100 py-2" onclick="calcPerf('disp')">Analyze</button></div></div></div>
+                <div id="res-disp-perf"></div>
+            </div>
         </div>
-        <button type="button" class="btn btn-warning mt-3 w-100 fw-bold" onclick="addQueue('disp')">+ Add to Queue</button>
-      </form>
-      <div class="mt-4">
-        <table class="table table-bordered table-sm queue-table" id="table-disp"><thead><tr><th>Date</th><th>Model</th><th>Color</th><th>Qty</th><th>Action</th></tr></thead><tbody id="queue-disp"></tbody></table>
-        <button class="btn btn-success w-100 fw-bold" onclick="submitQueue('disp', 'Dispatch')">Save All Dispatch</button>
-      </div>
     </div>
-  </div>
 
-  <!-- 4. OPENING TAB -->
-  <div id="open" class="tab-pane hidden">
-    <div class="card p-3 border-info">
-      <h5 class="text-info">Opening Balance</h5>
-      <form id="form-open">
-        <div class="row g-3">
-          <div class="col-md-4"><label class="form-label">Month</label><input type="month" name="month" class="form-control" required></div>
-          <div class="col-md-4"><label class="form-label">Type</label><select name="openType" class="form-select" onchange="toggleOp(this.value)"><option value="PDI">PDI Opening</option><option value="Dispatch">Dispatch Opening</option></select></div>
-          <div class="col-md-4"><label class="form-label">Model</label><select name="model" id="open-m" class="form-select" onchange="filterC('open')" required></select></div>
-          <div class="col-md-6"><label class="form-label">Color</label><select name="color" id="open-c" class="form-select" onchange="fillP('open')" required></select></div>
-          <div class="col-md-6"><label class="form-label">Part Code</label><input type="text" name="partCode" id="open-p" class="form-control bg-light" readonly></div>
-          <div class="grp-pdi col-md-3"><label class="form-label">Line</label><input type="number" name="line" class="form-control" min="1" max="24"></div>
-          <div class="grp-pdi col-md-3"><label class="form-label">For PDI Open</label><input type="number" name="pdiOpenQty" class="form-control"></div>
-          <div class="grp-pdi col-md-3"><label class="form-label">For Rework Open</label><input type="number" name="reworkOpenQty" class="form-control"></div>
-          <div class="grp-pdi col-12"><label class="form-label">Rework Reason</label><input type="text" name="reworkReason" class="form-control"></div>
-          <div class="grp-disp col-12 hidden"><label class="form-label">Dispatch Open Qty</label><input type="number" name="dispatchOpenQty" class="form-control"></div>
+    <!-- 4. OPENING TAB -->
+    <div id="view-open" class="main-view hidden">
+        <ul class="nav nav-pills sub-nav mb-3">
+            <li class="nav-item"><a class="nav-link active" data-bs-toggle="pill" href="#open-entry">📝 Entry</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#open-perf">📈 Overview</a></li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="open-entry">
+                <div class="card p-4 border-info">
+                    <h4 class="text-info fw-bold border-bottom pb-2 mb-3">Opening Balance</h4>
+                    <form id="form-open">
+                        <input type="hidden" id="editIdx-open" value="">
+                        <div class="row g-3">
+                            <div class="col-md-2"><label class="form-label">Month</label><input type="month" name="month" id="open-month" class="form-control" required></div>
+                            <div class="col-md-2"><label class="form-label">Type</label><select name="openType" id="open-type" class="form-select" onchange="toggleOp(this.value)"><option value="PDI">PDI Opening</option><option value="Dispatch">Dispatch Opening</option></select></div>
+                            <div class="col-md-2"><label class="form-label">Model</label><select name="model" id="open-m" class="form-select" onchange="filterC('open')" required></select></div>
+                            <div class="col-md-2"><label class="form-label">Color</label><select name="color" id="open-c" class="form-select" onchange="fillP('open')" required></select></div>
+                            <div class="grp-pdi col-md-1"><label class="form-label">Line</label><input type="number" name="line" id="open-line" class="form-control" placeholder="1-24"></div>
+                            <div class="grp-pdi col-md-1"><label class="form-label">PDI Opn</label><input type="number" name="pdiOpenQty" id="open-qpdi" class="form-control"></div>
+                            <div class="grp-pdi col-md-1"><label class="form-label">Rew Opn</label><input type="number" name="reworkOpenQty" id="open-qrew" class="form-control"></div>
+                            <div class="grp-disp col-md-2 hidden"><label class="form-label">Disp Opn</label><input type="number" name="dispatchOpenQty" id="open-qdisp" class="form-control"></div>
+                            <div class="col-12"><input type="text" name="partCode" id="open-p" class="form-control bg-light" readonly placeholder="Part Code"></div>
+                            <input type="hidden" name="reworkReason">
+                        </div>
+                        <div class="d-flex gap-2 mt-4"><button type="button" class="btn btn-info w-100 text-white fw-bold py-2" id="btnAddOpen" onclick="addQueue('open')">Add</button><button type="button" class="btn btn-secondary w-100 hidden py-2" id="btnCancelOpen" onclick="cancelEdit('open')">Cancel</button></div>
+                    </form>
+                    <div class="mt-4"><table class="table table-bordered mb-2"><tbody id="queue-open"></tbody></table><button class="btn btn-dark w-100 py-2 fw-bold" onclick="submitQueue('open', 'Opening')">Save</button></div>
+                </div>
+                <div class="card p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold m-0">Recent Opening</h5>
+                        <div class="d-flex gap-2"><input type="month" id="filter-open" class="form-control w-auto" onchange="renderDBTable('open')"><button class="btn btn-dark" onclick="previewReport('open')"><i class="bi bi-eye"></i> Preview</button><button class="btn btn-excel" onclick="exportTableToExcel('tbl-open-db', 'Opening_Data')"><i class="bi bi-file-earmark-excel"></i> Excel</button></div>
+                    </div>
+                    <div class="table-responsive"><table class="table table-bordered text-center table-hover" id="tbl-open-db"><thead class="table-light"><tr><th>Month</th><th>Type</th><th>Model</th><th>Part</th><th>Qty</th><th>Actions</th></tr></thead><tbody id="db-open"></tbody></table></div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="open-perf">
+                <div class="card p-4 mb-3"><div class="row"><div class="col-md-4"><label class="form-label">Select Month</label><input type="month" id="open-perf-month" class="form-control"></div><div class="col-md-2"><br><button class="btn btn-primary w-100 py-2" onclick="calcPerf('open')">Analyze</button></div></div></div>
+                <div id="res-open-perf"></div>
+            </div>
         </div>
-        <button type="button" class="btn btn-info mt-3 w-100 fw-bold text-white" onclick="addQueue('open')">+ Add to Queue</button>
-      </form>
-      <div class="mt-4">
-        <table class="table table-bordered table-sm queue-table" id="table-open"><thead><tr><th>Type</th><th>Model</th><th>Color</th><th>Qty</th><th>Action</th></tr></thead><tbody id="queue-open"></tbody></table>
-        <button class="btn btn-dark w-100 fw-bold" onclick="submitQueue('open', 'Opening')">Save All Opening Data</button>
-      </div>
     </div>
-  </div>
 
-  <!-- DASH 1 -->
-  <div id="dash1" class="tab-pane hidden">
-    <div class="d-flex justify-content-between mb-3">
-        <div class="input-group" style="max-width:300px;">
-            <span class="input-group-text">Line No</span>
-            <input type="number" id="dashLine" class="form-control" placeholder="1-24">
-            <button class="btn btn-dark" onclick="renderDash1()">Show</button>
+    <!-- 5. LIVE REPORTS -->
+    <div id="view-dash" class="main-view hidden">
+        <div class="card p-3">
+            <ul class="nav nav-tabs mb-3">
+                <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#d-line" onclick="renderDash1()">📊 Line Live (Detailed)</a></li>
+                <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#d-master" onclick="renderDash2()">📈 Master Sheet</a></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="d-line">
+                    <div class="d-flex justify-content-start align-items-center mb-3 gap-3 p-3 bg-white rounded shadow-sm border"><label class="fw-bold fs-5">Filter Line:</label><input type="number" id="dashLineInput" placeholder="1-24" class="form-control w-auto"><button class="btn btn-dark" onclick="renderDash1()">Show</button></div>
+                    <div class="table-responsive"><table class="table table-bordered text-center table-dash" id="tbl-dash1"><thead class="table-dark"><tr><th rowspan="2">Model</th><th rowspan="2">Color</th><th colspan="3" class="bg-primary">Input</th><th colspan="5" class="bg-success">PDI PASS</th><th colspan="4" class="bg-warning text-dark">Balances</th></tr><tr><th>Opn PDI</th><th>Opn Rew</th><th>FG Out</th><th>Fresh</th><th>Warr</th><th>Mkt</th><th>OldFG</th><th>Rew</th><th class="bg-info text-white">Bal(PDI)</th><th>OldFG Bal</th><th>For Rework</th><th>Reason</th></tr></thead><tbody id="dash1-res"></tbody></table></div>
+                </div>
+                <div class="tab-pane fade" id="d-master">
+                    <div class="table-responsive"><table class="table table-bordered table-striped text-center table-dash" id="tbl-dash2"><thead class="table-dark"><tr><th>Model</th><th>Color</th><th>Opn(PDI)+Opn(Rew)</th><th>FG Out</th><th>PDI Pass (Total)</th><th>Opn(Disp)</th><th>Dispatched</th><th class="bg-primary">Bal(PDI)</th><th class="bg-success">Bal(Disp)</th></tr></thead><tbody id="master-body"></tbody></table></div>
+                </div>
+            </div>
         </div>
-        <button class="btn btn-excel" onclick="exportTableToExcel('tbl-dash1', 'Line_Dashboard')">📥 Excel</button>
     </div>
-    <div class="table-responsive">
-        <table class="table table-bordered text-center table-sm" id="tbl-dash1">
-            <thead class="table-secondary">
-                <tr><th>Model</th><th>Color</th><th>Opn PDI</th><th>Opn Rew</th><th>FG Out</th><th>Fresh</th><th>Warr</th><th>Mkt</th><th>OldFG</th><th>Rew</th><th>Bal(PDI)</th><th>OldFG Bal</th><th>For Rework</th><th>Reason</th></tr>
-            </thead>
-            <tbody id="dash1-res"></tbody>
-        </table>
-    </div>
-  </div>
-
-  <!-- DASH 2 -->
-  <div id="dash2" class="tab-pane hidden">
-    <div class="d-flex justify-content-between mb-2">
-        <button class="btn btn-outline-dark btn-sm" onclick="renderDash2()">Refresh Master</button>
-        <button class="btn btn-excel btn-sm" onclick="exportTableToExcel('tbl-dash2', 'Master_Dashboard')">📥 Excel</button>
-    </div>
-    <div class="table-responsive">
-      <table class="table table-bordered table-sm table-striped text-center" id="tbl-dash2">
-        <thead class="table-dark">
-          <tr><th>Model</th><th>Color</th><th>Part</th><th>Opn(PDI+Rew)</th><th>FG Out</th><th>PDI Pass</th><th>Opn(Disp)</th><th>Disp</th><th>Bal(PDI)</th><th>Bal(Disp)</th></tr>
-        </thead>
-        <tbody id="master-body"></tbody>
-      </table>
-    </div>
-  </div>
 
 </div>
+
+<!-- PREVIEW MODAL -->
+<div class="modal fade" id="summaryModal" tabindex="-1"><div class="modal-dialog modal-xl"><div class="modal-content"><div class="modal-header bg-primary text-white"><div class="d-flex align-items-center"><img src="https://i.postimg.cc/5y7SN4xc/logo.png" class="app-logo me-2"><h5 class="modal-title">Report</h5></div><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body bg-light" id="summaryBody"></div></div></div></div>
+
+<!-- DETAIL MODAL -->
+<div class="modal fade" id="detailModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header bg-primary text-white"><h5 class="modal-title">Full Details</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body bg-light p-4" id="detailBody"></div></div></div></div>
 
 <script>
-  // 👇  👇
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_v98RjsENHzxZopAjkPBXdagXII_rA8vQICgGRwh92isZ4eBpHhYERrROZVmq8A0noA/exec"; 
-  
-  let masterData = [];
-  let queueData = { prod: [], pdi: [], disp: [], open: [] };
-  let dbData = { prod:[], disp:[], open:[] }; // To store fetched data for dashboards
-  let pdiData = []; // To store fetched PDI data for dashboards
-
-  function toggleLoader(show, text="Processing...") { 
-    const l = document.getElementById('loader');
-    document.getElementById('loader-txt').innerText = text;
-    l.classList.toggle('hidden', !show);
-  }
-
-  window.onload = function() {
-    toggleLoader(true, "Loading System...");
-    // Fetch Masters and All Data
-    fetch(SCRIPT_URL + "?action=getMasters")
-      .then(r => r.json())
-      .then(d => { 
-        masterData = d; 
-        populateModels(['prod','pdi','disp','open']); 
-        
-        // Fetch Dashboard Data immediately to populate reports
-        return fetch(SCRIPT_URL + "?action=getDashboard");
-      })
-      .then(r => r.json())
-      .then(d => {
-         dbData = d; // Store Production/Disp/Open data
-         // Fetch PDI Data
-         return fetch(SCRIPT_URL + "?action=getPDI");
-      })
-      .then(r => r.json())
-      .then(d => {
-         pdiData = d.data || [];
-         toggleLoader(false);
-      })
-      .catch(e => { 
-        console.error(e);
-        toggleLoader(false);
-        alert("System loaded, but failed to fetch previous data. New entries will still work.");
-      });
-  };
-
-  function showTab(id) {
-    document.querySelectorAll('.tab-pane').forEach(e => e.classList.add('hidden'));
-    document.getElementById(id).classList.remove('hidden');
-    document.querySelectorAll('.nav-link').forEach(e => e.classList.remove('active'));
-    event.target.classList.add('active');
-  }
-
-  function addQueue(tab) {
-    let form = document.getElementById('form-' + tab);
-    if(!form.checkValidity()) { form.reportValidity(); return; }
-    let formData = Object.fromEntries(new FormData(form));
-    queueData[tab].push(formData);
-    renderQueue(tab);
-    form.reset();
-  }
-
-  function renderQueue(tab) {
-    let tbody = document.getElementById('queue-' + tab);
-    tbody.innerHTML = "";
-    queueData[tab].forEach((item, index) => {
-       let row = "";
-       if(tab=='prod') row = `<td>${item.date}</td><td>${item.line}</td><td>${item.model}</td><td>${item.color}</td><td>${item.fgQty}</td>`;
-       if(tab=='pdi') row = `<td>${item.line}</td><td>${item.model}</td><td>${item.color}</td><td>${item.lotId}</td><td>${item.pdiPass}/${item.pdiOffer}</td>`;
-       if(tab=='disp') row = `<td>${item.date}</td><td>${item.model}</td><td>${item.color}</td><td>${item.dispatchQty}</td>`;
-       if(tab=='open') row = `<td>${item.openType}</td><td>${item.model}</td><td>${item.color}</td><td>${item.openType=='PDI'?item.pdiOpenQty:item.dispatchOpenQty}</td>`;
-       tbody.innerHTML += `<tr>${row}<td><button class="btn btn-sm btn-danger" onclick="removeQueue('${tab}', ${index})">X</button></td></tr>`;
-    });
-  }
-
-  function removeQueue(tab, index) { queueData[tab].splice(index, 1); renderQueue(tab); }
-
-  function submitQueue(tab, type) {
-    if(queueData[tab].length === 0) return alert("List is empty!");
-    toggleLoader(true, "Saving Data...");
+    const INV_URL = "https://script.google.com/macros/s/AKfycbz_v98RjsENHzxZopAjkPBXdagXII_rA8vQICgGRwh92isZ4eBpHhYERrROZVmq8A0noA/exec";
+    const PDI_URL = "https://script.google.com/macros/s/AKfycbz_v98RjsENHzxZopAjkPBXdagXII_rA8vQICgGRwh92isZ4eBpHhYERrROZVmq8A0noA/exec";
     
-    // NOTE: PDI logic in script handles 'type' differently or defaults. 
-    // Ensuring we send the correct 'type' string expected by the script.
-    let payloadType = type;
-    if(tab === 'pdi') payloadType = 'PDI'; // Or keep it empty if script handles default
+    let masterData=[], queueData={prod:[],disp:[],open:[],pdi:[]}, pdiData=[], dbData={prod:[],disp:[],open:[]};
 
-    fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ type: payloadType, data: queueData[tab] }) })
-    .then(r => r.json())
-    .then(d => {
-      toggleLoader(false);
-      if(d.status === 'success') {
-         alert("Saved Successfully!");
-         queueData[tab] = [];
-         renderQueue(tab);
-         // Refresh local data for dashboards
-         window.onload(); 
-      } else {
-         alert("Error: " + d.message);
-      }
-    })
-    .catch(e => { toggleLoader(false); alert("Connection Error."); });
-  }
+    google.charts.load('current', {'packages':['corechart', 'bar']});
 
-  // --- HELPERS ---
-  function checkFloor(i,id){ let v=parseInt(i.value),e=document.getElementById(id); e.className="floor-badge"; if(v>=1&&v<=8){e.innerText="1st";e.classList.add("bg-f1");}else if(v>=9&&v<=16){e.innerText="2nd";e.classList.add("bg-f2");}else if(v>=17&&v<=24){e.innerText="Base";e.classList.add("bg-base");}else e.classList.add("hidden"); }
-  function populateModels(ids){ 
-    if(!masterData || masterData.length === 0) return;
-    let m=[...new Set(masterData.map(r=>r[1]))].sort(); 
-    ids.forEach(x=>{ let s=document.getElementById(x+'-m'); s.innerHTML='<option value="">Select</option>'; m.forEach(v=>s.innerHTML+=`<option value="${v}">${v}</option>`) }); 
-  }
-  function filterC(p){ let m=document.getElementById(p+'-m').value,s=document.getElementById(p+'-c'); s.innerHTML='<option value="">Select</option>'; [...new Set(masterData.filter(r=>r[1]==m).map(r=>r[2]))].sort().forEach(c=>s.innerHTML+=`<option value="${c}">${c}</option>`); document.getElementById(p+'-p').value=""; }
-  function fillP(p){ let m=document.getElementById(p+'-m').value,c=document.getElementById(p+'-c').value,f=masterData.find(r=>r[1]==m&&r[2]==c); if(f)document.getElementById(p+'-p').value=f[0]; }
-  function calcP(){ let f=(document.getElementById('off').value||0)-(document.getElementById('pas').value||0); document.getElementById('fal').value=f; document.getElementById('defBox').classList.toggle('hidden',f<=0); }
-  function toggleOp(v){ document.querySelectorAll('.grp-pdi').forEach(e=>e.classList.toggle('hidden',v!='PDI')); document.querySelector('.grp-disp').classList.toggle('hidden',v!='Dispatch'); }
-  function exportTableToExcel(tableId, filename) { let table = document.getElementById(tableId); let wb = XLSX.utils.table_to_book(table, {sheet: "Sheet1"}); XLSX.writeFile(wb, filename + ".xlsx"); }
+    window.onload = function() {
+        let today = new Date().toLocaleDateString('en-CA');
+        let curMonth = today.substring(0, 7);
+        ['filter-prod','filter-disp','recentFilter','pdi-date', 'prod-date', 'disp-date', 'dashFrom', 'dashTo', 'prod-from', 'prod-to', 'disp-from', 'disp-to'].forEach(id=>{ let e=document.getElementById(id); if(e)e.value=today; });
+        ['filter-open', 'open-month', 'open-perf-month'].forEach(id=>{ let e=document.getElementById(id); if(e)e.value=curMonth; });
+        
+        toggleLoader(true);
+        fetch(INV_URL + "?action=getMasters").then(r=>r.json()).then(d=>{
+            masterData = d; populateModels(['prod','disp','open','pdi']);
+            return fetch(INV_URL + "?action=getDashboard");
+        }).then(r=>r.json()).then(d=>{
+            dbData.prod=d.prod||[]; dbData.disp=d.disp||[]; dbData.open=d.open||[];
+            renderDBTable('prod'); renderDBTable('disp'); renderDBTable('open');
+            return fetch(PDI_URL);
+        }).then(r=>r.json()).then(d=>{
+            pdiData = d.data || []; if(pdiData[0][0]==="Date") pdiData.shift();
+            renderRecentTable(); toggleLoader(false);
+        }).catch(e=>{ console.error(e); toggleLoader(false); alert("Connection Error"); });
+    };
 
-  // --- DASHBOARD LOGIC (Live Calculation from fetched data) ---
-  function renderDash1() {
-     let line = document.getElementById('dashLine').value; 
-     if(!dbData.prod) return alert("Data not loaded yet. Please wait.");
-     
-     let map={}; const get=(m,c)=>{ let k=m+"|"+c; if(!map[k])map[k]={m,c,oPdi:0,oRew:0,fg:0, pass_fresh:0, offer_fresh:0, pass_war:0, offer_war:0, pass_mkt:0, offer_mkt:0, pass_oldfg:0, offer_oldfg:0, pass_rew:0, offer_rew:0, fail_oldfg:0, fail_reasons:[] }; return map[k]; };
+    // --- ENHANCED PERFORMANCE LOGIC ---
+    function calcPerf(tab) {
+        let h = "";
+        
+        if (tab === 'prod') {
+            let from = document.getElementById('prod-from').value;
+            let to = document.getElementById('prod-to').value;
+            let filtered = dbData.prod.filter(r => { let d = getCleanDate(r[0]); return d >= from && d <= to; });
+            
+            let total = 0, fMap = {}, lMap = {}, mMap = {};
+            filtered.forEach(r => {
+                let q = Number(r[6]||0);
+                total += q;
+                let ln = Number(r[1]||0);
+                let floor = (ln>=1 && ln<=8) ? "1st Floor" : (ln>=9 && ln<=16) ? "2nd Floor" : "Basement";
+                
+                fMap[floor] = (fMap[floor] || 0) + q;
+                lMap[ln] = (lMap[ln] || 0) + q;
+                mMap[r[3]] = (mMap[r[3]] || 0) + q;
+            });
+            
+            // Build Tables
+            let fRows="", lRows="", mRows="";
+            for(let k in fMap) fRows += `<tr><td>${k}</td><td>${fMap[k]}</td></tr>`;
+            for(let k in lMap) lRows += `<tr><td>Line ${k}</td><td>${lMap[k]}</td></tr>`;
+            for(let k in mMap) mRows += `<tr><td>${k}</td><td>${mMap[k]}</td></tr>`;
 
-     // 1. Process Opening & Production
-     dbData.open.forEach(r => { 
-         // Assuming r: [Month, Type, Line, Model, Color...]
-         if(line && r[2]!=line) return;
-         if(r[1]=='PDI') { let o=get(r[3],r[4]); o.oPdi+=Number(r[6]||0); o.oRew+=Number(r[7]||0); }
-     });
-     dbData.prod.forEach(r => {
-         // Assuming r: [Date, Line, Floor, Model, Color, Part, Qty]
-         if(line && r[1]!=line) return;
-         get(r[3],r[4]).fg += Number(r[6]||0);
-     });
+            h = `<div class="row g-3 mb-4">
+                    <div class="col-md-12"><div class="stat-box border-dark"><h2 class="fw-bold">${total}</h2><div class="text-muted">TOTAL PRODUCTION</div></div></div>
+                 </div>
+                 <div class="row g-4">
+                    <div class="col-md-4"><h5 class="text-center fw-bold">Floor Wise</h5><table class="table table-bordered text-center table-striped"><thead class="table-dark"><tr><th>Floor</th><th>Qty</th></tr></thead><tbody>${fRows}</tbody></table></div>
+                    <div class="col-md-4"><h5 class="text-center fw-bold">Line Wise</h5><table class="table table-bordered text-center table-striped"><thead class="table-dark"><tr><th>Line</th><th>Qty</th></tr></thead><tbody>${lRows}</tbody></table></div>
+                    <div class="col-md-4"><h5 class="text-center fw-bold">Model Wise</h5><table class="table table-bordered text-center table-striped"><thead class="table-dark"><tr><th>Model</th><th>Qty</th></tr></thead><tbody>${mRows}</tbody></table></div>
+                 </div>`;
+            document.getElementById('res-prod-perf').innerHTML = h;
 
-     // 2. Process PDI
-     pdiData.forEach(r => {
-         // Assuming r: [Date, Line, Model, Color, Part, LotID, Type, Offer, Pass, Fail, Reason]
-         if(line && r[1]!=line) return;
-         let o = get(r[2], r[3]);
-         let type = r[6], offer=Number(r[7]||0), pass=Number(r[8]||0), fail=Number(r[9]||0);
-         
-         if(type === 'Fresh') { o.pass_fresh += pass; o.offer_fresh += offer; } 
-         else if(type === 'Warranty') { o.pass_war += pass; o.offer_war += offer; }
-         else if(type === 'Market Return') { o.pass_mkt += pass; o.offer_mkt += offer; }
-         else if(type === 'Old FG') { o.pass_oldfg += pass; o.offer_oldfg += offer; o.fail_oldfg += fail; }
-         else if(type === 'Rework') { o.pass_rew += pass; o.offer_rew += offer; }
-         
-         if(fail>0 && r[10]) o.fail_reasons.push(r[10]);
-     });
+        } else if (tab === 'disp') {
+            let from = document.getElementById('disp-from').value;
+            let to = document.getElementById('disp-to').value;
+            let filtered = dbData.disp.filter(r => { let d = getCleanDate(r[0]); return d >= from && d <= to; });
+            
+            let total = 0, mMap = {};
+            filtered.forEach(r => {
+                let q = Number(r[4]||0);
+                total += q;
+                mMap[r[1]] = (mMap[r[1]] || 0) + q;
+            });
+            
+            let mRows = "";
+            for(let k in mMap) mRows += `<tr><td>${k}</td><td>${mMap[k]}</td></tr>`;
+            
+            h = `<div class="row g-3 mb-4"><div class="col-md-12"><div class="stat-box border-primary"><h2 class="fw-bold text-primary">${total}</h2><div class="text-muted">TOTAL DISPATCHED</div></div></div></div>
+                 <h5 class="text-center fw-bold">Model Wise Dispatch</h5>
+                 <table class="table table-bordered text-center table-striped w-50 mx-auto"><thead class="table-dark"><tr><th>Model</th><th>Qty</th></tr></thead><tbody>${mRows}</tbody></table>`;
+            document.getElementById('res-disp-perf').innerHTML = h;
 
-     let h='';
-     for(let k in map){
-        let x=map[k];
-        // Formulas
-        let old_fg_bal = x.oRew - x.pass_oldfg; if(old_fg_bal<0) old_fg_bal=0;
-        let bal_pdi = (x.oPdi + x.fg) - (x.offer_fresh + x.offer_war + x.offer_mkt); if(bal_pdi<0) bal_pdi=0;
-        let total_fresh_fails = (x.offer_fresh - x.pass_fresh) + (x.offer_war - x.pass_war) + (x.offer_mkt - x.pass_mkt);
-        let for_rework = total_fresh_fails - x.pass_rew; if(for_rework<0) for_rework=0; // Simplified rework logic
-        let rsn = [...new Set(x.fail_reasons)].join(", ");
+        } else if (tab === 'open') {
+            let mth = document.getElementById('open-perf-month').value;
+            let filtered = dbData.open.filter(r => r[0] === mth);
+            
+            let pdiTot = 0, dispTot = 0;
+            let pdiMap = {}, dispMap = {}; // Model Wise
 
-        h+=`<tr><td>${x.m}</td><td>${x.c}</td><td>${x.oPdi}</td><td>${x.oRew}</td><td>${x.fg}</td>
-            <td>${x.pass_fresh}</td><td>${x.pass_war}</td><td>${x.pass_mkt}</td><td>${x.pass_oldfg}</td><td>${x.pass_rew}</td>
-            <td class="bg-primary text-white fw-bold">${bal_pdi}</td>
-            <td class="bg-warning fw-bold">${old_fg_bal}</td>
-            <td class="bg-danger text-white fw-bold">${for_rework}</td>
-            <td>${rsn}</td></tr>`;
-     }
-     document.getElementById('dash1-res').innerHTML=h;
-  }
+            filtered.forEach(r => {
+                if(r[1] === 'PDI') {
+                    let q = Number(r[6]||0); pdiTot += q;
+                    pdiMap[r[3]] = (pdiMap[r[3]] || 0) + q;
+                } else {
+                    let q = Number(r[9]||0); dispTot += q;
+                    dispMap[r[3]] = (dispMap[r[3]] || 0) + q;
+                }
+            });
 
-  function renderDash2() {
-     let map={}; const get=(m,c)=>{let k=m+"|"+c; if(!map[k])map[k]={m,c,opPdi:0,fg:0,pass:0,opDisp:0,disp:0}; return map[k];};
-     dbData.open.forEach(r=>{ let o=get(r[3],r[4]); if(r[1]=='PDI') o.opPdi+=Number(r[6]||0)+Number(r[7]||0); else o.opDisp+=Number(r[9]||0); });
-     dbData.prod.forEach(r=>get(r[3],r[4]).fg+=Number(r[6]||0));
-     dbData.disp.forEach(r=>get(r[1],r[2]).disp+=Number(r[4]||0));
-     pdiData.forEach(r=>get(r[2],r[3]).pass+=Number(r[8]||0));
-     
-     let h='';
-     for(let k in map){
-        let o=map[k], balPdi=(o.opPdi+o.fg)-o.pass, balDisp=(o.opDisp+o.pass)-o.disp;
-        h+=`<tr><td>${o.m}</td><td>${o.c}</td><td>-</td><td>${o.opPdi}</td><td>${o.fg}</td><td>${o.pass}</td><td>${o.opDisp}</td><td>${o.disp}</td><td class="bg-light fw-bold">${balPdi}</td><td class="bg-light fw-bold">${balDisp}</td></tr>`;
-     }
-     document.getElementById('master-body').innerHTML=h;
-  }
+            let pRow="", dRow="";
+            for(let k in pdiMap) pRow += `<tr><td>${k}</td><td>${pdiMap[k]}</td></tr>`;
+            for(let k in dispMap) dRow += `<tr><td>${k}</td><td>${dispMap[k]}</td></tr>`;
+
+            h = `<div class="row g-3 mb-4">
+                    <div class="col-md-6"><div class="stat-box border-info"><h2 class="fw-bold text-info">${pdiTot}</h2><div class="text-muted">Total PDI Opening</div></div></div>
+                    <div class="col-md-6"><div class="stat-box border-dark"><h2 class="fw-bold text-dark">${dispTot}</h2><div class="text-muted">Total Dispatch Opening</div></div></div>
+                 </div>
+                 <div class="row">
+                    <div class="col-md-6"><h6 class="text-center">PDI Opening (Model-wise)</h6><table class="table table-bordered text-center"><thead class="table-secondary"><tr><th>Model</th><th>Qty</th></tr></thead><tbody>${pRow}</tbody></table></div>
+                    <div class="col-md-6"><h6 class="text-center">Dispatch Opening (Model-wise)</h6><table class="table table-bordered text-center"><thead class="table-secondary"><tr><th>Model</th><th>Qty</th></tr></thead><tbody>${dRow}</tbody></table></div>
+                 </div>`;
+            document.getElementById('res-open-perf').innerHTML = h;
+        }
+    }
+
+    // --- VIEW DETAIL ---
+    function viewDetail(tab, idx) {
+        let r = dbData[tab][idx];
+        let h = `<table class="table table-bordered table-striped fs-5">`;
+        if(tab==='prod') h += `<tr><th>Date</th><td>${fmtDate(r[0])}</td></tr><tr><th>Line</th><td>${r[1]}</td></tr><tr><th>Floor</th><td>${r[2]}</td></tr><tr><th>Model</th><td>${r[3]}</td></tr><tr><th>Color</th><td>${r[4]}</td></tr><tr><th>Part Code</th><td>${r[5]}</td></tr><tr><th>Quantity</th><td class="fw-bold">${r[6]}</td></tr>`;
+        else if(tab==='disp') h += `<tr><th>Date</th><td>${fmtDate(r[0])}</td></tr><tr><th>Model</th><td>${r[1]}</td></tr><tr><th>Color</th><td>${r[2]}</td></tr><tr><th>Part Code</th><td>${r[3]}</td></tr><tr><th>Quantity</th><td class="fw-bold">${r[4]}</td></tr>`;
+        else if(tab==='open') {
+            h += `<tr><th>Month</th><td>${r[0]}</td></tr><tr><th>Type</th><td>${r[1]}</td></tr><tr><th>Line</th><td>${r[2]}</td></tr><tr><th>Model</th><td>${r[3]}</td></tr><tr><th>Color</th><td>${r[4]}</td></tr><tr><th>Part Code</th><td>${r[5]}</td></tr>`;
+            if(r[1]=='PDI') h+= `<tr><th>PDI Open</th><td>${r[6]}</td></tr><tr><th>Rework Open</th><td>${r[7]}</td></tr><tr><th>Reason</th><td>${r[8]}</td></tr>`;
+            else h+= `<tr><th>Dispatch Open</th><td>${r[9]}</td></tr>`;
+        }
+        h += `</table>`;
+        document.getElementById('detailBody').innerHTML = h;
+        new bootstrap.Modal(document.getElementById('detailModal')).show();
+    }
+
+    function viewPdiDetail(idx) {
+        let r = pdiData[idx];
+        let h = `<table class="table table-bordered table-striped fs-5">
+            <tr><th>Date</th><td>${fmtDate(r[0])}</td></tr><tr><th>Line</th><td>${r[1]}</td></tr><tr><th>Model</th><td>${r[2]}</td></tr><tr><th>Color</th><td>${r[3]}</td></tr><tr><th>Part Code</th><td>${r[4]}</td></tr>
+            <tr><th>Lot ID</th><td class="fw-bold">${r[5]}</td></tr><tr><th>Type</th><td>${r[6]}</td></tr><tr><th>Offer Qty</th><td>${r[7]}</td></tr><tr><th>Pass Qty</th><td class="text-success fw-bold">${r[8]}</td></tr>
+            <tr><th>Fail Qty</th><td class="text-danger fw-bold">${r[7]-r[8]}</td></tr><tr><th>Reason</th><td>${r[9]}</td></tr>
+        </table>`;
+        document.getElementById('detailBody').innerHTML = h;
+        new bootstrap.Modal(document.getElementById('detailModal')).show();
+    }
+
+    // --- CORE LOGIC (DASHBOARDS) ---
+    function renderDash1() {
+        let selectedLine = document.getElementById('dashLineInput').value;
+        let map = {};
+        const get = (m,c) => { let k=m+"|"+c; if(!map[k]) map[k]={m,c, opn_pdi:0, opn_rew:0, fg:0, pass_fresh:0, offer_fresh:0, pass_war:0, offer_war:0, pass_mkt:0, offer_mkt:0, pass_oldfg:0, offer_oldfg:0, pass_rew:0, offer_rew:0, fail_fresh:0, fail_war:0, fail_mkt:0, fail_oldfg:0, fail_reasons:[], lot_tracking: {} }; return map[k]; };
+
+        dbData.open.forEach(r => { if(selectedLine && r[2] != selectedLine) return; if(r[1]=='PDI') { let o=get(r[3],r[4]); o.opn_pdi+=Number(r[6]||0); o.opn_rew+=Number(r[7]||0); } });
+        dbData.prod.forEach(r => { if(selectedLine && r[1] != selectedLine) return; get(r[3],r[4]).fg += Number(r[6]||0); });
+        pdiData.forEach(r => {
+            if(selectedLine && r[1] != selectedLine) return;
+            let o = get(r[2], r[3]); let type = r[6], offer = Number(r[7]||0), pass = Number(r[8]||0), fail = offer - pass, lotID = r[5], reason = r[9];
+            if(type === 'Fresh') { o.pass_fresh += pass; o.offer_fresh += offer; o.fail_fresh += fail; } else if(type === 'Warranty') { o.pass_war += pass; o.offer_war += offer; o.fail_war += fail; } else if(type === 'Market Return') { o.pass_mkt += pass; o.offer_mkt += offer; o.fail_mkt += fail; } else if(type === 'Old FG') { o.pass_oldfg += pass; o.offer_oldfg += offer; o.fail_oldfg += fail; } else if(type === 'Rework') { o.pass_rew += pass; o.offer_rew += offer; }
+            if(type !== 'Old FG') { if(fail > 0) { if(!o.lot_tracking[lotID]) o.lot_tracking[lotID]=0; o.lot_tracking[lotID] += fail; if(reason) o.fail_reasons.push(reason); } if(type === 'Rework' && pass > 0 && o.lot_tracking[lotID]) { o.lot_tracking[lotID] -= pass; if(o.lot_tracking[lotID] <= 0) delete o.lot_tracking[lotID]; } }
+        });
+
+        let h = "";
+        for(let k in map) {
+            let x = map[k], old_fg_bal = x.opn_rew - x.pass_oldfg; if(old_fg_bal < 0) old_fg_bal = 0;
+            let processed_fresh = x.offer_fresh + x.offer_war + x.offer_mkt;
+            let bal_pdi = (x.opn_pdi + x.fg) - processed_fresh; if(bal_pdi < 0) bal_pdi = 0; 
+            let total_fresh_fails = x.fail_fresh + x.fail_war + x.fail_mkt;
+            let for_rework = total_fresh_fails - x.pass_rew; if(for_rework < 0) for_rework = 0;
+            let rsn = [...new Set(x.fail_reasons)].join(", ");
+            h += `<tr><td class="fw-bold">${x.m}</td><td>${x.c}</td><td>${x.opn_pdi}</td><td>${x.opn_rew}</td><td>${x.fg}</td><td>${x.pass_fresh}</td><td>${x.pass_war}</td><td>${x.pass_mkt}</td><td>${x.pass_oldfg}</td><td>${x.pass_rew}</td><td class="bg-light-blue fw-bold fs-6">${bal_pdi}</td><td class="bg-light-yellow text-danger fw-bold">${old_fg_bal}</td><td class="bg-warning fw-bold">${for_rework}</td><td class="small text-danger">${rsn}</td></tr>`;
+        }
+        document.getElementById('dash1-res').innerHTML = h;
+    }
+
+    function renderDash2() {
+        let map = {}; const get = (m,c) => { let k=m+"|"+c; if(!map[k]) map[k]={m,c, total_opn_pdi:0, fg:0, total_pass:0, opn_disp:0, disp_out:0 }; return map[k]; };
+        dbData.open.forEach(r => { let o=get(r[3],r[4]); if(r[1]=='PDI') { o.total_opn_pdi += (Number(r[6]||0) + Number(r[7]||0)); } else if(r[1]=='Dispatch') { o.opn_disp += Number(r[9]||0); } });
+        dbData.prod.forEach(r => { get(r[3],r[4]).fg += Number(r[6]||0); });
+        dbData.disp.forEach(r => { get(r[1],r[2]).disp_out += Number(r[4]||0); });
+        pdiData.forEach(r => { get(r[2],r[3]).total_pass += Number(r[8]||0); });
+        let h = ""; for(let k in map) { let x = map[k], bal_pdi = (x.total_opn_pdi + x.fg) - x.total_pass, bal_disp = (x.opn_disp + x.total_pass) - x.disp_out; h += `<tr><td>${x.m}</td><td>${x.c}</td><td>${x.total_opn_pdi}</td><td>${x.fg}</td><td>${x.total_pass}</td><td>${x.opn_disp}</td><td>${x.disp_out}</td><td class="bg-primary text-white fw-bold">${bal_pdi}</td><td class="bg-success text-white fw-bold">${bal_disp}</td></tr>`; }
+        document.getElementById('master-body').innerHTML = h;
+    }
+
+    // --- HELPERS ---
+    function switchMainTab(id) { document.querySelectorAll('.main-view').forEach(e=>e.classList.add('hidden')); document.getElementById('view-'+id).classList.remove('hidden'); document.querySelectorAll('.nav-main .nav-link').forEach(e=>e.classList.remove('active')); event.target.classList.add('active'); }
+    function switchPdiSub(sub, btn) { ['entry','dash','close'].forEach(t => document.getElementById('pdi-sub-'+t).classList.add('hidden')); document.getElementById('pdi-sub-'+sub).classList.remove('hidden'); btn.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('active', 'btn-outline-primary', 'btn-outline-dark', 'btn-outline-danger')); btn.classList.add('active'); if(sub==='entry') btn.classList.add('btn-outline-primary'); if(sub==='dash') { btn.classList.add('btn-outline-dark'); runPdiAnalysis(); } if(sub==='close') { btn.classList.add('btn-outline-danger'); runClosureReport(); } }
+    function toggleLoader(s){ document.getElementById('global-loader').style.display = s?'flex':'none'; }
+    function populateModels(ids){ if(!masterData.length)return; let m=[...new Set(masterData.map(r=>r[1]))].sort(); ids.forEach(x=>{ let s=document.getElementById(x+'-m'); s.innerHTML='<option value="">Select</option>'; m.forEach(v=>s.innerHTML+=`<option value="${v}">${v}</option>`) }); }
+    function filterC(p){ let m=document.getElementById(p+'-m').value,s=document.getElementById(p+'-c'); s.innerHTML='<option value="">Select</option>'; [...new Set(masterData.filter(r=>r[1]==m).map(r=>r[2]))].sort().forEach(c=>s.innerHTML+=`<option value="${c}">${c}</option>`); }
+    function fillP(p){ let m=document.getElementById(p+'-m').value,c=document.getElementById(p+'-c').value,f=masterData.find(r=>r[1]==m&&r[2]==c); if(f)document.getElementById(p+'-p').value=f[0]; }
+    function toggleOp(v){ document.querySelectorAll('.grp-pdi').forEach(e=>e.classList.toggle('hidden',v!='PDI')); document.querySelector('.grp-disp').classList.toggle('hidden',v!='Dispatch'); }
+    function calcP(){ let f=(document.getElementById('off').value||0)-(document.getElementById('pas').value||0); document.getElementById('fal').value=f; document.getElementById('defBox').classList.toggle('hidden',f<=0); }
+    function fmtDate(iso){ if(!iso)return ""; let d=new Date(iso); return d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0'); }
+    function getCleanDate(iso){ if(!iso)return ""; return new Date(iso).toLocaleDateString('en-CA'); }
+    function checkFloor(i,id){ let v=parseInt(i.value),e=document.getElementById(id); e.className="floor-badge"; if(v>=1&&v<=8){e.innerText="1st";e.classList.add("bg-f1");}else if(v>=9&&v<=16){e.innerText="2nd";e.classList.add("bg-f2");}else if(v>=17&&v<=24){e.innerText="Base";e.classList.add("bg-base");}else e.classList.add("hidden"); }
+
+    function addQueue(tab) { let form=document.getElementById('form-'+tab); if(document.getElementById('editIdx-'+tab).value!="") { submitEdit(tab); return; } if(!form.checkValidity()){ form.reportValidity(); return; } let fd=Object.fromEntries(new FormData(form)); queueData[tab].push(fd); renderQueue(tab); form.reset(); document.getElementById(tab+'-date').value=new Date().toLocaleDateString('en-CA'); }
+    function renderQueue(tab) { let tb=document.getElementById('queue-'+tab); tb.innerHTML=""; queueData[tab].forEach((i,x)=>{ let row = tab=='prod' ? `<td>${i.date}</td><td>${i.line}</td><td>${i.model}</td><td>${i.color}</td><td>${i.fgQty}</td>` : tab=='disp' ? `<td>${i.date}</td><td>${i.model}</td><td>${i.color}</td><td>${i.dispatchQty}</td>` : `<td>${i.openType}</td><td>${i.model}</td><td>${i.color}</td><td>${i.openType=='PDI'?i.pdiOpenQty:i.dispatchOpenQty}</td>`; tb.innerHTML+=`<tr>${row}<td><button class="btn btn-sm btn-danger btn-action" onclick="queueData['${tab}'].splice(${x},1);renderQueue('${tab}')"><i class="bi bi-x-lg"></i></button></td></tr>`; }); }
+    function submitQueue(tab,type) { if(!queueData[tab].length)return alert("Empty"); toggleLoader(true); fetch(INV_URL, {method:'POST', body:JSON.stringify({type:type, data:queueData[tab]})}).then(r=>r.json()).then(async d=>{ if(d.status=='success'){ alert("Saved"); queueData[tab]=[]; renderQueue(tab); window.onload(); } else alert(d.message); toggleLoader(false); }); }
+    function addPdiQueue(){ let form=document.getElementById('form-pdi'); if(!form.checkValidity()){ form.reportValidity(); return; } if(document.getElementById('pdiEditIndex').value!==""){ submitPdiEdit(); return; } let fd=new FormData(form), r={date:fd.get('date'), line:fd.get('line'), model:fd.get('model'), color:fd.get('color'), partCode:fd.get('partCode'), lotId:fd.get('lotId'), lotType:fd.get('lotType'), pdiOffer:fd.get('pdiOffer'), pdiPass:fd.get('pdiPass'), defectReason:fd.get('defectReason')}; queueData.pdi.push(r); renderPdiQueue(); form.reset(); document.getElementById('pdi-date').value=new Date().toLocaleDateString('en-CA'); }
+    function renderPdiQueue(){ let tb=document.getElementById('queue-pdi'); tb.innerHTML=""; queueData.pdi.forEach((r,i)=>tb.innerHTML+=`<tr><td>${r.lotId}</td><td>${r.model}</td><td>${r.pdiPass}/${r.pdiOffer}</td><td>${r.pdiOffer-r.pdiPass}</td><td><button class="btn btn-sm btn-danger btn-action" onclick="queueData.pdi.splice(${i},1);renderPdiQueue()"><i class="bi bi-x-lg"></i></button></td></tr>`); }
+    function submitPdiQueue(){ if(!queueData.pdi.length)return; toggleLoader(true); let rows = queueData.pdi.map(r=>[r.date, r.line, r.model, r.color, r.partCode, r.lotId, r.lotType, r.pdiOffer, r.pdiPass, r.defectReason]); fetch(PDI_URL, {method:'POST', body:JSON.stringify({action:'save', data:rows})}).then(r=>r.json()).then(d=>{ alert("Saved"); queueData.pdi=[]; renderPdiQueue(); window.onload(); toggleLoader(false); }); }
+
+    function renderDBTable(tab) { let tb=document.getElementById('db-'+tab); tb.innerHTML=""; let fd=document.getElementById('filter-'+tab).value; let data = dbData[tab]; if(!data) return; data.slice().reverse().forEach((r, idx)=>{ let realIdx = data.length - 1 - idx; if((tab=='open'?r[0]:getCleanDate(r[0])) === fd) { let row = tab=='prod' ? `<td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[3]}</td><td>${r[6]}</td>` : tab=='disp' ? `<td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[4]}</td>` : `<td>${r[0]}</td><td>${r[1]}</td><td>${r[3]}</td><td>${r[1]=='PDI'?r[6]:r[9]}</td>`; tb.innerHTML += `<tr>${row}<td><button class="btn btn-sm btn-link p-0 btn-action" onclick="viewDetail('${tab}', ${realIdx})"><i class="bi bi-eye"></i></button> <button class="btn btn-sm btn-link p-0 mx-1 btn-action" onclick="editDB('${tab}',${realIdx})"><i class="bi bi-pencil-square"></i></button> <button class="btn btn-sm btn-link text-danger p-0 btn-action" onclick="delDB('${tab}',${realIdx})"><i class="bi bi-trash"></i></button></td></tr>`; } }); }
+    function renderRecentTable(){ let tb=document.getElementById('crudTable'); tb.innerHTML=""; let fd=document.getElementById('recentFilter').value; pdiData.slice().reverse().forEach((r,idx)=>{ let realIdx = pdiData.length - 1 - idx; if(getCleanDate(r[0])===fd) tb.innerHTML+=`<tr><td>${fmtDate(r[0])}</td><td>${r[2]}</td><td>${r[5]}</td><td>${r[8]}/${r[7]}</td><td>${r[7]-r[8]}</td><td><button class="btn btn-sm btn-link p-0 btn-action" onclick="viewPdiDetail(${realIdx})"><i class="bi bi-eye"></i></button> <button class="btn btn-sm btn-link p-0 mx-1 btn-action" onclick="editPdiDB(${realIdx})"><i class="bi bi-pencil-square"></i></button> <button class="btn btn-sm btn-link text-danger p-0 btn-action" onclick="deletePdiSaved(${realIdx})"><i class="bi bi-trash"></i></button></td></tr>`; }); }
+
+    function editDB(tab, idx){ let r=dbData[tab][idx]; document.getElementById('editIdx-'+tab).value=idx+2; if(tab=='prod'){ document.getElementById('prod-date').value=getCleanDate(r[0]); document.getElementById('prod-line').value=r[1]; document.getElementById('prod-m').value=r[3]; filterC('prod'); document.getElementById('prod-c').value=r[4]; document.getElementById('prod-p').value=r[5]; document.getElementById('prod-qty').value=r[6]; } if(tab=='disp'){ document.getElementById('disp-date').value=getCleanDate(r[0]); document.getElementById('disp-m').value=r[1]; filterC('disp'); document.getElementById('disp-c').value=r[2]; document.getElementById('disp-p').value=r[3]; document.getElementById('disp-qty').value=r[4]; } if(tab=='open'){ document.getElementById('open-month').value=r[0]; document.getElementById('open-type').value=r[1]; toggleOp(r[1]); document.getElementById('open-line').value=r[2]; document.getElementById('open-m').value=r[3]; filterC('open'); document.getElementById('open-c').value=r[4]; document.getElementById('open-p').value=r[5]; if(r[1]=='PDI'){document.getElementById('open-qpdi').value=r[6];document.getElementById('open-qrew').value=r[7];}else{document.getElementById('open-qdisp').value=r[9];} } document.getElementById('btnCancel'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.remove('hidden'); }
+    function submitEdit(tab){ let form=document.getElementById('form-'+tab), idx=document.getElementById('editIdx-'+tab).value, fd=new FormData(form); let arr=[]; if(tab=='prod') arr=[fd.get('date'), fd.get('line'), "NA", fd.get('model'), fd.get('color'), fd.get('partCode'), fd.get('fgQty')]; if(tab=='disp') arr=[fd.get('date'), fd.get('model'), fd.get('color'), fd.get('partCode'), fd.get('dispatchQty')]; if(tab=='open') arr=[fd.get('month'), fd.get('openType'), fd.get('line'), fd.get('model'), fd.get('color'), fd.get('partCode'), fd.get('pdiOpenQty'), fd.get('reworkOpenQty'), fd.get('reworkReason'), fd.get('dispatchOpenQty')]; let type=(tab=='prod'?'Production':(tab=='disp'?'Dispatch':'Opening')); toggleLoader(true); fetch(INV_URL, {method:'POST', body:JSON.stringify({action:'edit', type:type, rowIndex:parseInt(idx), data:arr})}).then(r=>r.json()).then(d=>{ alert("Updated"); cancelEdit(tab); window.onload(); }); }
+    function cancelEdit(tab){ document.getElementById('form-'+tab).reset(); document.getElementById('editIdx-'+tab).value=""; document.getElementById('btnCancel'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.add('hidden'); }
+    function delDB(tab, idx){ if(confirm("Delete?")){ toggleLoader(true); let type=(tab=='prod'?'Production':(tab=='disp'?'Dispatch':'Opening')); fetch(INV_URL, {method:'POST', body:JSON.stringify({action:'delete', type:type, rowIndex:idx+2})}).then(r=>r.json()).then(d=>{ alert("Deleted"); window.onload(); }); } }
+    function editPdiDB(idx){ let r=pdiData[idx]; document.getElementById('pdiEditIndex').value=idx+2; document.getElementById('pdi-date').value=getCleanDate(r[0]); document.getElementById('pdi-line').value=r[1]; document.getElementById('pdi-m').value=r[2]; filterC('pdi'); document.getElementById('pdi-c').value=r[3]; document.getElementById('pdi-p').value=r[4]; document.getElementById('pdi-lot').value=r[5]; document.getElementById('pdi-type').value=r[6]; document.getElementById('off').value=r[7]; document.getElementById('pas').value=r[8]; document.getElementById('btnCancelEdit').classList.remove('hidden'); }
+    function submitPdiEdit(){ let form=document.getElementById('form-pdi'), idx=document.getElementById('pdiEditIndex').value, fd=new FormData(form); let arr=[fd.get('date'), fd.get('line'), fd.get('model'), fd.get('color'), fd.get('partCode'), fd.get('lotId'), fd.get('lotType'), fd.get('pdiOffer'), fd.get('pdiPass'), fd.get('defectReason')]; toggleLoader(true); fetch(PDI_URL, {method:'POST', body:JSON.stringify({action:'edit', rowIndex:parseInt(idx), data:arr})}).then(r=>r.json()).then(d=>{ alert("Updated"); cancelPdiEdit(); window.onload(); }); }
+    function cancelPdiEdit(){ document.getElementById('form-pdi').reset(); document.getElementById('pdiEditIndex').value=""; document.getElementById('btnCancelEdit').classList.add('hidden'); }
+    async function deletePdiSaved(idx){ if(!confirm("Delete?"))return; toggleLoader(true); await fetch(PDI_URL,{method:'POST',body:JSON.stringify({action:'delete',rowIndex:idx+2})}); window.onload(); }
+    
+    function previewReport(tab){ 
+        let f=document.getElementById('filter-'+tab).value;
+        let d=dbData[tab].filter(r=>(tab=='open'?r[0]:getCleanDate(r[0]))===f); 
+        if(!d.length) return alert("No data"); 
+        
+        // Detailed Table Generation
+        let h = `<h5 class='text-center mb-3 text-primary'>Daily Summary: ${f}</h5>
+                 <div class="table-responsive"><table class='table table-bordered table-striped text-center align-middle'>
+                 <thead class='table-dark'>`;
+        
+        if(tab==='prod') {
+            h+=`<tr><th>Line</th><th>Model</th><th>Color</th><th>Part</th><th>Qty</th></tr></thead><tbody>`;
+            d.forEach(r=>{ h+=`<tr><td>${r[1]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td class="fw-bold">${r[6]}</td></tr>`; });
+        } else if(tab==='disp') {
+            h+=`<tr><th>Model</th><th>Color</th><th>Part</th><th>Qty</th></tr></thead><tbody>`;
+            d.forEach(r=>{ h+=`<tr><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td class="fw-bold">${r[4]}</td></tr>`; });
+        } else if(tab==='open') {
+            h+=`<tr><th>Type</th><th>Model</th><th>Line</th><th>Qty</th></tr></thead><tbody>`;
+            d.forEach(r=>{ h+=`<tr><td>${r[1]}</td><td>${r[3]}</td><td>${r[2]}</td><td class="fw-bold">${r[1]=='PDI'?r[6]:r[9]}</td></tr>`; });
+        }
+        h += `</tbody></table></div>`;
+        document.getElementById('summaryBody').innerHTML=h; 
+        new bootstrap.Modal(document.getElementById('summaryModal')).show(); 
+    }
+
+    function showDaySummary(){ 
+        let f=document.getElementById('recentFilter').value;
+        let d=pdiData.filter(r=>getCleanDate(r[0])===f); 
+        if(!d.length) return alert("No Data"); 
+        
+        let h=`<h5 class='text-center mb-3 text-success'>PDI Report: ${f}</h5>
+               <div class="table-responsive"><table class='table table-bordered table-striped text-center align-middle'>
+               <thead class='table-dark'><tr><th>Line</th><th>Model</th><th>Lot</th><th>Offer</th><th>Pass</th><th>Fail</th></tr></thead><tbody>`;
+        d.forEach(r=>{ 
+            let fail = r[7]-r[8];
+            h+=`<tr><td>${r[1]}</td><td>${r[2]}</td><td>${r[5]}</td><td>${r[7]}</td><td class="text-success fw-bold">${r[8]}</td><td class="${fail>0?'text-danger fw-bold':''}">${fail}</td></tr>`; 
+        }); 
+        h += `</tbody></table></div>`;
+        document.getElementById('summaryBody').innerHTML=h; 
+        new bootstrap.Modal(document.getElementById('summaryModal')).show(); 
+    }
+
+    function exportTableToExcel(tid, fname) { let wb=XLSX.utils.table_to_book(document.getElementById(tid),{sheet:"Sheet1"}); XLSX.writeFile(wb,fname+".xlsx"); }
+    function downloadPDF() { html2pdf().set({margin:10,filename:'Report.pdf',jsPDF:{unit:'mm',format:'a4',orientation:'landscape'}}).from(document.getElementById('pdf-content')).save(); }
+    function runPdiAnalysis(){
+        let from=document.getElementById('dashFrom').value, to=document.getElementById('dashTo').value;
+        let doff=0, dpass=0, dfail=0, dates={}, lines={}, floors={}, defects={};
+        pdiData.forEach(r=>{ let d=getCleanDate(r[0]); if(d>=from && d<=to){ let o=Number(r[7]||0), p=Number(r[8]||0), f=o-p; doff+=o; dpass+=p; dfail+=f; if(!dates[d])dates[d]={o:0,p:0}; dates[d].o+=o; dates[d].p+=p; let ln="L"+r[1]; if(!lines[ln])lines[ln]={o:0,p:0}; lines[ln].o+=o; lines[ln].p+=p; let fl=(r[1]<=8?"F1":(r[1]<=16?"F2":"Base")); if(!floors[fl])floors[fl]={o:0,p:0}; floors[fl].o+=o; floors[fl].p+=p; if(f>0 && r[9]) defects[r[9]]=(defects[r[9]]||0)+f; } });
+        document.getElementById('d_total_qty').innerText=doff; document.getElementById('d_passed_qty').innerText=dpass; document.getElementById('d_rejected_qty').innerText=dfail; document.getElementById('d_pass_rate').innerText=doff?((dpass/doff)*100).toFixed(1)+"%":"0%";
+        drawChart('ch_trend',Object.keys(dates).map(k=>[k.substr(5),(dates[k].p/dates[k].o)*100]),'Daily %'); drawChart('ch_line',Object.keys(lines).map(k=>[k,(lines[k].p/lines[k].o)*100]),'Line %'); drawChart('ch_floor',Object.keys(floors).map(k=>[k,(floors[k].p/floors[k].o)*100]),'Floor %'); drawChart('ch_defects',Object.keys(defects).map(k=>[k,defects[k]]), 'Defects');
+    }
+    function drawChart(id, arr, title) { let dt=new google.visualization.DataTable(); dt.addColumn('string','L'); dt.addColumn('number','V'); dt.addRows(arr); new google.visualization.ColumnChart(document.getElementById(id)).draw(dt,{title:title,legend:'none'}); }
+    function runClosureReport(){
+        let f1=document.getElementById('list_f1'), f2=document.getElementById('list_f2'), fb=document.getElementById('list_fb'); f1.innerHTML=f2.innerHTML=fb.innerHTML="";
+        pdiData.forEach(r => { let fail = (r[7] - r[8]); if(fail > 0) { let fl=(r[1]<=8?"Floor 1":(r[1]<=16?"Floor 2":"Basement")); let h = `<div class="ticket"><div class="d-flex justify-content-between fw-bold"><span>${r[5]||"No ID"}</span><span class="text-danger">L${r[1]}</span></div><div class="small">${r[2]}</div><div class="text-danger small fw-bold">Failed: ${fail} (${r[9]||"N/A"})</div></div>`; if(fl=='Floor 1') f1.innerHTML+=h; else if(fl=='Floor 2') f2.innerHTML+=h; else fb.innerHTML+=h; } });
+    }
 </script>
-
 </body>
 </html>
-
