@@ -124,6 +124,7 @@
                         <div class="filter-group">
                             <span class="fw-bold">From:</span> <input type="date" id="filter-prod-from" class="form-control w-auto" onchange="renderDBTable('prod')">
                             <span class="fw-bold">To:</span> <input type="date" id="filter-prod-to" class="form-control w-auto" onchange="renderDBTable('prod')">
+                            <button class="btn btn-dark" onclick="showDaySummary()">Preview Report</button>
                             <button class="btn btn-excel" onclick="exportTableToExcel('tbl-prod-db', 'Production_Data')"><i class="bi bi-file-earmark-excel"></i></button>
                         </div>
                     </div>
@@ -136,7 +137,7 @@
                     <div class="row g-4 align-items-end">
                         <div class="col-md-3"><label class="form-label">From Date</label><input type="date" id="perf-prod-from" class="form-control"></div>
                         <div class="col-md-3"><label class="form-label">To Date</label><input type="date" id="perf-prod-to" class="form-control"></div>
-                        <div class="col-md-6 text-end"><button class="btn btn-excel py-3 px-4" onclick="exportTableToExcel('perf-res-table', 'Production_Analysis')">Download Excel</button></div>
+                        <div class="col-md-6 text-end"><button class="btn btn-dark py-3 px-4 me-2" onclick="showDaySummary()">Preview Report</button><button class="btn btn-excel py-3 px-4" onclick="exportTableToExcel('perf-res-table', 'Production_Analysis')">Download Excel</button></div>
                     </div>
                 </div>
 
@@ -210,7 +211,6 @@
                             <button class="btn btn-excel" onclick="exportTableToExcel('tbl-pdi-db', 'PDI_Data')">Excel</button>
                         </div>
                     </div>
-                    <!-- Updated Table Structure -->
                     <div class="table-responsive" style="max-height: 600px;">
                         <table class="table table-bordered text-center table-hover" id="tbl-pdi-db">
                             <thead class="table-light sticky-top">
@@ -233,7 +233,7 @@
                 </div>
             </div>
             <div class="tab-pane fade" id="pdi-perf">
-                <div class="card p-4 mb-4"><div class="row g-4 align-items-end"><div class="col-md-3"><label class="form-label">From</label><input type="date" id="dashFrom" class="form-control"></div><div class="col-md-3"><label class="form-label">To</label><input type="date" id="dashTo" class="form-control"></div><div class="col-md-2"><button class="btn btn-primary w-100 py-3" onclick="runPdiAnalysis()">Analyze</button></div></div></div>
+                <div class="card p-4 mb-4"><div class="row g-4 align-items-end"><div class="col-md-3"><label class="form-label">From</label><input type="date" id="dashFrom" class="form-control"></div><div class="col-md-3"><label class="form-label">To</label><input type="date" id="dashTo" class="form-control"></div><div class="col-md-4 d-flex gap-2"><button class="btn btn-primary w-100 py-3" onclick="runPdiAnalysis()">Analyze</button><button class="btn btn-dark w-100 py-3" onclick="showDaySummary()">Preview Report</button></div></div></div>
                 <div id="pdf-content"><div class="row g-4 mb-5"><div class="col-md-3"><div class="stat-box border-dark"><h2 class="fw-bold display-5" id="d_total_qty">0</h2><small class="fs-5">TOTAL OFFER</small></div></div><div class="col-md-3"><div class="stat-box border-success"><h2 class="fw-bold display-5 text-success" id="d_passed_qty">0</h2><small class="fs-5">PASSED</small></div></div><div class="col-md-3"><div class="stat-box border-danger"><h2 class="fw-bold display-5 text-danger" id="d_rejected_qty">0</h2><small class="fs-5">FAILED</small></div></div><div class="col-md-3"><div class="stat-box border-primary"><h2 class="fw-bold display-5 text-primary" id="d_pass_rate">0%</h2><small class="fs-5">PASS RATE</small></div></div></div><div class="row g-4"><div class="col-md-6"><div class="card p-3"><div id="ch_trend" style="height:400px"></div></div></div><div class="col-md-6"><div class="card p-3"><div id="ch_line" style="height:400px"></div></div></div><div class="col-md-6"><div class="card p-3"><div id="ch_floor" style="height:400px"></div></div></div><div class="col-md-6"><div class="card p-3"><div id="ch_defects" style="height:400px"></div></div></div></div></div>
             </div>
             <div class="tab-pane fade" id="pdi-close">
@@ -272,6 +272,7 @@
                         <div class="filter-group">
                             <span class="fw-bold">From:</span> <input type="date" id="filter-disp-from" class="form-control w-auto" onchange="renderDBTable('disp')">
                             <span class="fw-bold">To:</span> <input type="date" id="filter-disp-to" class="form-control w-auto" onchange="renderDBTable('disp')">
+                            <button class="btn btn-dark" onclick="showDaySummary()">Preview Report</button>
                             <button class="btn btn-excel" onclick="exportTableToExcel('tbl-disp-db', 'Dispatch_Data')">Excel</button>
                         </div>
                     </div>
@@ -279,7 +280,7 @@
                 </div>
             </div>
             <div class="tab-pane fade" id="disp-perf">
-                <div class="card p-4 mb-4"><div class="row g-4 align-items-end"><div class="col-md-3"><label class="form-label">From</label><input type="date" id="disp-from" class="form-control"></div><div class="col-md-3"><label class="form-label">To</label><input type="date" id="disp-to" class="form-control"></div><div class="col-md-2"><button class="btn btn-primary w-100 py-3" onclick="calcPerf('disp')">Analyze</button></div></div></div>
+                <div class="card p-4 mb-4"><div class="row g-4 align-items-end"><div class="col-md-3"><label class="form-label">From</label><input type="date" id="disp-from" class="form-control"></div><div class="col-md-3"><label class="form-label">To</label><input type="date" id="disp-to" class="form-control"></div><div class="col-md-4 d-flex gap-2"><button class="btn btn-primary w-100 py-3" onclick="calcPerf('disp')">Analyze</button><button class="btn btn-dark w-100 py-3" onclick="showDaySummary()">Preview Report</button></div></div></div>
                 <div id="res-disp-perf"></div>
             </div>
         </div>
@@ -319,6 +320,7 @@
                         <div class="filter-group">
                             <span class="fw-bold">From:</span> <input type="month" id="filter-open-from" class="form-control w-auto" onchange="renderDBTable('open')">
                             <span class="fw-bold">To:</span> <input type="month" id="filter-open-to" class="form-control w-auto" onchange="renderDBTable('open')">
+                            <button class="btn btn-dark" onclick="showDaySummary()">Preview Report</button>
                             <button class="btn btn-excel" onclick="exportTableToExcel('tbl-open-db', 'Opening_Data')">Excel</button>
                         </div>
                     </div>
@@ -326,7 +328,7 @@
                 </div>
             </div>
             <div class="tab-pane fade" id="open-perf">
-                <div class="card p-4 mb-4"><div class="row"><div class="col-md-4"><label class="form-label">Select Month</label><input type="month" id="open-perf-month" class="form-control"></div><div class="col-md-2"><br><button class="btn btn-primary w-100 py-3" onclick="calcPerf('open')">Analyze</button></div></div></div>
+                <div class="card p-4 mb-4"><div class="row g-4 align-items-end"><div class="col-md-4"><label class="form-label">Select Month</label><input type="month" id="open-perf-month" class="form-control"></div><div class="col-md-4 d-flex gap-2"><button class="btn btn-primary w-100 py-3" onclick="calcPerf('open')">Analyze</button><button class="btn btn-dark w-100 py-3" onclick="showDaySummary()">Preview Report</button></div></div></div>
                 <div id="res-open-perf"></div>
             </div>
         </div>
@@ -344,12 +346,16 @@
                             <input type="number" id="dashLineInput" placeholder="1-24" class="form-control w-auto">
                             <button class="btn btn-dark py-2 px-4" onclick="renderDash1()">Show</button>
                         </div>
-                        <button class="btn btn-excel py-2 px-4" onclick="exportTableToExcel('tbl-dash1', 'Line_Live_Report')"><i class="bi bi-file-earmark-excel"></i> Download Excel</button>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-dark py-2 px-4" onclick="showDaySummary()">Preview Report</button>
+                            <button class="btn btn-excel py-2 px-4" onclick="exportTableToExcel('tbl-dash1', 'Line_Live_Report')"><i class="bi bi-file-earmark-excel"></i> Download Excel</button>
+                        </div>
                     </div>
                     <div class="table-responsive"><table class="table table-bordered text-center table-dash" id="tbl-dash1"><thead class="table-dark"><tr><th rowspan="2">Model</th><th rowspan="2">Color</th><th colspan="3" class="bg-primary">Input</th><th colspan="5" class="bg-success">PDI PASS</th><th colspan="4" class="bg-warning text-dark">Balances</th></tr><tr><th>Opn PDI</th><th>Opn Rew</th><th>FG Out</th><th>Fresh</th><th>Warr</th><th>Mkt</th><th>OldFG</th><th>Rew</th><th class="bg-info text-white">Bal(PDI)</th><th>OldFG Bal</th><th>For Rework</th><th>Reason</th></tr></thead><tbody id="dash1-res"></tbody></table></div>
                 </div>
                 <div class="tab-pane fade" id="d-master">
-                    <div class="d-flex justify-content-end p-2 mb-2">
+                    <div class="d-flex justify-content-end p-2 mb-2 gap-2">
+                         <button class="btn btn-dark py-2 px-4" onclick="showDaySummary()">Preview Report</button>
                          <button class="btn btn-excel py-2 px-4" onclick="exportTableToExcel('tbl-dash2', 'Master_Sheet_Report')"><i class="bi bi-file-earmark-excel"></i> Download Excel</button>
                     </div>
                     <div class="table-responsive"><table class="table table-bordered table-striped text-center table-dash" id="tbl-dash2"><thead class="table-dark"><tr><th>Model</th><th>Color</th><th>Opn(PDI)+Opn(Rew)</th><th>FG Out</th><th>PDI Pass (Total)</th><th>Opn(Disp)</th><th>Dispatched</th><th class="bg-primary">Bal(PDI)</th><th class="bg-success">Bal(Disp)</th></tr></thead><tbody id="master-body"></tbody></table></div>
@@ -407,17 +413,11 @@
 
     function safeLen(arr){ return arr ? arr.length : 0; }
 
-    // --- UPDATED DATE HELPER TO FIX SHIFTING ---
     function getCleanDate(iso){
         if(!iso) return "";
-        // If already formatted like 2025-12, return it
         if(typeof iso === 'string' && iso.length === 7) return iso;
-        // If already formatted like 2025-12-28, return it
         if(typeof iso === 'string' && iso.length === 10) return iso;
-        
-        // Handle ISO Date Objects (Prevent Timezone shift)
         let d = new Date(iso);
-        // Manually format to YYYY-MM-DD using local time concept
         let year = d.getFullYear();
         let month = (d.getMonth() + 1).toString().padStart(2, '0');
         let day = d.getDate().toString().padStart(2, '0');
@@ -614,14 +614,13 @@
         document.getElementById('master-body').innerHTML = h;
     }
 
-    function switchMainTab(id) { document.querySelectorAll('.main-view').forEach(e=>e.classList.add('hidden')); document.getElementById('view-'+id).classList.remove('hidden'); document.querySelectorAll('.nav-main .nav-link').forEach(e=>e.classList.remove('active')); event.target.classList.add('active'); if(id=='dash'){ renderDash1(); renderDash2(); }}
-    function switchPdiSub(sub, btn) { ['entry','dash','close'].forEach(t => document.getElementById('pdi-sub-'+t).classList.add('hidden')); document.getElementById('pdi-sub-'+sub).classList.remove('hidden'); btn.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('active', 'btn-outline-primary', 'btn-outline-dark', 'btn-outline-danger')); btn.classList.add('active'); if(sub==='entry') btn.classList.add('btn-outline-primary'); if(sub==='dash') { btn.classList.add('btn-outline-dark'); runPdiAnalysis(); } if(sub==='close') { btn.classList.add('btn-outline-danger'); runClosureReport(); } }
+    function switchMainTab(id) { document.querySelectorAll('.main-view').forEach(e=>e.classList.add('hidden')); document.getElementById('view-'+id).classList.remove('hidden'); document.querySelectorAll('.nav-main .nav-link').forEach(e=>e.classList.remove('active')); if(event) event.target.classList.add('active'); if(id=='dash'){ renderDash1(); renderDash2(); }}
     function toggleLoader(s){ document.getElementById('global-loader').style.display = s?'flex':'none'; }
     function populateModels(ids){ if(!masterData.length)return; let m=[...new Set(masterData.map(r=>r[1]))].sort(); ids.forEach(x=>{ let s=document.getElementById(x+'-m'); s.innerHTML='<option value="">Select</option>'; m.forEach(v=>s.innerHTML+=`<option value="${v}">${v}</option>`) }); }
     function filterC(p){ let m=document.getElementById(p+'-m').value,s=document.getElementById(p+'-c'); s.innerHTML='<option value="">Select</option>'; [...new Set(masterData.filter(r=>r[1]==m).map(r=>r[2]))].sort().forEach(c=>s.innerHTML+=`<option value="${c}">${c}</option>`); }
     function fillP(p){ let m=document.getElementById(p+'-m').value,c=document.getElementById(p+'-c').value,f=masterData.find(r=>r[1]==m&&r[2]==c); if(f)document.getElementById(p+'-p').value=f[0]; }
     function toggleOp(v){ document.querySelectorAll('.grp-pdi').forEach(e=>e.classList.toggle('hidden',v!='PDI')); document.querySelector('.grp-disp').classList.toggle('hidden',v!='Dispatch'); }
-    function calcP(){ let f=(document.getElementById('off').value||0)-(document.getElementById('pas').value||0); document.getElementById('fal').value=f; document.getElementById('defBox').classList.toggle('hidden',f<=0); }
+    function calcP(){ let f=(document.getElementById('off').value||0)-(document.getElementById('pas').value||0); document.getElementById('fal').value=f; }
     function fmtDate(iso){ if(!iso)return ""; let d=new Date(iso); d.setHours(12); return d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0'); }
     function checkFloor(i,id){ let v=parseInt(i.value),e=document.getElementById(id); e.className="floor-badge"; if(v>=1&&v<=8){e.innerText="1st";e.classList.add("bg-f1");}else if(v>=9&&v<=16){e.innerText="2nd";e.classList.add("bg-f2");}else if(v>=17&&v<=24){e.innerText="Base";e.classList.add("bg-base");}else e.classList.add("hidden"); }
     function addQueue(tab) { let form=document.getElementById('form-'+tab); if(document.getElementById('editIdx-'+tab).value!="") { submitEdit(tab); return; } if(!form.checkValidity()){ form.reportValidity(); return; } let fd=Object.fromEntries(new FormData(form)); queueData[tab].push(fd); renderQueue(tab); form.reset(); document.getElementById(tab+'-date').value=new Date().toLocaleDateString('en-CA'); }
@@ -634,115 +633,38 @@
     function renderDBTable(tab) { 
         let tb=document.getElementById('db-'+tab); tb.innerHTML=""; 
         let data = dbData[tab]; if(!data || data.length===0) { tb.innerHTML="<tr><td colspan='8'>No data found</td></tr>"; return; } 
-        
         let from, to;
-        // FIXED OPENING MONTH COMPARISON
-        if(tab==='open') {
-             from = document.getElementById('filter-open-from').value;
-             to = document.getElementById('filter-open-to').value;
-        } else {
-             from = document.getElementById('filter-'+tab+'-from').value;
-             to = document.getElementById('filter-'+tab+'-to').value;
-        }
-
+        if(tab==='open') { from = document.getElementById('filter-open-from').value; to = document.getElementById('filter-open-to').value; } 
+        else { from = document.getElementById('filter-'+tab+'-from').value; to = document.getElementById('filter-'+tab+'-to').value; }
         data.slice().reverse().forEach((r, idx)=>{ 
-            if(!r) return; 
-            let realIdx = data.length - 1 - idx; 
-            let rowDate = getCleanDate(r[0]);
-            
-            // For Opening, handle YYYY-MM
-            if(tab === 'open') {
-               rowDate = rowDate.substring(0, 7);
-            }
-
+            if(!r) return; let realIdx = data.length - 1 - idx; let rowDate = getCleanDate(r[0]);
+            if(tab === 'open') rowDate = rowDate.substring(0, 7);
             if(rowDate >= from && rowDate <= to) { 
                 let row = tab=='prod' ? `<td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td>` : tab=='disp' ? `<td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td>` : `<td>${r[0]}</td><td>${r[1]}</td><td>${r[3]}</td><td>${r[5]}</td><td>${r[1]=='PDI'?r[6]:r[9]}</td>`; 
-                // FIXED: Passed realIdx correctly to functions
                 tb.innerHTML += `<tr>${row}<td><button class="btn btn-sm btn-link p-0 btn-action" onclick="viewDetail('${tab}', ${realIdx})"><i class="bi bi-eye"></i></button> <button class="btn btn-sm btn-link p-0 mx-1 btn-action" onclick="editDB('${tab}',${realIdx})"><i class="bi bi-pencil-square"></i></button> <button class="btn btn-sm btn-link text-danger p-0 btn-action" onclick="delDB('${tab}',${realIdx})"><i class="bi bi-trash"></i></button></td></tr>`; 
             } 
         }); 
     }
     
-    // --- UPDATED PDI TABLE TO SHOW ALL DETAILS ---
     function renderRecentTable(){ 
         let tb=document.getElementById('crudTable'); tb.innerHTML=""; 
         let from = document.getElementById('pdi-from').value;
         let to = document.getElementById('pdi-to').value;
-        
         pdiData.slice().reverse().forEach((r,idx)=>{ 
-            if(!r) return; 
-            let realIdx = pdiData.length - 1 - idx; 
-            let d = getCleanDate(r[0]);
+            if(!r) return; let realIdx = pdiData.length - 1 - idx; let d = getCleanDate(r[0]);
             if(d >= from && d <= to) 
-                // Added missing columns: Line(r1), Color(r3), Defect(r9)
-                tb.innerHTML+=`<tr>
-                    <td>${fmtDate(r[0])}</td>
-                    <td>${r[1]}</td>
-                    <td>${r[2]}</td>
-                    <td>${r[3]}</td>
-                    <td>${r[5]}</td>
-                    <td>${r[6]}</td>
-                    <td>${r[8]}/${r[7]}</td>
-                    <td class="text-danger fw-bold">${r[7]-r[8]}</td>
-                    <td class="small text-muted">${r[9]||'-'}</td>
-                    <td>
-                        <button class="btn btn-sm btn-link p-0 btn-action" onclick="viewPdiDetail(${realIdx})"><i class="bi bi-eye"></i></button> 
-                        <button class="btn btn-sm btn-link p-0 mx-1 btn-action" onclick="editPdiDB(${realIdx})"><i class="bi bi-pencil-square"></i></button> 
-                        <button class="btn btn-sm btn-link text-danger p-0 btn-action" onclick="deletePdiSaved(${realIdx})"><i class="bi bi-trash"></i></button>
-                    </td>
-                </tr>`; 
+                tb.innerHTML+=`<tr><td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[5]}</td><td>${r[6]}</td><td>${r[8]}/${r[7]}</td><td class="text-danger fw-bold">${r[7]-r[8]}</td><td class="small text-muted">${r[9]||'-'}</td><td><button class="btn btn-sm btn-link p-0 btn-action" onclick="viewPdiDetail(${realIdx})"><i class="bi bi-eye"></i></button> <button class="btn btn-sm btn-link p-0 mx-1 btn-action" onclick="editPdiDB(${realIdx})"><i class="bi bi-pencil-square"></i></button> <button class="btn btn-sm btn-link text-danger p-0 btn-action" onclick="deletePdiSaved(${realIdx})"><i class="bi bi-trash"></i></button></td></tr>`; 
         }); 
     }
-
-    // --- UPDATED EDIT FUNCTIONS WITH SCROLL AND BUTTON STATE ---
 
     function editDB(tab, idx){ 
         if(!dbData[tab] || !dbData[tab][idx]) return;
         let r=dbData[tab][idx]; 
-        
-        // Scroll to form so user sees it
         document.getElementById('form-' + tab).scrollIntoView({ behavior: 'smooth', block: 'center' });
-        
         document.getElementById('editIdx-'+tab).value=idx+2; 
-        
-        if(tab=='prod'){ 
-            document.getElementById('prod-date').value=getCleanDate(r[0]); 
-            document.getElementById('prod-line').value=r[1]; 
-            document.getElementById('prod-m').value=r[3]; 
-            filterC('prod'); 
-            document.getElementById('prod-c').value=r[4]; 
-            document.getElementById('prod-p').value=r[5]; 
-            document.getElementById('prod-qty').value=r[6]; 
-            document.getElementById('btnAddProd').innerText = "Update Queue"; // Visual change
-            document.getElementById('btnAddProd').classList.replace('btn-warning', 'btn-primary');
-        } 
-        if(tab=='disp'){ 
-            document.getElementById('disp-date').value=getCleanDate(r[0]); 
-            document.getElementById('disp-m').value=r[1]; 
-            filterC('disp'); 
-            document.getElementById('disp-c').value=r[2]; 
-            document.getElementById('disp-p').value=r[3]; 
-            document.getElementById('disp-qty').value=r[4]; 
-            document.getElementById('btnAddDisp').innerText = "Update Queue"; // Visual change
-            document.getElementById('btnAddDisp').classList.replace('btn-warning', 'btn-primary');
-        } 
-        if(tab=='open'){ 
-            // Fix: Handle Date object for month input
-            let mVal = getCleanDate(r[0]).substring(0, 7);
-            document.getElementById('open-month').value=mVal; 
-            
-            document.getElementById('open-type').value=r[1]; 
-            toggleOp(r[1]); 
-            document.getElementById('open-line').value=r[2]; 
-            document.getElementById('open-m').value=r[3]; 
-            filterC('open'); 
-            document.getElementById('open-c').value=r[4]; 
-            document.getElementById('open-p').value=r[5]; 
-            if(r[1]=='PDI'){document.getElementById('open-qpdi').value=r[6];document.getElementById('open-qrew').value=r[7];}
-            else{document.getElementById('open-qdisp').value=r[9];} 
-            document.getElementById('btnAddOpen').innerText = "Update Queue"; // Visual change
-            document.getElementById('btnAddOpen').classList.replace('btn-info', 'btn-primary');
-        } 
+        if(tab=='prod'){ document.getElementById('prod-date').value=getCleanDate(r[0]); document.getElementById('prod-line').value=r[1]; document.getElementById('prod-m').value=r[3]; filterC('prod'); document.getElementById('prod-c').value=r[4]; document.getElementById('prod-p').value=r[5]; document.getElementById('prod-qty').value=r[6]; document.getElementById('btnAddProd').innerText = "Update Queue"; document.getElementById('btnAddProd').classList.replace('btn-warning', 'btn-primary'); } 
+        if(tab=='disp'){ document.getElementById('disp-date').value=getCleanDate(r[0]); document.getElementById('disp-m').value=r[1]; filterC('disp'); document.getElementById('disp-c').value=r[2]; document.getElementById('disp-p').value=r[3]; document.getElementById('disp-qty').value=r[4]; document.getElementById('btnAddDisp').innerText = "Update Queue"; document.getElementById('btnAddDisp').classList.replace('btn-warning', 'btn-primary'); } 
+        if(tab=='open'){ let mVal = getCleanDate(r[0]).substring(0, 7); document.getElementById('open-month').value=mVal; document.getElementById('open-type').value=r[1]; toggleOp(r[1]); document.getElementById('open-line').value=r[2]; document.getElementById('open-m').value=r[3]; filterC('open'); document.getElementById('open-c').value=r[4]; document.getElementById('open-p').value=r[5]; if(r[1]=='PDI'){document.getElementById('open-qpdi').value=r[6];document.getElementById('open-qrew').value=r[7];} else{document.getElementById('open-qdisp').value=r[9];} document.getElementById('btnAddOpen').innerText = "Update Queue"; document.getElementById('btnAddOpen').classList.replace('btn-info', 'btn-primary'); } 
         document.getElementById('btnCancel'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.remove('hidden'); 
     }
     
@@ -752,97 +674,45 @@
         if(tab=='prod') arr=[fd.get('date'), fd.get('line'), "NA", fd.get('model'), fd.get('color'), fd.get('partCode'), fd.get('fgQty')]; 
         if(tab=='disp') arr=[fd.get('date'), fd.get('model'), fd.get('color'), fd.get('partCode'), fd.get('dispatchQty')]; 
         if(tab=='open') arr=[fd.get('month'), fd.get('openType'), fd.get('line'), fd.get('model'), fd.get('color'), fd.get('partCode'), fd.get('pdiOpenQty'), fd.get('reworkOpenQty'), fd.get('reworkReason'), fd.get('dispatchOpenQty')]; 
-        
         let type=(tab=='prod'?'Production':(tab=='disp'?'Dispatch':'Opening')); 
-        toggleLoader(true); 
-        fetch(INV_URL, {method:'POST', body:JSON.stringify({action:'edit', type:type, rowIndex:parseInt(idx), data:arr})}).then(r=>r.json()).then(d=>{ 
-            alert("Updated Successfully"); cancelEdit(tab); window.onload(); 
-        }).catch(e=>{ toggleLoader(false); alert("Update Failed"); }); 
+        toggleLoader(true); fetch(INV_URL, {method:'POST', body:JSON.stringify({action:'edit', type:type, rowIndex:parseInt(idx), data:arr})}).then(r=>r.json()).then(d=>{ alert("Updated Successfully"); cancelEdit(tab); window.onload(); }).catch(e=>{ toggleLoader(false); alert("Update Failed"); }); 
     }
     
     function cancelEdit(tab){ 
-        document.getElementById('form-'+tab).reset(); 
-        document.getElementById('editIdx-'+tab).value=""; 
-        
+        document.getElementById('form-'+tab).reset(); document.getElementById('editIdx-'+tab).value=""; 
         let btnId = tab=='prod'?'btnAddProd':(tab=='disp'?'btnAddDisp':'btnAddOpen');
         let btnText = tab=='disp'?'Add':(tab=='open'?'Add':'+ Add to Queue');
         let btnEl = document.getElementById(btnId);
-        
-        btnEl.innerText = btnText;
-        btnEl.classList.remove('btn-primary');
+        btnEl.innerText = btnText; btnEl.classList.remove('btn-primary');
         if(tab=='prod' || tab=='disp') btnEl.classList.add('btn-warning');
         if(tab=='open') btnEl.classList.add('btn-info');
-
         document.getElementById('btnCancel'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.add('hidden'); 
     }
     
     function delDB(tab, idx){ 
         if(confirm("Are you sure you want to delete this record?")){ 
-            toggleLoader(true); 
-            let type=(tab=='prod'?'Production':(tab=='disp'?'Dispatch':'Opening')); 
-            // Send request to delete
-            fetch(INV_URL, {method:'POST', body:JSON.stringify({action:'delete', type:type, rowIndex:idx+2})})
-            .then(r=>r.json())
-            .then(d=>{ 
-                alert("Deleted Successfully"); window.onload(); 
-            })
-            .catch(e => {
-                toggleLoader(false); alert("Delete Failed: " + e.message);
-            });
+            toggleLoader(true); let type=(tab=='prod'?'Production':(tab=='disp'?'Dispatch':'Opening')); 
+            fetch(INV_URL, {method:'POST', body:JSON.stringify({action:'delete', type:type, rowIndex:idx+2})}).then(r=>r.json()).then(d=>{ alert("Deleted Successfully"); window.onload(); }).catch(e => { toggleLoader(false); alert("Delete Failed"); });
         } 
     }
     
     function editPdiDB(idx){ 
         if(!pdiData[idx]) return;
-        let r=pdiData[idx]; 
-        document.getElementById('pdi-card-container').scrollIntoView({ behavior: 'smooth', block: 'center' });
-        document.getElementById('pdiEditIndex').value=idx+2; 
-        document.getElementById('pdi-date').value=getCleanDate(r[0]); 
-        document.getElementById('pdi-line').value=r[1]; 
-        document.getElementById('pdi-m').value=r[2]; 
-        filterC('pdi'); 
-        document.getElementById('pdi-c').value=r[3]; 
-        document.getElementById('pdi-p').value=r[4]; 
-        document.getElementById('pdi-lot').value=r[5]; 
-        document.getElementById('pdi-type').value=r[6]; 
-        document.getElementById('off').value=r[7]; 
-        document.getElementById('pas').value=r[8]; 
-        document.getElementById('btnAddPdi').innerText = "Update Entry";
-        document.getElementById('btnAddPdi').classList.replace('btn-warning', 'btn-primary');
-        document.getElementById('btnCancelEdit').classList.remove('hidden'); 
+        let r=pdiData[idx]; document.getElementById('pdi-card-container').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        document.getElementById('pdiEditIndex').value=idx+2; document.getElementById('pdi-date').value=getCleanDate(r[0]); document.getElementById('pdi-line').value=r[1]; document.getElementById('pdi-m').value=r[2]; filterC('pdi'); document.getElementById('pdi-c').value=r[3]; document.getElementById('pdi-p').value=r[4]; document.getElementById('pdi-lot').value=r[5]; document.getElementById('pdi-type').value=r[6]; document.getElementById('off').value=r[7]; document.getElementById('pas').value=r[8]; document.getElementById('btnAddPdi').innerText = "Update Entry"; document.getElementById('btnAddPdi').classList.replace('btn-warning', 'btn-primary'); document.getElementById('btnCancelEdit').classList.remove('hidden'); 
     }
     
     function submitPdiEdit(){ 
         let form=document.getElementById('form-pdi'), idx=document.getElementById('pdiEditIndex').value, fd=new FormData(form); 
         let arr=[fd.get('date'), fd.get('line'), fd.get('model'), fd.get('color'), fd.get('partCode'), fd.get('lotId'), fd.get('lotType'), fd.get('pdiOffer'), fd.get('pdiPass'), fd.get('defectReason')]; 
-        toggleLoader(true); 
-        fetch(PDI_URL, {method:'POST', body:JSON.stringify({action:'edit', rowIndex:parseInt(idx), data:arr})}).then(r=>r.json()).then(d=>{ alert("Updated"); cancelPdiEdit(); window.onload(); }); 
+        toggleLoader(true); fetch(PDI_URL, {method:'POST', body:JSON.stringify({action:'edit', rowIndex:parseInt(idx), data:arr})}).then(r=>r.json()).then(d=>{ alert("Updated"); cancelPdiEdit(); window.onload(); }); 
     }
     
-    function cancelPdiEdit(){ 
-        document.getElementById('form-pdi').reset(); 
-        document.getElementById('pdiEditIndex').value=""; 
-        let btn = document.getElementById('btnAddPdi');
-        btn.innerText = "+ Add Pending";
-        btn.classList.replace('btn-primary', 'btn-warning');
-        document.getElementById('btnCancelEdit').classList.add('hidden'); 
-    }
+    function cancelPdiEdit(){ document.getElementById('form-pdi').reset(); document.getElementById('pdiEditIndex').value=""; let btn = document.getElementById('btnAddPdi'); btn.innerText = "+ Add Pending"; btn.classList.replace('btn-primary', 'btn-warning'); document.getElementById('btnCancelEdit').classList.add('hidden'); }
     
-    async function deletePdiSaved(idx){ 
-        if(!confirm("Delete PDI Record?"))return; 
-        toggleLoader(true); 
-        try {
-            await fetch(PDI_URL,{method:'POST',body:JSON.stringify({action:'delete',rowIndex:idx+2})}); 
-            alert("Deleted");
-            window.onload(); 
-        } catch(e) {
-            toggleLoader(false);
-            alert("Error deleting PDI record");
-        }
-    }
+    async function deletePdiSaved(idx){ if(!confirm("Delete PDI Record?"))return; toggleLoader(true); try { await fetch(PDI_URL,{method:'POST',body:JSON.stringify({action:'delete',rowIndex:idx+2})}); alert("Deleted"); window.onload(); } catch(e) { toggleLoader(false); alert("Error deleting PDI record"); } }
     
     function exportTableToExcel(tid, fname) { let wb=XLSX.utils.table_to_book(document.getElementById(tid),{sheet:"Sheet1"}); XLSX.writeFile(wb,fname+".xlsx"); }
-    function downloadPDF() { html2pdf().set({margin:10,filename:'Report.pdf',jsPDF:{unit:'mm',format:'a4',orientation:'landscape'}}).from(document.getElementById('pdf-content')).save(); }
     
     function runPdiAnalysis(){
         let from=document.getElementById('dashFrom').value, to=document.getElementById('dashTo').value;
@@ -856,32 +726,28 @@
     function runClosureReport(){
         let f1=document.getElementById('list_f1'), f2=document.getElementById('list_f2'), fb=document.getElementById('list_fb'); 
         f1.innerHTML=f2.innerHTML=fb.innerHTML="";
-        
         let lotStatus = {};
         let sortedPDI = [...pdiData].sort((a,b) => new Date(a[0]) - new Date(b[0]));
-        sortedPDI.forEach(r => {
-            let lot = r[5]; 
-            if(lot) {
-                let fail = Number(r[7]) - Number(r[8]); 
-                lotStatus[lot] = { fails: fail, row: r };
-            }
-        });
-        for(let lot in lotStatus) {
-            let item = lotStatus[lot];
-            if(item.fails > 0) {
-                let r = item.row;
-                let fl=(r[1]<=8?"Floor 1":(r[1]<=16?"Floor 2":"Basement")); 
-                let h = `<div class="ticket"><div class="d-flex justify-content-between fw-bold"><span>${lot}</span><span class="text-danger">L${r[1]}</span></div><div class="small">${r[2]}</div><div class="text-danger small fw-bold">Failed: ${item.fails} (${r[9]||"N/A"})</div></div>`; 
-                if(fl=='Floor 1') f1.innerHTML+=h; else if(fl=='Floor 2') f2.innerHTML+=h; else fb.innerHTML+=h;
-            }
-        }
+        sortedPDI.forEach(r => { let lot = r[5]; if(lot) { let fail = Number(r[7]) - Number(r[8]); lotStatus[lot] = { fails: fail, row: r }; } });
+        for(let lot in lotStatus) { let item = lotStatus[lot]; if(item.fails > 0) { let r = item.row; let fl=(r[1]<=8?"Floor 1":(r[1]<=16?"Floor 2":"Basement")); let h = `<div class="ticket p-2 border-bottom mb-2"><div class="d-flex justify-content-between fw-bold"><span>${lot}</span><span class="text-danger">L${r[1]}</span></div><div class="small">${r[2]}</div><div class="text-danger small fw-bold">Failed: ${item.fails}</div></div>`; if(fl=='Floor 1') f1.innerHTML+=h; else if(fl=='Floor 2') f2.innerHTML+=h; else fb.innerHTML+=h; } }
     }
 
     function showDaySummary(){ 
-        let f = document.getElementById('pdi-from').value; 
-        let t = document.getElementById('pdi-to').value;
+        let f, t;
+        // Logic to determine date range based on active tab
+        if(!document.getElementById('view-prod').classList.contains('hidden')) { f = document.getElementById('filter-prod-from').value; t = document.getElementById('filter-prod-to').value; }
+        else if(!document.getElementById('view-disp').classList.contains('hidden')) { f = document.getElementById('filter-disp-from').value; t = document.getElementById('filter-disp-to').value; }
+        else if(!document.getElementById('view-open').classList.contains('hidden')) { f = document.getElementById('filter-open-from').value + "-01"; t = document.getElementById('filter-open-to').value + "-28"; }
+        else if(!document.getElementById('view-pdi-master').classList.contains('hidden')) {
+             if(!document.getElementById('pdi-perf').classList.contains('hidden')) { f = document.getElementById('dashFrom').value; t = document.getElementById('dashTo').value; }
+             else { f = document.getElementById('pdi-from').value; t = document.getElementById('pdi-to').value; }
+        }
+        else { f = document.getElementById('pdi-from').value; t = document.getElementById('pdi-to').value; }
+
+        if(!f || !t) { f = new Date().toISOString().split('T')[0]; t = f; }
+
         let d = pdiData.filter(r => { let dt = getCleanDate(r[0]); return dt >= f && dt <= t; });
-        if(!d.length) return alert("No Data in Range"); 
+        if(!d.length) return alert("No PDI Data in Range"); 
 
         let stats = { totalQty: 0, totalPass: 0, totalFail: 0, totalLots: 0, passedLots: 0, rejectedLots: 0, floors: { 'Floor 1': { lots:0, passLots:0, qty:0, passQty:0 }, 'Floor 2': { lots:0, passLots:0, qty:0, passQty:0 }, 'Basement': { lots:0, passLots:0, qty:0, passQty:0 } } };
         let rejectedList = [];
@@ -896,13 +762,9 @@
         });
 
         let passRate = stats.totalQty ? ((stats.totalPass / stats.totalQty) * 100).toFixed(2) : "0.00";
-        // --- ADDED LOGO TO PREVIEW ---
         let html = `<div class="report-2x container-fluid">
-            <div class="d-flex justify-content-center align-items-center mb-4">
-                 <img src="https://i.postimg.cc/5y7SN4xc/logo.png" style="height:80px;" class="me-3">
-                 <h2 class="fw-bold m-0 text-primary">Daily PDI Report</h2>
-            </div>
-            <div class="report-header">Date: ${fmtDate(f)} ${f!==t ? ' to '+fmtDate(t) : ''}</div>
+            <div class="d-flex justify-content-center align-items-center mb-4"><img src="https://i.postimg.cc/5y7SN4xc/logo.png" style="height:80px;" class="me-3"><h2 class="fw-bold m-0 text-primary">Daily PDI Report</h2></div>
+            <div class="report-header">Date Range: ${fmtDate(f)} to ${fmtDate(t)}</div>
             <div class="row g-4 mb-5">
                 <div class="col-md-3"><div class="report-card rc-total"><div class="rc-num text-dark">${stats.totalQty}</div><div class="rc-label">TOTAL UNITS</div><div class="rc-sub">(Lots: ${stats.totalLots})</div></div></div>
                 <div class="col-md-3"><div class="report-card rc-pass"><div class="rc-num text-success">${stats.totalPass}</div><div class="rc-label">PASSED UNITS</div><div class="rc-sub">(Lots: ${stats.passedLots})</div></div></div>
@@ -911,10 +773,8 @@
             </div>
             <h4 class="fw-bold text-secondary mb-3 text-uppercase">Floor Wise Performance</h4>
             <table class="table table-bordered table-report text-center bg-white mb-5 shadow-sm"><thead><tr><th>Floor Name</th><th>Lots</th><th>Passed Lots</th><th>Total Qty</th><th>Pass Qty</th><th>Rate %</th></tr></thead><tbody>`;
-        
         for(let fName in stats.floors) {
-            let fl = stats.floors[fName];
-            if(fl.qty > 0 || fl.lots > 0) {
+            let fl = stats.floors[fName]; if(fl.qty > 0 || fl.lots > 0) {
                 let frate = fl.qty ? ((fl.passQty / fl.qty) * 100).toFixed(2) : "0.00";
                 let badgeClass = frate >= 95 ? 'bg-success' : (frate >= 90 ? 'bg-warning text-dark' : 'bg-danger');
                 html += `<tr><td class="fw-bold text-start ps-4">${fName}</td><td>${fl.lots}</td><td>${fl.passLots}</td><td>${fl.qty}</td><td>${fl.passQty}</td><td><span class="badge ${badgeClass} badge-lg">${frate}%</span></td></tr>`;
@@ -930,5 +790,3 @@
 </script>
 </body>
 </html>
-
-
