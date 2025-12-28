@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -637,6 +636,7 @@
 
             if(rowDate >= from && rowDate <= to) { 
                 let row = tab=='prod' ? `<td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td>` : tab=='disp' ? `<td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td>` : `<td>${r[0]}</td><td>${r[1]}</td><td>${r[3]}</td><td>${r[5]}</td><td>${r[1]=='PDI'?r[6]:r[9]}</td>`; 
+                // FIXED: Passed realIdx correctly to functions
                 tb.innerHTML += `<tr>${row}<td><button class="btn btn-sm btn-link p-0 btn-action" onclick="viewDetail('${tab}', ${realIdx})"><i class="bi bi-eye"></i></button> <button class="btn btn-sm btn-link p-0 mx-1 btn-action" onclick="editDB('${tab}',${realIdx})"><i class="bi bi-pencil-square"></i></button> <button class="btn btn-sm btn-link text-danger p-0 btn-action" onclick="delDB('${tab}',${realIdx})"><i class="bi bi-trash"></i></button></td></tr>`; 
             } 
         }); 
@@ -657,15 +657,137 @@
         }); 
     }
 
-    function editDB(tab, idx){ let r=dbData[tab][idx]; document.getElementById('editIdx-'+tab).value=idx+2; if(tab=='prod'){ document.getElementById('prod-date').value=getCleanDate(r[0]); document.getElementById('prod-line').value=r[1]; document.getElementById('prod-m').value=r[3]; filterC('prod'); document.getElementById('prod-c').value=r[4]; document.getElementById('prod-p').value=r[5]; document.getElementById('prod-qty').value=r[6]; } if(tab=='disp'){ document.getElementById('disp-date').value=getCleanDate(r[0]); document.getElementById('disp-m').value=r[1]; filterC('disp'); document.getElementById('disp-c').value=r[2]; document.getElementById('disp-p').value=r[3]; document.getElementById('disp-qty').value=r[4]; } if(tab=='open'){ document.getElementById('open-month').value=r[0]; document.getElementById('open-type').value=r[1]; toggleOp(r[1]); document.getElementById('open-line').value=r[2]; document.getElementById('open-m').value=r[3]; filterC('open'); document.getElementById('open-c').value=r[4]; document.getElementById('open-p').value=r[5]; if(r[1]=='PDI'){document.getElementById('open-qpdi').value=r[6];document.getElementById('open-qrew').value=r[7];}else{document.getElementById('open-qdisp').value=r[9];} } document.getElementById('btnCancel'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.remove('hidden'); }
-    function submitEdit(tab){ let form=document.getElementById('form-'+tab), idx=document.getElementById('editIdx-'+tab).value, fd=new FormData(form); let arr=[]; if(tab=='prod') arr=[fd.get('date'), fd.get('line'), "NA", fd.get('model'), fd.get('color'), fd.get('partCode'), fd.get('fgQty')]; if(tab=='disp') arr=[fd.get('date'), fd.get('model'), fd.get('color'), fd.get('partCode'), fd.get('dispatchQty')]; if(tab=='open') arr=[fd.get('month'), fd.get('openType'), fd.get('line'), fd.get('model'), fd.get('color'), fd.get('partCode'), fd.get('pdiOpenQty'), fd.get('reworkOpenQty'), fd.get('reworkReason'), fd.get('dispatchOpenQty')]; let type=(tab=='prod'?'Production':(tab=='disp'?'Dispatch':'Opening')); toggleLoader(true); fetch(INV_URL, {method:'POST', body:JSON.stringify({action:'edit', type:type, rowIndex:parseInt(idx), data:arr})}).then(r=>r.json()).then(d=>{ alert("Updated"); cancelEdit(tab); window.onload(); }); }
-    function cancelEdit(tab){ document.getElementById('form-'+tab).reset(); document.getElementById('editIdx-'+tab).value=""; document.getElementById('btnCancel'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.add('hidden'); }
-    function delDB(tab, idx){ if(confirm("Delete?")){ toggleLoader(true); let type=(tab=='prod'?'Production':(tab=='disp'?'Dispatch':'Opening')); fetch(INV_URL, {method:'POST', body:JSON.stringify({action:'delete', type:type, rowIndex:idx+2})}).then(r=>r.json()).then(d=>{ alert("Deleted"); window.onload(); }); } }
+    function editDB(tab, idx){ 
+        if(!dbData[tab] || !dbData[tab][idx]) return;
+        let r=dbData[tab][idx]; 
+        
+        // Scroll to form so user sees it
+        document.getElementById('form-' + tab).scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        document.getElementById('editIdx-'+tab).value=idx+2; 
+        
+        if(tab=='prod'){ 
+            document.getElementById('prod-date').value=getCleanDate(r[0]); 
+            document.getElementById('prod-line').value=r[1]; 
+            document.getElementById('prod-m').value=r[3]; 
+            filterC('prod'); 
+            document.getElementById('prod-c').value=r[4]; 
+            document.getElementById('prod-p').value=r[5]; 
+            document.getElementById('prod-qty').value=r[6]; 
+            document.getElementById('btnAddProd').innerText = "Update Queue"; // Visual change
+        } 
+        if(tab=='disp'){ 
+            document.getElementById('disp-date').value=getCleanDate(r[0]); 
+            document.getElementById('disp-m').value=r[1]; 
+            filterC('disp'); 
+            document.getElementById('disp-c').value=r[2]; 
+            document.getElementById('disp-p').value=r[3]; 
+            document.getElementById('disp-qty').value=r[4]; 
+            document.getElementById('btnAddDisp').innerText = "Update Queue"; // Visual change
+        } 
+        if(tab=='open'){ 
+            // Fix: Handle Date object for month input
+            let mVal = r[0];
+            if(mVal instanceof Date) mVal = mVal.toISOString().substring(0,7);
+            document.getElementById('open-month').value=mVal; 
+            
+            document.getElementById('open-type').value=r[1]; 
+            toggleOp(r[1]); 
+            document.getElementById('open-line').value=r[2]; 
+            document.getElementById('open-m').value=r[3]; 
+            filterC('open'); 
+            document.getElementById('open-c').value=r[4]; 
+            document.getElementById('open-p').value=r[5]; 
+            if(r[1]=='PDI'){document.getElementById('open-qpdi').value=r[6];document.getElementById('open-qrew').value=r[7];}
+            else{document.getElementById('open-qdisp').value=r[9];} 
+            document.getElementById('btnAddOpen').innerText = "Update Queue"; // Visual change
+        } 
+        document.getElementById('btnCancel'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.remove('hidden'); 
+    }
     
-    function editPdiDB(idx){ let r=pdiData[idx]; document.getElementById('pdiEditIndex').value=idx+2; document.getElementById('pdi-date').value=getCleanDate(r[0]); document.getElementById('pdi-line').value=r[1]; document.getElementById('pdi-m').value=r[2]; filterC('pdi'); document.getElementById('pdi-c').value=r[3]; document.getElementById('pdi-p').value=r[4]; document.getElementById('pdi-lot').value=r[5]; document.getElementById('pdi-type').value=r[6]; document.getElementById('off').value=r[7]; document.getElementById('pas').value=r[8]; document.getElementById('btnCancelEdit').classList.remove('hidden'); }
-    function submitPdiEdit(){ let form=document.getElementById('form-pdi'), idx=document.getElementById('pdiEditIndex').value, fd=new FormData(form); let arr=[fd.get('date'), fd.get('line'), fd.get('model'), fd.get('color'), fd.get('partCode'), fd.get('lotId'), fd.get('lotType'), fd.get('pdiOffer'), fd.get('pdiPass'), fd.get('defectReason')]; toggleLoader(true); fetch(PDI_URL, {method:'POST', body:JSON.stringify({action:'edit', rowIndex:parseInt(idx), data:arr})}).then(r=>r.json()).then(d=>{ alert("Updated"); cancelPdiEdit(); window.onload(); }); }
-    function cancelPdiEdit(){ document.getElementById('form-pdi').reset(); document.getElementById('pdiEditIndex').value=""; document.getElementById('btnCancelEdit').classList.add('hidden'); }
-    async function deletePdiSaved(idx){ if(!confirm("Delete?"))return; toggleLoader(true); await fetch(PDI_URL,{method:'POST',body:JSON.stringify({action:'delete',rowIndex:idx+2})}); window.onload(); }
+    function submitEdit(tab){ 
+        let form=document.getElementById('form-'+tab), idx=document.getElementById('editIdx-'+tab).value, fd=new FormData(form); 
+        let arr=[]; 
+        if(tab=='prod') arr=[fd.get('date'), fd.get('line'), "NA", fd.get('model'), fd.get('color'), fd.get('partCode'), fd.get('fgQty')]; 
+        if(tab=='disp') arr=[fd.get('date'), fd.get('model'), fd.get('color'), fd.get('partCode'), fd.get('dispatchQty')]; 
+        if(tab=='open') arr=[fd.get('month'), fd.get('openType'), fd.get('line'), fd.get('model'), fd.get('color'), fd.get('partCode'), fd.get('pdiOpenQty'), fd.get('reworkOpenQty'), fd.get('reworkReason'), fd.get('dispatchOpenQty')]; 
+        
+        let type=(tab=='prod'?'Production':(tab=='disp'?'Dispatch':'Opening')); 
+        toggleLoader(true); 
+        fetch(INV_URL, {method:'POST', body:JSON.stringify({action:'edit', type:type, rowIndex:parseInt(idx), data:arr})}).then(r=>r.json()).then(d=>{ 
+            alert("Updated Successfully"); cancelEdit(tab); window.onload(); 
+        }).catch(e=>{ toggleLoader(false); alert("Update Failed"); }); 
+    }
+    
+    function cancelEdit(tab){ 
+        document.getElementById('form-'+tab).reset(); 
+        document.getElementById('editIdx-'+tab).value=""; 
+        let btnId = tab=='prod'?'btnAddProd':(tab=='disp'?'btnAddDisp':'btnAddOpen');
+        document.getElementById(btnId).innerText = tab=='disp'?'Add':(tab=='open'?'Add':'+ Add to Queue');
+        document.getElementById('btnCancel'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.add('hidden'); 
+    }
+    
+    function delDB(tab, idx){ 
+        if(confirm("Are you sure you want to delete this record?")){ 
+            toggleLoader(true); 
+            let type=(tab=='prod'?'Production':(tab=='disp'?'Dispatch':'Opening')); 
+            // Send request to delete
+            fetch(INV_URL, {method:'POST', body:JSON.stringify({action:'delete', type:type, rowIndex:idx+2})})
+            .then(r=>r.json())
+            .then(d=>{ 
+                alert("Deleted Successfully"); window.onload(); 
+            })
+            .catch(e => {
+                toggleLoader(false); alert("Delete Failed: " + e.message);
+            });
+        } 
+    }
+    
+    function editPdiDB(idx){ 
+        if(!pdiData[idx]) return;
+        let r=pdiData[idx]; 
+        document.getElementById('pdi-card-container').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        document.getElementById('pdiEditIndex').value=idx+2; 
+        document.getElementById('pdi-date').value=getCleanDate(r[0]); 
+        document.getElementById('pdi-line').value=r[1]; 
+        document.getElementById('pdi-m').value=r[2]; 
+        filterC('pdi'); 
+        document.getElementById('pdi-c').value=r[3]; 
+        document.getElementById('pdi-p').value=r[4]; 
+        document.getElementById('pdi-lot').value=r[5]; 
+        document.getElementById('pdi-type').value=r[6]; 
+        document.getElementById('off').value=r[7]; 
+        document.getElementById('pas').value=r[8]; 
+        document.getElementById('btnAddPdi').innerText = "Update Entry";
+        document.getElementById('btnCancelEdit').classList.remove('hidden'); 
+    }
+    
+    function submitPdiEdit(){ 
+        let form=document.getElementById('form-pdi'), idx=document.getElementById('pdiEditIndex').value, fd=new FormData(form); 
+        let arr=[fd.get('date'), fd.get('line'), fd.get('model'), fd.get('color'), fd.get('partCode'), fd.get('lotId'), fd.get('lotType'), fd.get('pdiOffer'), fd.get('pdiPass'), fd.get('defectReason')]; 
+        toggleLoader(true); 
+        fetch(PDI_URL, {method:'POST', body:JSON.stringify({action:'edit', rowIndex:parseInt(idx), data:arr})}).then(r=>r.json()).then(d=>{ alert("Updated"); cancelPdiEdit(); window.onload(); }); 
+    }
+    
+    function cancelPdiEdit(){ 
+        document.getElementById('form-pdi').reset(); 
+        document.getElementById('pdiEditIndex').value=""; 
+        document.getElementById('btnAddPdi').innerText = "+ Add Pending";
+        document.getElementById('btnCancelEdit').classList.add('hidden'); 
+    }
+    
+    async function deletePdiSaved(idx){ 
+        if(!confirm("Delete PDI Record?"))return; 
+        toggleLoader(true); 
+        try {
+            await fetch(PDI_URL,{method:'POST',body:JSON.stringify({action:'delete',rowIndex:idx+2})}); 
+            alert("Deleted");
+            window.onload(); 
+        } catch(e) {
+            toggleLoader(false);
+            alert("Error deleting PDI record");
+        }
+    }
     
     function exportTableToExcel(tid, fname) { let wb=XLSX.utils.table_to_book(document.getElementById(tid),{sheet:"Sheet1"}); XLSX.writeFile(wb,fname+".xlsx"); }
     function downloadPDF() { html2pdf().set({margin:10,filename:'Report.pdf',jsPDF:{unit:'mm',format:'a4',orientation:'landscape'}}).from(document.getElementById('pdf-content')).save(); }
