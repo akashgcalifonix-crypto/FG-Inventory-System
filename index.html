@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Integrated Inventory & PDI System</title>
+    <title>Integrated System (Final with Opening Line)</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -145,7 +145,6 @@
             </div>
         </div>
 
-        <!-- PDI DASHBOARD (CHARTS) -->
         <div id="pdi-sub-dash" class="hidden">
             <div class="card p-3 mb-3"><div class="row g-2 align-items-end"><div class="col-md-3"><label>From</label><input type="date" id="dashFrom" class="form-control"></div><div class="col-md-3"><label>To</label><input type="date" id="dashTo" class="form-control"></div><div class="col-md-2"><button class="btn btn-primary w-100" onclick="runPdiAnalysis()">Filter</button></div><div class="col-md-2"><button class="btn btn-danger w-100" onclick="downloadPDF()"><i class="bi bi-file-pdf"></i> PDF</button></div></div></div>
             <div id="pdf-content">
@@ -154,7 +153,6 @@
             </div>
         </div>
 
-        <!-- PDI CLOSURE -->
         <div id="pdi-sub-close" class="hidden">
             <div class="row g-3">
                 <div class="col-md-4"><div class="card p-3 bg-light h-100"><h6 class="text-primary fw-bold text-center border-bottom pb-2">Floor 1 Pending</h6><div id="list_f1"></div></div></div>
@@ -198,11 +196,14 @@
                     <div class="col-md-2"><label>Type</label><select name="openType" id="open-type" class="form-select form-select-sm" onchange="toggleOp(this.value)"><option value="PDI">PDI Opening</option><option value="Dispatch">Dispatch Opening</option></select></div>
                     <div class="col-md-2"><label>Model</label><select name="model" id="open-m" class="form-select form-select-sm" onchange="filterC('open')" required></select></div>
                     <div class="col-md-2"><label>Color</label><select name="color" id="open-c" class="form-select form-select-sm" onchange="fillP('open')" required></select></div>
+                    
+                    <!-- NEW LINE INPUT ADDED HERE -->
+                    <div class="grp-pdi col-md-1"><label>Line</label><input type="number" name="line" id="open-line" class="form-control form-control-sm" placeholder="1-24"></div>
+                    
                     <div class="grp-pdi col-md-1"><label>PDI Opn</label><input type="number" name="pdiOpenQty" id="open-qpdi" class="form-control form-control-sm"></div>
                     <div class="grp-pdi col-md-1"><label>Rew Opn</label><input type="number" name="reworkOpenQty" id="open-qrew" class="form-control form-control-sm"></div>
                     <div class="grp-disp col-md-2 hidden"><label>Disp Opn</label><input type="number" name="dispatchOpenQty" id="open-qdisp" class="form-control form-control-sm"></div>
                     <div class="col-12"><input type="text" name="partCode" id="open-p" class="form-control form-control-sm bg-light" readonly placeholder="Part Code"></div>
-                    <input type="hidden" name="line" value="1">
                     <input type="hidden" name="reworkReason">
                 </div>
                 <div class="d-flex gap-2 mt-3"><button type="button" class="btn btn-info w-100 btn-sm text-white" id="btnAddOpen" onclick="addQueue('open')">Add</button><button type="button" class="btn btn-secondary w-100 btn-sm hidden" id="btnCancelOpen" onclick="cancelEdit('open')">Cancel</button></div>
@@ -215,7 +216,7 @@
         </div>
     </div>
 
-    <!-- 5. LIVE REPORTS (CORRECTED LOGIC) -->
+    <!-- 5. LIVE REPORTS -->
     <div id="view-dash" class="main-view hidden">
         <div class="card p-3">
             <ul class="nav nav-tabs mb-3">
@@ -238,7 +239,7 @@
                                     <th rowspan="2">Color</th>
                                     <th colspan="3" class="bg-primary">Input Sources</th>
                                     <th colspan="5" class="bg-success">PDI PASS (Display)</th>
-                                    <th colspan="4" class="bg-warning text-dark">Balances</th>
+                                    <th colspan="4" class="bg-warning text-dark">Balances (Based on Offer)</th>
                                 </tr>
                                 <tr>
                                     <th>Opn PDI</th><th>Opn Rew</th><th>FG Out</th>
@@ -297,7 +298,6 @@
         ['filter-open', 'open-month'].forEach(id=>{ let e=document.getElementById(id); if(e)e.value=curMonth; });
         
         toggleLoader(true);
-        // Load Master Data & Inventory
         fetch(INV_URL + "?action=getMasters").then(r=>r.json()).then(d=>{
             masterData = d; populateModels(['prod','disp','open','pdi']);
             return fetch(INV_URL + "?action=getDashboard");
@@ -311,7 +311,6 @@
         }).catch(e=>{ console.error(e); toggleLoader(false); alert("Connection Error"); });
     };
 
-    // --- DASHBOARD LOGIC: LINE LIVE (UPDATED) ---
     function renderDash1() {
         let selectedLine = document.getElementById('dashLineInput').value;
         let map = {};
@@ -338,7 +337,7 @@
         pdiData.forEach(r => {
             if(selectedLine && r[1] != selectedLine) return;
 
-            let o = get(r[2], r[3]); // Model, Color
+            let o = get(r[2], r[3]); 
             let type = r[6], offer = Number(r[7]||0), pass = Number(r[8]||0);
             let fail = offer - pass;
             let reason = r[9];
@@ -356,19 +355,12 @@
         for(let k in map) {
             let x = map[k];
             
-            // Formula 1: Old FG Balance = Opn Rew - Pass Old FG
-            let old_fg_bal = x.opn_rew - x.pass_oldfg;
-            if(old_fg_bal < 0) old_fg_bal = 0;
-
-            // Formula 2: Bal PDI = (Opn PDI + FG) - (Fresh Offer + War Offer + Mkt Offer)
+            // CORRECTED LOGIC (Offer Deductions)
+            let old_fg_bal = x.opn_rew - x.pass_oldfg; if(old_fg_bal < 0) old_fg_bal = 0;
             let processed_fresh = x.offer_fresh + x.offer_war + x.offer_mkt;
-            let bal_pdi = (x.opn_pdi + x.fg) - processed_fresh;
-            if(bal_pdi < 0) bal_pdi = 0; 
-            
-            // Formula 3: For Rework = (Fresh Fail + War Fail + Mkt Fail) - (Rework Pass)
+            let bal_pdi = (x.opn_pdi + x.fg) - processed_fresh; if(bal_pdi < 0) bal_pdi = 0; 
             let total_fresh_fails = x.fail_fresh + x.fail_war + x.fail_mkt;
-            let for_rework = total_fresh_fails - x.pass_rew;
-            if(for_rework < 0) for_rework = 0;
+            let for_rework = total_fresh_fails - x.pass_rew; if(for_rework < 0) for_rework = 0;
 
             let rsn = [...new Set(x.fail_reasons)].join(", ");
 
@@ -430,7 +422,7 @@
         });
     }
 
-    // --- STANDARD FUNCTIONS ---
+    // --- STANDARD UI FUNCTIONS ---
     function switchMainTab(id) { document.querySelectorAll('.main-view').forEach(e=>e.classList.add('hidden')); document.getElementById('view-'+id).classList.remove('hidden'); document.querySelectorAll('.nav-main .nav-link').forEach(e=>e.classList.remove('active')); event.target.classList.add('active'); }
     function switchPdiSub(sub, btn) { ['entry','dash','close'].forEach(t => document.getElementById('pdi-sub-'+t).classList.add('hidden')); document.getElementById('pdi-sub-'+sub).classList.remove('hidden'); btn.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('active', 'btn-outline-primary', 'btn-outline-dark', 'btn-outline-danger')); btn.classList.add('active'); if(sub==='entry') btn.classList.add('btn-outline-primary'); if(sub==='dash') { btn.classList.add('btn-outline-dark'); runPdiAnalysis(); } if(sub==='close') { btn.classList.add('btn-outline-danger'); runClosureReport(); } }
     function toggleLoader(s){ document.getElementById('global-loader').style.display = s?'flex':'none'; }
@@ -441,87 +433,25 @@
     function calcP(){ let f=(document.getElementById('off').value||0)-(document.getElementById('pas').value||0); document.getElementById('fal').value=f; document.getElementById('defBox').classList.toggle('hidden',f<=0); }
     function fmtDate(iso){ if(!iso)return ""; let d=new Date(iso); return d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0'); }
     function getCleanDate(iso){ if(!iso)return ""; return new Date(iso).toLocaleDateString('en-CA'); }
+    function checkFloor(i,id){ let v=parseInt(i.value),e=document.getElementById(id); e.className="floor-badge"; if(v>=1&&v<=8){e.innerText="1st";e.classList.add("bg-f1");}else if(v>=9&&v<=16){e.innerText="2nd";e.classList.add("bg-f2");}else if(v>=17&&v<=24){e.innerText="Base";e.classList.add("bg-base");}else e.classList.add("hidden"); }
 
-    // Queue & Submit Logic
-    function addQueue(tab) {
-        let form=document.getElementById('form-'+tab);
-        if(document.getElementById('editIdx-'+tab).value!=="") { submitEdit(tab); return; }
-        if(!form.checkValidity()){ form.reportValidity(); return; }
-        let fd=Object.fromEntries(new FormData(form)); queueData[tab].push(fd); renderQueue(tab);
-        form.reset(); document.getElementById(tab+'-date').value=new Date().toLocaleDateString('en-CA');
-    }
-    function renderQueue(tab) {
-        let tb=document.getElementById('queue-'+tab); tb.innerHTML="";
-        queueData[tab].forEach((i,x)=>{ 
-            let row = tab=='prod' ? `<td>${i.date}</td><td>${i.line}</td><td>${i.model}</td><td>${i.color}</td><td>${i.partCode}</td><td>${i.fgQty}</td>` :
-                      tab=='disp' ? `<td>${i.date}</td><td>${i.model}</td><td>${i.color}</td><td>${i.partCode}</td><td>${i.dispatchQty}</td>` :
-                                    `<td>${i.openType}</td><td>${i.model}</td><td>${i.color}</td><td>${i.partCode}</td><td>${i.openType=='PDI'?i.pdiOpenQty:i.dispatchOpenQty}</td>`;
-            tb.innerHTML+=`<tr>${row}<td><button class="btn btn-sm btn-danger" onclick="queueData['${tab}'].splice(${x},1);renderQueue('${tab}')">X</button></td></tr>`;
-        });
-    }
-    function submitQueue(tab,type) {
-        if(!queueData[tab].length)return alert("Empty"); toggleLoader(true);
-        fetch(INV_URL, {method:'POST', body:JSON.stringify({type:type, data:queueData[tab]})})
-        .then(r=>r.json()).then(async d=>{ 
-            if(d.status=='success'){ alert("Saved"); queueData[tab]=[]; renderQueue(tab); window.onload(); } else alert(d.message); toggleLoader(false); 
-        });
-    }
-    function addPdiQueue(){
-        let form=document.getElementById('form-pdi'); if(!form.checkValidity()){ form.reportValidity(); return; }
-        if(document.getElementById('pdiEditIndex').value!==""){ submitPdiEdit(); return; }
-        let fd=new FormData(form), r={date:fd.get('date'), line:fd.get('line'), model:fd.get('model'), color:fd.get('color'), partCode:fd.get('partCode'), lotId:fd.get('lotId'), lotType:fd.get('lotType'), pdiOffer:fd.get('pdiOffer'), pdiPass:fd.get('pdiPass'), defectReason:fd.get('defectReason')};
-        queueData.pdi.push(r); renderPdiQueue(); form.reset(); document.getElementById('pdi-date').value=new Date().toLocaleDateString('en-CA');
-    }
+    // Queue & Submit Logic (Similar to previous, maintained)
+    function addQueue(tab) { let form=document.getElementById('form-'+tab); if(document.getElementById('editIdx-'+tab).value!="") { submitEdit(tab); return; } if(!form.checkValidity()){ form.reportValidity(); return; } let fd=Object.fromEntries(new FormData(form)); queueData[tab].push(fd); renderQueue(tab); form.reset(); document.getElementById(tab+'-date').value=new Date().toLocaleDateString('en-CA'); }
+    function renderQueue(tab) { let tb=document.getElementById('queue-'+tab); tb.innerHTML=""; queueData[tab].forEach((i,x)=>{ let row = tab=='prod' ? `<td>${i.date}</td><td>${i.line}</td><td>${i.model}</td><td>${i.color}</td><td>${i.partCode}</td><td>${i.fgQty}</td>` : tab=='disp' ? `<td>${i.date}</td><td>${i.model}</td><td>${i.color}</td><td>${i.partCode}</td><td>${i.dispatchQty}</td>` : `<td>${i.openType}</td><td>${i.model}</td><td>${i.color}</td><td>${i.partCode}</td><td>${i.openType=='PDI'?i.pdiOpenQty:i.dispatchOpenQty}</td>`; tb.innerHTML+=`<tr>${row}<td><button class="btn btn-sm btn-danger" onclick="queueData['${tab}'].splice(${x},1);renderQueue('${tab}')">X</button></td></tr>`; }); }
+    function submitQueue(tab,type) { if(!queueData[tab].length)return alert("Empty"); toggleLoader(true); fetch(INV_URL, {method:'POST', body:JSON.stringify({type:type, data:queueData[tab]})}).then(r=>r.json()).then(async d=>{ if(d.status=='success'){ alert("Saved"); queueData[tab]=[]; renderQueue(tab); window.onload(); } else alert(d.message); toggleLoader(false); }); }
+    function addPdiQueue(){ let form=document.getElementById('form-pdi'); if(!form.checkValidity()){ form.reportValidity(); return; } if(document.getElementById('pdiEditIndex').value!==""){ submitPdiEdit(); return; } let fd=new FormData(form), r={date:fd.get('date'), line:fd.get('line'), model:fd.get('model'), color:fd.get('color'), partCode:fd.get('partCode'), lotId:fd.get('lotId'), lotType:fd.get('lotType'), pdiOffer:fd.get('pdiOffer'), pdiPass:fd.get('pdiPass'), defectReason:fd.get('defectReason')}; queueData.pdi.push(r); renderPdiQueue(); form.reset(); document.getElementById('pdi-date').value=new Date().toLocaleDateString('en-CA'); }
     function renderPdiQueue(){ let tb=document.getElementById('queue-pdi'); tb.innerHTML=""; queueData.pdi.forEach((r,i)=>tb.innerHTML+=`<tr><td>${r.lotId}</td><td>${r.model}</td><td>${r.lotType}</td><td>${r.pdiPass}/${r.pdiOffer}</td><td>${r.pdiOffer-r.pdiPass}</td><td><button class="btn btn-sm btn-danger" onclick="queueData.pdi.splice(${i},1);renderPdiQueue()">X</button></td></tr>`); }
-    function submitPdiQueue(){
-        if(!queueData.pdi.length)return; toggleLoader(true);
-        let rows = queueData.pdi.map(r=>[r.date, r.line, r.model, r.color, r.partCode, r.lotId, r.lotType, r.pdiOffer, r.pdiPass, r.defectReason]);
-        fetch(PDI_URL, {method:'POST', body:JSON.stringify({action:'save', data:rows})}).then(r=>r.json()).then(d=>{ alert("Saved"); queueData.pdi=[]; renderPdiQueue(); window.onload(); toggleLoader(false); });
-    }
+    function submitPdiQueue(){ if(!queueData.pdi.length)return; toggleLoader(true); let rows = queueData.pdi.map(r=>[r.date, r.line, r.model, r.color, r.partCode, r.lotId, r.lotType, r.pdiOffer, r.pdiPass, r.defectReason]); fetch(PDI_URL, {method:'POST', body:JSON.stringify({action:'save', data:rows})}).then(r=>r.json()).then(d=>{ alert("Saved"); queueData.pdi=[]; renderPdiQueue(); window.onload(); toggleLoader(false); }); }
 
     // Render DB Tables
-    function renderDBTable(tab) {
-        let tb=document.getElementById('db-'+tab); tb.innerHTML="";
-        let fd=document.getElementById('filter-'+tab).value;
-        let data = dbData[tab]; if(!data) return;
-        data.slice().reverse().forEach((r, idx)=>{
-            let realIdx = data.length - 1 - idx;
-            if((tab=='open'?r[0]:getCleanDate(r[0])) === fd) {
-                let row = tab=='prod' ? `<td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td>` :
-                          tab=='disp' ? `<td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td>` :
-                                        `<td>${r[0]}</td><td>${r[1]}</td><td>${r[3]}</td><td>${r[5]}</td><td>${r[1]=='PDI'?r[6]:r[9]}</td>`;
-                tb.innerHTML += `<tr>${row}<td><button class="btn btn-sm btn-link p-0" onclick="editDB('${tab}',${realIdx})">Edit</button> <button class="btn btn-sm btn-link text-danger p-0" onclick="delDB('${tab}',${realIdx})">Del</button></td></tr>`;
-            }
-        });
-    }
-    function renderRecentTable(){
-        let tb=document.getElementById('crudTable'); tb.innerHTML=""; let fd=document.getElementById('recentFilter').value;
-        pdiData.slice().reverse().forEach((r,idx)=>{
-            let realIdx = pdiData.length - 1 - idx;
-            if(getCleanDate(r[0])===fd) tb.innerHTML+=`<tr><td>${fmtDate(r[0])}</td><td>${r[2]}</td><td>${r[5]}</td><td>${r[6]}</td><td>${r[8]}/${r[7]}</td><td>${r[7]-r[8]}</td><td><button class="btn btn-sm btn-link p-0" onclick="editPdiDB(${realIdx})">Edit</button></td></tr>`;
-        });
-    }
+    function renderDBTable(tab) { let tb=document.getElementById('db-'+tab); tb.innerHTML=""; let fd=document.getElementById('filter-'+tab).value; let data = dbData[tab]; if(!data) return; data.slice().reverse().forEach((r, idx)=>{ let realIdx = data.length - 1 - idx; if((tab=='open'?r[0]:getCleanDate(r[0])) === fd) { let row = tab=='prod' ? `<td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td>` : tab=='disp' ? `<td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td>` : `<td>${r[0]}</td><td>${r[1]}</td><td>${r[3]}</td><td>${r[5]}</td><td>${r[1]=='PDI'?r[6]:r[9]}</td>`; tb.innerHTML += `<tr>${row}<td><button class="btn btn-sm btn-link p-0" onclick="editDB('${tab}',${realIdx})">Edit</button> <button class="btn btn-sm btn-link text-danger p-0" onclick="delDB('${tab}',${realIdx})">Del</button></td></tr>`; } }); }
+    function renderRecentTable(){ let tb=document.getElementById('crudTable'); tb.innerHTML=""; let fd=document.getElementById('recentFilter').value; pdiData.slice().reverse().forEach((r,idx)=>{ let realIdx = pdiData.length - 1 - idx; if(getCleanDate(r[0])===fd) tb.innerHTML+=`<tr><td>${fmtDate(r[0])}</td><td>${r[2]}</td><td>${r[5]}</td><td>${r[6]}</td><td>${r[8]}/${r[7]}</td><td>${r[7]-r[8]}</td><td><button class="btn btn-sm btn-link p-0" onclick="editPdiDB(${realIdx})">Edit</button></td></tr>`; }); }
 
-    // Edit/Delete Stubs
-    function editDB(tab, idx){
-        let r=dbData[tab][idx]; document.getElementById('editIdx-'+tab).value=idx+2;
-        if(tab=='prod'){ document.getElementById('prod-date').value=getCleanDate(r[0]); document.getElementById('prod-line').value=r[1]; document.getElementById('prod-m').value=r[3]; filterC('prod'); document.getElementById('prod-c').value=r[4]; document.getElementById('prod-p').value=r[5]; document.getElementById('prod-qty').value=r[6]; }
-        if(tab=='disp'){ document.getElementById('disp-date').value=getCleanDate(r[0]); document.getElementById('disp-m').value=r[1]; filterC('disp'); document.getElementById('disp-c').value=r[2]; document.getElementById('disp-p').value=r[3]; document.getElementById('disp-qty').value=r[4]; }
-        if(tab=='open'){ document.getElementById('open-month').value=r[0]; document.getElementById('open-type').value=r[1]; toggleOp(r[1]); document.getElementById('open-m').value=r[3]; filterC('open'); document.getElementById('open-c').value=r[4]; document.getElementById('open-p').value=r[5]; if(r[1]=='PDI'){document.getElementById('open-qpdi').value=r[6];document.getElementById('open-qrew').value=r[7];}else{document.getElementById('open-qdisp').value=r[9];} }
-        document.getElementById('btnCancel'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.remove('hidden');
-    }
-    function submitEdit(tab){
-        let form=document.getElementById('form-'+tab), idx=document.getElementById('editIdx-'+tab).value, fd=new FormData(form);
-        let arr=[]; if(tab=='prod') arr=[fd.get('date'), fd.get('line'), "NA", fd.get('model'), fd.get('color'), fd.get('partCode'), fd.get('fgQty')];
-        if(tab=='disp') arr=[fd.get('date'), fd.get('model'), fd.get('color'), fd.get('partCode'), fd.get('dispatchQty')];
-        if(tab=='open') arr=[fd.get('month'), fd.get('openType'), fd.get('line'), fd.get('model'), fd.get('color'), fd.get('partCode'), fd.get('pdiOpenQty'), fd.get('reworkOpenQty'), fd.get('reworkReason'), fd.get('dispatchOpenQty')];
-        let type=(tab=='prod'?'Production':(tab=='disp'?'Dispatch':'Opening'));
-        toggleLoader(true);
-        fetch(INV_URL, {method:'POST', body:JSON.stringify({action:'edit', type:type, rowIndex:parseInt(idx), data:arr})}).then(r=>r.json()).then(d=>{ alert("Updated"); cancelEdit(tab); window.onload(); });
-    }
+    // Edit/Delete Hooks
+    function editDB(tab, idx){ let r=dbData[tab][idx]; document.getElementById('editIdx-'+tab).value=idx+2; if(tab=='prod'){ document.getElementById('prod-date').value=getCleanDate(r[0]); document.getElementById('prod-line').value=r[1]; document.getElementById('prod-m').value=r[3]; filterC('prod'); document.getElementById('prod-c').value=r[4]; document.getElementById('prod-p').value=r[5]; document.getElementById('prod-qty').value=r[6]; } if(tab=='disp'){ document.getElementById('disp-date').value=getCleanDate(r[0]); document.getElementById('disp-m').value=r[1]; filterC('disp'); document.getElementById('disp-c').value=r[2]; document.getElementById('disp-p').value=r[3]; document.getElementById('disp-qty').value=r[4]; } if(tab=='open'){ document.getElementById('open-month').value=r[0]; document.getElementById('open-type').value=r[1]; toggleOp(r[1]); document.getElementById('open-line').value=r[2]; document.getElementById('open-m').value=r[3]; filterC('open'); document.getElementById('open-c').value=r[4]; document.getElementById('open-p').value=r[5]; if(r[1]=='PDI'){document.getElementById('open-qpdi').value=r[6];document.getElementById('open-qrew').value=r[7];}else{document.getElementById('open-qdisp').value=r[9];} } document.getElementById('btnCancel'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.remove('hidden'); }
+    function submitEdit(tab){ let form=document.getElementById('form-'+tab), idx=document.getElementById('editIdx-'+tab).value, fd=new FormData(form); let arr=[]; if(tab=='prod') arr=[fd.get('date'), fd.get('line'), "NA", fd.get('model'), fd.get('color'), fd.get('partCode'), fd.get('fgQty')]; if(tab=='disp') arr=[fd.get('date'), fd.get('model'), fd.get('color'), fd.get('partCode'), fd.get('dispatchQty')]; if(tab=='open') arr=[fd.get('month'), fd.get('openType'), fd.get('line'), fd.get('model'), fd.get('color'), fd.get('partCode'), fd.get('pdiOpenQty'), fd.get('reworkOpenQty'), fd.get('reworkReason'), fd.get('dispatchOpenQty')]; let type=(tab=='prod'?'Production':(tab=='disp'?'Dispatch':'Opening')); toggleLoader(true); fetch(INV_URL, {method:'POST', body:JSON.stringify({action:'edit', type:type, rowIndex:parseInt(idx), data:arr})}).then(r=>r.json()).then(d=>{ alert("Updated"); cancelEdit(tab); window.onload(); }); }
     function cancelEdit(tab){ document.getElementById('form-'+tab).reset(); document.getElementById('editIdx-'+tab).value=""; document.getElementById('btnCancel'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.add('hidden'); }
     function delDB(tab, idx){ if(confirm("Delete?")){ toggleLoader(true); let type=(tab=='prod'?'Production':(tab=='disp'?'Dispatch':'Opening')); fetch(INV_URL, {method:'POST', body:JSON.stringify({action:'delete', type:type, rowIndex:idx+2})}).then(r=>r.json()).then(d=>{ alert("Deleted"); window.onload(); }); } }
-    
     function editPdiDB(idx){ let r=pdiData[idx]; document.getElementById('pdiEditIndex').value=idx+2; document.getElementById('pdi-date').value=getCleanDate(r[0]); document.getElementById('pdi-line').value=r[1]; document.getElementById('pdi-m').value=r[2]; filterC('pdi'); document.getElementById('pdi-c').value=r[3]; document.getElementById('pdi-p').value=r[4]; document.getElementById('pdi-lot').value=r[5]; document.getElementById('pdi-type').value=r[6]; document.getElementById('off').value=r[7]; document.getElementById('pas').value=r[8]; document.getElementById('btnCancelEdit').classList.remove('hidden'); }
     function submitPdiEdit(){ let form=document.getElementById('form-pdi'), idx=document.getElementById('pdiEditIndex').value, fd=new FormData(form); let arr=[fd.get('date'), fd.get('line'), fd.get('model'), fd.get('color'), fd.get('partCode'), fd.get('lotId'), fd.get('lotType'), fd.get('pdiOffer'), fd.get('pdiPass'), fd.get('defectReason')]; toggleLoader(true); fetch(PDI_URL, {method:'POST', body:JSON.stringify({action:'edit', rowIndex:parseInt(idx), data:arr})}).then(r=>r.json()).then(d=>{ alert("Updated"); cancelPdiEdit(); window.onload(); }); }
     function cancelPdiEdit(){ document.getElementById('form-pdi').reset(); document.getElementById('pdiEditIndex').value=""; document.getElementById('btnCancelEdit').classList.add('hidden'); }
