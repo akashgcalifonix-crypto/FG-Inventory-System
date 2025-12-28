@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Integrated Inventory & PDI System (Final v2)</title>
+    <title>Boat PDI & Inventory System (Final Logic)</title>
     
     <!-- Dependencies -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -22,8 +22,8 @@
         .nav-main .nav-link { color: rgba(255,255,255,0.7); font-weight: 600; margin-right: 5px; cursor: pointer; }
         .nav-main .nav-link.active { background-color: var(--accent); color: white !important; }
         .card { border: none; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .table-dash th { background-color: #343a40; color: white; font-size: 0.85rem; }
-        .table-dash td { font-size: 0.9rem; vertical-align: middle; font-weight: 500; }
+        .table-dash th { background-color: #343a40; color: white; font-size: 0.8rem; text-transform: uppercase; vertical-align: middle; }
+        .table-dash td { font-size: 0.85rem; vertical-align: middle; font-weight: 600; }
         .bg-light-blue { background-color: #e3f2fd; }
         .bg-light-yellow { background-color: #fff9c4; }
         .edit-active { border: 2px dashed #ffc107 !important; background-color: #fffdf5; }
@@ -47,7 +47,7 @@
         <li class="nav-item"><a class="nav-link" onclick="switchMainTab('pdi-master')">PDI Master</a></li>
         <li class="nav-item"><a class="nav-link" onclick="switchMainTab('disp')">Dispatch</a></li>
         <li class="nav-item"><a class="nav-link" onclick="switchMainTab('open')">Opening</a></li>
-        <li class="nav-item"><a class="nav-link" onclick="switchMainTab('dash')">Live Reports</a></li>
+        <li class="nav-item"><a class="nav-link" onclick="switchMainTab('dash')">Reports</a></li>
     </ul>
 </div>
 
@@ -73,19 +73,13 @@
                 </div>
             </form>
             <div class="mt-3">
-                <table class="table table-sm table-bordered mb-2"><thead class="table-light"><tr><th>Date</th><th>Line</th><th>Model</th><th>Color</th><th>Part Code</th><th>Qty</th><th>Act</th></tr></thead><tbody id="queue-prod"></tbody></table>
+                <table class="table table-sm table-bordered mb-2"><thead class="table-light"><tr><th>Date</th><th>Line</th><th>Model</th><th>Color</th><th>Part</th><th>Qty</th><th>Act</th></tr></thead><tbody id="queue-prod"></tbody></table>
                 <button class="btn btn-primary w-100 btn-sm" onclick="submitQueue('prod', 'Production')">Save Queue</button>
             </div>
         </div>
         <div class="card p-3">
-            <div class="d-flex justify-content-between mb-2">
-                <h6 class="fw-bold m-0">Recent Production (Saved)</h6>
-                <div class="d-flex gap-2">
-                    <input type="date" id="filter-prod" class="form-control form-control-sm w-auto" onchange="renderDBTable('prod')">
-                    <button class="btn btn-dark btn-sm" onclick="previewReport('prod')">Preview</button>
-                </div>
-            </div>
-            <div class="table-responsive" style="max-height: 400px;"><table class="table table-bordered table-sm text-center"><thead class="table-light"><tr><th>Date</th><th>Line</th><th>Model</th><th>Color</th><th>Part Code</th><th>Qty</th><th>Act</th></tr></thead><tbody id="db-prod"></tbody></table></div>
+            <div class="d-flex justify-content-between mb-2"><h6 class="fw-bold m-0">Recent Production</h6><div class="d-flex gap-2"><input type="date" id="filter-prod" class="form-control form-control-sm w-auto" onchange="renderDBTable('prod')"><button class="btn btn-dark btn-sm" onclick="previewReport('prod')">Preview</button></div></div>
+            <div class="table-responsive" style="max-height: 400px;"><table class="table table-bordered table-sm text-center"><thead class="table-light"><tr><th>Date</th><th>Line</th><th>Model</th><th>Color</th><th>Part</th><th>Qty</th><th>Act</th></tr></thead><tbody id="db-prod"></tbody></table></div>
         </div>
     </div>
 
@@ -120,19 +114,10 @@
                         <button type="button" class="btn btn-secondary w-100 btn-sm hidden" id="btnCancelEdit" onclick="cancelPdiEdit()">Cancel Edit</button>
                     </div>
                 </form>
-                <div class="mt-3">
-                    <table class="table table-bordered table-sm mb-2"><thead class="table-light"><tr><th>Lot</th><th>Model</th><th>Type</th><th>Pass/Offer</th><th>Fail</th><th>Act</th></tr></thead><tbody id="queue-pdi"></tbody></table>
-                    <button class="btn btn-primary w-100 btn-sm" onclick="submitPdiQueue()">Save All Pending</button>
-                </div>
+                <div class="mt-3"><table class="table table-bordered table-sm mb-2"><thead class="table-light"><tr><th>Lot</th><th>Model</th><th>Type</th><th>Pass/Offer</th><th>Fail</th><th>Act</th></tr></thead><tbody id="queue-pdi"></tbody></table><button class="btn btn-primary w-100 btn-sm" onclick="submitPdiQueue()">Save All Pending</button></div>
             </div>
             <div class="card p-3">
-                <div class="d-flex justify-content-between mb-2">
-                    <h6 class="fw-bold m-0">Recent PDI Data</h6>
-                    <div class="d-flex gap-2">
-                        <input type="date" id="recentFilter" class="form-control form-control-sm w-auto" onchange="renderRecentTable()">
-                        <button class="btn btn-dark btn-sm" onclick="showDaySummary()">Preview</button>
-                    </div>
-                </div>
+                <div class="d-flex justify-content-between mb-2"><h6 class="fw-bold m-0">Recent PDI</h6><div class="d-flex gap-2"><input type="date" id="recentFilter" class="form-control form-control-sm w-auto" onchange="renderRecentTable()"><button class="btn btn-dark btn-sm" onclick="showDaySummary()">Preview</button></div></div>
                 <div class="table-responsive" style="max-height: 400px;"><table class="table table-bordered table-sm text-center"><thead class="table-light"><tr><th>Date</th><th>Model</th><th>Lot ID</th><th>Type</th><th>Pass/Offer</th><th>Fail</th><th>Act</th></tr></thead><tbody id="crudTable"></tbody></table></div>
             </div>
         </div>
@@ -169,14 +154,11 @@
                 </div>
                 <div class="d-flex gap-2 mt-3"><button type="button" class="btn btn-warning w-100" id="btnAddDisp" onclick="addQueue('disp')">Add</button><button type="button" class="btn btn-secondary w-100 hidden" id="btnCancelDisp" onclick="cancelEdit('disp')">Cancel</button></div>
             </form>
-            <div class="mt-3"><table class="table table-sm table-bordered mb-2"><thead class="table-light"><tr><th>Date</th><th>Model</th><th>Color</th><th>Part Code</th><th>Qty</th><th>Act</th></tr></thead><tbody id="queue-disp"></tbody></table><button class="btn btn-success w-100 btn-sm" onclick="submitQueue('disp', 'Dispatch')">Save</button></div>
+            <div class="mt-3"><table class="table table-sm table-bordered mb-2"><tbody id="queue-disp"></tbody></table><button class="btn btn-success w-100 btn-sm" onclick="submitQueue('disp', 'Dispatch')">Save</button></div>
         </div>
         <div class="card p-3">
-            <div class="d-flex justify-content-between mb-2">
-                <h6>Recent Dispatch</h6>
-                <div class="d-flex gap-2"><input type="date" id="filter-disp" class="form-control form-control-sm w-auto" onchange="renderDBTable('disp')"><button class="btn btn-dark btn-sm" onclick="previewReport('disp')">Preview</button></div>
-            </div>
-            <div class="table-responsive"><table class="table table-bordered table-sm text-center"><thead class="table-light"><tr><th>Date</th><th>Model</th><th>Color</th><th>Part Code</th><th>Qty</th><th>Act</th></tr></thead><tbody id="db-disp"></tbody></table></div>
+            <div class="d-flex justify-content-between mb-2"><h6>Recent Dispatch</h6><div class="d-flex gap-2"><input type="date" id="filter-disp" class="form-control form-control-sm w-auto" onchange="renderDBTable('disp')"><button class="btn btn-dark btn-sm" onclick="previewReport('disp')">Preview</button></div></div>
+            <div class="table-responsive"><table class="table table-bordered table-sm text-center"><thead class="table-light"><tr><th>Date</th><th>Model</th><th>Color</th><th>Part</th><th>Qty</th><th>Act</th></tr></thead><tbody id="db-disp"></tbody></table></div>
         </div>
     </div>
 
@@ -200,18 +182,15 @@
                 </div>
                 <div class="d-flex gap-2 mt-3"><button type="button" class="btn btn-info w-100 btn-sm text-white" id="btnAddOpen" onclick="addQueue('open')">Add</button><button type="button" class="btn btn-secondary w-100 btn-sm hidden" id="btnCancelOpen" onclick="cancelEdit('open')">Cancel</button></div>
             </form>
-            <div class="mt-3"><table class="table table-sm table-bordered mb-2"><thead class="table-light"><tr><th>Type</th><th>Model</th><th>Color</th><th>Part</th><th>Qty</th><th>Act</th></tr></thead><tbody id="queue-open"></tbody></table><button class="btn btn-dark w-100 btn-sm" onclick="submitQueue('open', 'Opening')">Save</button></div>
+            <div class="mt-3"><table class="table table-sm table-bordered mb-2"><tbody id="queue-open"></tbody></table><button class="btn btn-dark w-100 btn-sm" onclick="submitQueue('open', 'Opening')">Save</button></div>
         </div>
         <div class="card p-3">
-            <div class="d-flex justify-content-between mb-2">
-                <h6>Recent Opening</h6>
-                <div class="d-flex gap-2"><input type="month" id="filter-open" class="form-control form-control-sm w-auto" onchange="renderDBTable('open')"><button class="btn btn-dark btn-sm" onclick="previewReport('open')">Preview</button></div>
-            </div>
+            <div class="d-flex justify-content-between mb-2"><h6>Recent Opening</h6><div class="d-flex gap-2"><input type="month" id="filter-open" class="form-control form-control-sm w-auto" onchange="renderDBTable('open')"><button class="btn btn-dark btn-sm" onclick="previewReport('open')">Preview</button></div></div>
             <div class="table-responsive"><table class="table table-bordered table-sm text-center"><thead class="table-light"><tr><th>Month</th><th>Type</th><th>Model</th><th>Part</th><th>Qty</th><th>Act</th></tr></thead><tbody id="db-open"></tbody></table></div>
         </div>
     </div>
 
-    <!-- 5. LIVE REPORTS -->
+    <!-- 5. LIVE REPORTS (CORRECTED LOGIC) -->
     <div id="view-dash" class="main-view hidden">
         <div class="card p-3">
             <ul class="nav nav-tabs mb-3">
@@ -222,8 +201,8 @@
                 <!-- LINE LIVE -->
                 <div class="tab-pane fade show active" id="d-line">
                     <div class="d-flex justify-content-start align-items-center mb-3 gap-2 p-2 bg-light rounded">
-                        <label class="fw-bold">Filter:</label>
-                        <input type="number" id="dashLineInput" placeholder="Line (1-24)" class="form-control form-control-sm w-auto">
+                        <label class="fw-bold">Filter Line:</label>
+                        <input type="number" id="dashLineInput" placeholder="1-24" class="form-control form-control-sm w-auto">
                         <button class="btn btn-dark btn-sm" onclick="renderDash1()">Show</button>
                     </div>
                     <div class="table-responsive">
@@ -233,8 +212,8 @@
                                     <th rowspan="2">Model</th>
                                     <th rowspan="2">Color</th>
                                     <th colspan="3" class="bg-primary">Input Sources</th>
-                                    <th colspan="5" class="bg-success">PDI Passed (Deductions)</th>
-                                    <th colspan="4" class="bg-warning text-dark">Current Balance</th>
+                                    <th colspan="5" class="bg-success">PDI PASS (Display)</th>
+                                    <th colspan="4" class="bg-warning text-dark">Balances</th>
                                 </tr>
                                 <tr>
                                     <th>Opn PDI</th><th>Opn Rew</th><th>FG Out</th>
@@ -307,27 +286,30 @@
         }).catch(e=>{ console.error(e); toggleLoader(false); alert("Connection Error"); });
     };
 
-    // --- DASHBOARD LOGIC (Updated with Line Filter) ---
+    // --- DASHBOARD LOGIC 1: LINE LIVE (Fixed for Offer vs Pass) ---
     function renderDash1() {
         let selectedLine = document.getElementById('dashLineInput').value;
         let map = {};
-        const get = (m,c) => { let k=m+"|"+c; if(!map[k]) map[k]={m,c, opn_pdi:0, opn_rew:0, fg:0, pass_fresh:0, pass_war:0, pass_mkt:0, pass_oldfg:0, pass_rew:0, fail_fresh:0, fail_war:0, fail_mkt:0, fail_oldfg:0, offer_rew:0, fail_reasons:[] }; return map[k]; };
+        const get = (m,c) => { let k=m+"|"+c; if(!map[k]) map[k]={m,c, opn_pdi:0, opn_rew:0, fg:0, 
+            pass_fresh:0, offer_fresh:0,
+            pass_war:0, offer_war:0,
+            pass_mkt:0, offer_mkt:0,
+            pass_oldfg:0, offer_oldfg:0, fail_oldfg:0,
+            pass_rew:0, offer_rew:0, 
+            fail_reasons:[] }; return map[k]; };
 
-        // 1. Inputs (Filter by Line if selected)
+        // 1. Inputs (With Line Filter)
         dbData.open.forEach(r => { 
-            // r: [Month, Type, Line, Model, Color, Part, Qty...]
             if(selectedLine && r[2] != selectedLine) return; 
             if(r[1]=='PDI') { let o=get(r[3],r[4]); o.opn_pdi+=Number(r[6]||0); o.opn_rew+=Number(r[7]||0); } 
         });
         dbData.prod.forEach(r => { 
-            // r: [Date, Line, Floor, Model, Color, Part, Qty]
             if(selectedLine && r[1] != selectedLine) return;
             get(r[3],r[4]).fg += Number(r[6]||0); 
         });
 
-        // 2. PDI Processing (Filter by Line if selected)
+        // 2. PDI Processing
         pdiData.forEach(r => {
-            // r: [Date, Line, Model, Color, Part, LotID, Type, Offer, Pass, Reason]
             if(selectedLine && r[1] != selectedLine) return;
 
             let o = get(r[2], r[3]); // Model, Color
@@ -335,10 +317,10 @@
             let fail = offer - pass;
             let reason = r[9];
 
-            if(type === 'Fresh') { o.pass_fresh += pass; o.fail_fresh += fail; } 
-            else if(type === 'Warranty') { o.pass_war += pass; o.fail_war += fail; }
-            else if(type === 'Market Return') { o.pass_mkt += pass; o.fail_mkt += fail; }
-            else if(type === 'Old FG') { o.pass_oldfg += pass; o.fail_oldfg += fail; }
+            if(type === 'Fresh') { o.pass_fresh += pass; o.offer_fresh += offer; } 
+            else if(type === 'Warranty') { o.pass_war += pass; o.offer_war += offer; }
+            else if(type === 'Market Return') { o.pass_mkt += pass; o.offer_mkt += offer; }
+            else if(type === 'Old FG') { o.pass_oldfg += pass; o.offer_oldfg += offer; o.fail_oldfg += fail; }
             else if(type === 'Rework') { o.pass_rew += pass; o.offer_rew += offer; }
 
             if(fail > 0 && reason) o.fail_reasons.push(reason);
@@ -347,16 +329,23 @@
         let h = "";
         for(let k in map) {
             let x = map[k];
-            // Balance PDI Formula (The 170 Calculation)
-            let processed_fresh = (x.pass_fresh + x.fail_fresh);
-            let processed_war = (x.pass_war + x.fail_war);
-            let processed_mkt = (x.pass_mkt + x.fail_mkt);
-            let bal_pdi = (x.opn_pdi + x.fg) - (processed_fresh + processed_war + processed_mkt);
+            
+            // Formula 1: Bal(PDI) = (Opn PDI + FG) - (Fresh Offer + War Offer + Mkt Offer)
+            // Note: Rework Offer also consumes "PDI Stock" if considered part of flow, but usually Rework comes from Rework Pile.
+            // Based on user image logic: 200 - (10+10+10) = 170. (Deducting FRESH/WAR/MKT Offers)
+            let total_processed = x.offer_fresh + x.offer_war + x.offer_mkt;
+            let bal_pdi = (x.opn_pdi + x.fg) - total_processed;
             if(bal_pdi < 0) bal_pdi = 0; 
             
-            // For Rework Formula
-            let total_new_fails = x.fail_fresh + x.fail_war + x.fail_mkt;
+            // Formula 2: For Rework = (Opn Rew + Fresh/War/Mkt Fails) - Rework Offer
+            let fresh_fails = x.offer_fresh - x.pass_fresh;
+            let war_fails = x.offer_war - x.pass_war;
+            let mkt_fails = x.offer_mkt - x.pass_mkt;
+            
+            let total_new_fails = fresh_fails + war_fails + mkt_fails;
             let for_rework = (x.opn_rew + total_new_fails) - x.offer_rew;
+            
+            // Formula 3: Old FG Balance (Failures sit here)
             let old_fg_bal = x.fail_oldfg;
 
             let rsn = [...new Set(x.fail_reasons)].join(", ");
@@ -366,6 +355,7 @@
         document.getElementById('dash1-res').innerHTML = h;
     }
 
+    // --- DASHBOARD LOGIC 2: MASTER SHEET ---
     function renderDash2() {
         let map = {};
         const get = (m,c) => { let k=m+"|"+c; if(!map[k]) map[k]={m,c, total_opn_pdi:0, fg:0, total_pass:0, opn_disp:0, disp_out:0 }; return map[k]; };
@@ -384,7 +374,7 @@
         document.getElementById('master-body').innerHTML = h;
     }
 
-    // PDI Analysis (Charts)
+    // PDI Analysis
     function runPdiAnalysis() {
         let from=document.getElementById('dashFrom').value, to=document.getElementById('dashTo').value;
         let doff=0, dpass=0, dfail=0, dates={}, lines={}, floors={}, defects={};
@@ -407,7 +397,6 @@
     }
     function drawChart(id, arr, title) { let dt=new google.visualization.DataTable(); dt.addColumn('string','L'); dt.addColumn('number','V'); dt.addRows(arr); new google.visualization.ColumnChart(document.getElementById(id)).draw(dt,{title:title,legend:'none'}); }
 
-    // PDI Closure
     function runClosureReport() {
         let f1=document.getElementById('list_f1'), f2=document.getElementById('list_f2'), fb=document.getElementById('list_fb');
         f1.innerHTML=f2.innerHTML=fb.innerHTML="";
@@ -470,7 +459,7 @@
         fetch(PDI_URL, {method:'POST', body:JSON.stringify({action:'save', data:rows})}).then(r=>r.json()).then(d=>{ alert("Saved"); queueData.pdi=[]; renderPdiQueue(); window.onload(); toggleLoader(false); });
     }
 
-    // Render DB Tables (Updated with Part Code)
+    // Render DB Tables
     function renderDBTable(tab) {
         let tb=document.getElementById('db-'+tab); tb.innerHTML="";
         let fd=document.getElementById('filter-'+tab).value;
