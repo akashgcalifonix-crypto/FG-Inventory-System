@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Integrated System (Final Full Version)</title>
+    <title>Integrated Inventory & PDI System</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -82,7 +82,13 @@
             </div>
         </div>
         <div class="card p-3">
-            <div class="d-flex justify-content-between mb-2"><h6 class="fw-bold m-0">Recent Production</h6><div class="d-flex gap-2"><input type="date" id="filter-prod" class="form-control form-control-sm w-auto" onchange="renderDBTable('prod')"><button class="btn btn-dark btn-sm" onclick="previewReport('prod')">Preview</button></div></div>
+            <div class="d-flex justify-content-between mb-2">
+                <h6 class="fw-bold m-0">Recent Production (Saved)</h6>
+                <div class="d-flex gap-2">
+                    <input type="date" id="filter-prod" class="form-control form-control-sm w-auto" onchange="renderDBTable('prod')">
+                    <button class="btn btn-dark btn-sm" onclick="previewReport('prod')">Preview</button>
+                </div>
+            </div>
             <div class="table-responsive" style="max-height: 400px;"><table class="table table-bordered table-sm text-center"><thead class="table-light"><tr><th>Date</th><th>Line</th><th>Model</th><th>Color</th><th>Part</th><th>Qty</th><th>Act</th></tr></thead><tbody id="db-prod"></tbody></table></div>
         </div>
     </div>
@@ -122,15 +128,24 @@
                         <button type="button" class="btn btn-secondary w-100 btn-sm hidden" id="btnCancelEdit" onclick="cancelPdiEdit()">Cancel Edit</button>
                     </div>
                 </form>
-                <div class="mt-3"><table class="table table-bordered table-sm mb-2"><thead class="table-light"><tr><th>Lot</th><th>Model</th><th>Type</th><th>Pass/Offer</th><th>Fail</th><th>Act</th></tr></thead><tbody id="queue-pdi"></tbody></table><button class="btn btn-primary w-100 btn-sm" onclick="submitPdiQueue()">Save All Pending</button></div>
+                <div class="mt-3">
+                    <table class="table table-bordered table-sm mb-2"><thead class="table-light"><tr><th>Lot</th><th>Model</th><th>Type</th><th>Pass/Offer</th><th>Fail</th><th>Act</th></tr></thead><tbody id="queue-pdi"></tbody></table>
+                    <button class="btn btn-primary w-100 btn-sm" onclick="submitPdiQueue()">Save All Pending</button>
+                </div>
             </div>
             <div class="card p-3">
-                <div class="d-flex justify-content-between mb-2"><h6 class="fw-bold m-0">Recent PDI</h6><div class="d-flex gap-2"><input type="date" id="recentFilter" class="form-control form-control-sm w-auto" onchange="renderRecentTable()"><button class="btn btn-dark btn-sm" onclick="showDaySummary()">Preview</button></div></div>
+                <div class="d-flex justify-content-between mb-2">
+                    <h6 class="fw-bold m-0">Recent PDI Data</h6>
+                    <div class="d-flex gap-2">
+                        <input type="date" id="recentFilter" class="form-control form-control-sm w-auto" onchange="renderRecentTable()">
+                        <button class="btn btn-dark btn-sm" onclick="showDaySummary()">Preview</button>
+                    </div>
+                </div>
                 <div class="table-responsive" style="max-height: 400px;"><table class="table table-bordered table-sm text-center"><thead class="table-light"><tr><th>Date</th><th>Model</th><th>Lot ID</th><th>Type</th><th>Pass/Offer</th><th>Fail</th><th>Act</th></tr></thead><tbody id="crudTable"></tbody></table></div>
             </div>
         </div>
 
-        <!-- PDI DASHBOARD (CHARTS) - RESTORED -->
+        <!-- PDI DASHBOARD (CHARTS) -->
         <div id="pdi-sub-dash" class="hidden">
             <div class="card p-3 mb-3"><div class="row g-2 align-items-end"><div class="col-md-3"><label>From</label><input type="date" id="dashFrom" class="form-control"></div><div class="col-md-3"><label>To</label><input type="date" id="dashTo" class="form-control"></div><div class="col-md-2"><button class="btn btn-primary w-100" onclick="runPdiAnalysis()">Filter</button></div><div class="col-md-2"><button class="btn btn-danger w-100" onclick="downloadPDF()"><i class="bi bi-file-pdf"></i> PDF</button></div></div></div>
             <div id="pdf-content">
@@ -139,7 +154,7 @@
             </div>
         </div>
 
-        <!-- PDI CLOSURE - RESTORED -->
+        <!-- PDI CLOSURE -->
         <div id="pdi-sub-close" class="hidden">
             <div class="row g-3">
                 <div class="col-md-4"><div class="card p-3 bg-light h-100"><h6 class="text-primary fw-bold text-center border-bottom pb-2">Floor 1 Pending</h6><div id="list_f1"></div></div></div>
@@ -200,7 +215,7 @@
         </div>
     </div>
 
-    <!-- 5. LIVE REPORTS -->
+    <!-- 5. LIVE REPORTS (CORRECTED LOGIC) -->
     <div id="view-dash" class="main-view hidden">
         <div class="card p-3">
             <ul class="nav nav-tabs mb-3">
@@ -223,7 +238,7 @@
                                     <th rowspan="2">Color</th>
                                     <th colspan="3" class="bg-primary">Input Sources</th>
                                     <th colspan="5" class="bg-success">PDI PASS (Display)</th>
-                                    <th colspan="4" class="bg-warning text-dark">Balances (Based on Offer)</th>
+                                    <th colspan="4" class="bg-warning text-dark">Balances</th>
                                 </tr>
                                 <tr>
                                     <th>Opn PDI</th><th>Opn Rew</th><th>FG Out</th>
@@ -296,7 +311,7 @@
         }).catch(e=>{ console.error(e); toggleLoader(false); alert("Connection Error"); });
     };
 
-    // --- DASHBOARD LOGIC 1: LINE LIVE (CORRECTED: Uses Offer to Reduce Balance) ---
+    // --- DASHBOARD LOGIC: LINE LIVE (UPDATED) ---
     function renderDash1() {
         let selectedLine = document.getElementById('dashLineInput').value;
         let map = {};
@@ -304,9 +319,10 @@
             pass_fresh:0, offer_fresh:0,
             pass_war:0, offer_war:0,
             pass_mkt:0, offer_mkt:0,
-            pass_oldfg:0, offer_oldfg:0, fail_oldfg:0,
+            pass_oldfg:0, offer_oldfg:0,
             pass_rew:0, offer_rew:0, 
-            fail_reasons:[], lot_tracking: {} }; return map[k]; };
+            fail_fresh:0, fail_war:0, fail_mkt:0, fail_oldfg:0,
+            fail_reasons:[] }; return map[k]; };
 
         // 1. Inputs
         dbData.open.forEach(r => { 
@@ -325,52 +341,35 @@
             let o = get(r[2], r[3]); // Model, Color
             let type = r[6], offer = Number(r[7]||0), pass = Number(r[8]||0);
             let fail = offer - pass;
-            let lotID = r[5];
             let reason = r[9];
 
-            if(type === 'Fresh') { o.pass_fresh += pass; o.offer_fresh += offer; } 
-            else if(type === 'Warranty') { o.pass_war += pass; o.offer_war += offer; }
-            else if(type === 'Market Return') { o.pass_mkt += pass; o.offer_mkt += offer; }
+            if(type === 'Fresh') { o.pass_fresh += pass; o.offer_fresh += offer; o.fail_fresh += fail; } 
+            else if(type === 'Warranty') { o.pass_war += pass; o.offer_war += offer; o.fail_war += fail; }
+            else if(type === 'Market Return') { o.pass_mkt += pass; o.offer_mkt += offer; o.fail_mkt += fail; }
             else if(type === 'Old FG') { o.pass_oldfg += pass; o.offer_oldfg += offer; o.fail_oldfg += fail; }
             else if(type === 'Rework') { o.pass_rew += pass; o.offer_rew += offer; }
 
-            // Lot Tracking for Detailed Rework/Failures
-            if(type !== 'Old FG') {
-                if(fail > 0) {
-                    if(!o.lot_tracking[lotID]) o.lot_tracking[lotID]=0;
-                    o.lot_tracking[lotID] += fail;
-                    if(reason) o.fail_reasons.push(reason);
-                }
-                if(type === 'Rework' && pass > 0) {
-                    if(o.lot_tracking[lotID]) {
-                        o.lot_tracking[lotID] -= pass;
-                        if(o.lot_tracking[lotID] <= 0) delete o.lot_tracking[lotID];
-                    }
-                }
-            }
+            if(fail > 0 && reason) o.fail_reasons.push(reason);
         });
 
         let h = "";
         for(let k in map) {
             let x = map[k];
             
-            // Formula 1: Bal(PDI) = (Opn PDI + FG) - (Fresh Offer + War Offer + Mkt Offer)
-            // Note: We subtract OFFERS because any item offered to PDI leaves the "Available PDI Stock".
-            let total_processed_fresh = x.offer_fresh + x.offer_war + x.offer_mkt;
-            let bal_pdi = (x.opn_pdi + x.fg) - total_processed_fresh;
+            // Formula 1: Old FG Balance = Opn Rew - Pass Old FG
+            let old_fg_bal = x.opn_rew - x.pass_oldfg;
+            if(old_fg_bal < 0) old_fg_bal = 0;
+
+            // Formula 2: Bal PDI = (Opn PDI + FG) - (Fresh Offer + War Offer + Mkt Offer)
+            let processed_fresh = x.offer_fresh + x.offer_war + x.offer_mkt;
+            let bal_pdi = (x.opn_pdi + x.fg) - processed_fresh;
             if(bal_pdi < 0) bal_pdi = 0; 
             
-            // Formula 2: For Rework = (Opn Rew + Fails of Fresh/War/Mkt) - Rework Offer
-            // Logic: Fails add to rework pile. Rework Offers reduce rework pile.
-            let fresh_fails = x.offer_fresh - x.pass_fresh;
-            let war_fails = x.offer_war - x.pass_war;
-            let mkt_fails = x.offer_mkt - x.pass_mkt;
-            
-            let total_new_fails = fresh_fails + war_fails + mkt_fails;
-            let for_rework = (x.opn_rew + total_new_fails) - x.offer_rew;
+            // Formula 3: For Rework = (Fresh Fail + War Fail + Mkt Fail) - (Rework Pass)
+            let total_fresh_fails = x.fail_fresh + x.fail_war + x.fail_mkt;
+            let for_rework = total_fresh_fails - x.pass_rew;
             if(for_rework < 0) for_rework = 0;
-            
-            let old_fg_bal = x.fail_oldfg; // Old FG Fails
+
             let rsn = [...new Set(x.fail_reasons)].join(", ");
 
             h += `<tr><td class="fw-bold">${x.m}</td><td>${x.c}</td><td>${x.opn_pdi}</td><td>${x.opn_rew}</td><td>${x.fg}</td><td>${x.pass_fresh}</td><td>${x.pass_war}</td><td>${x.pass_mkt}</td><td>${x.pass_oldfg}</td><td>${x.pass_rew}</td><td class="bg-light-blue fw-bold fs-6">${bal_pdi}</td><td class="bg-light-yellow text-danger fw-bold">${old_fg_bal}</td><td class="bg-warning fw-bold">${for_rework}</td><td class="small text-danger">${rsn}</td></tr>`;
@@ -396,7 +395,6 @@
         document.getElementById('master-body').innerHTML = h;
     }
 
-    // --- PDI CHARTS & CLOSURE (RESTORED) ---
     function runPdiAnalysis() {
         let from=document.getElementById('dashFrom').value, to=document.getElementById('dashTo').value;
         let doff=0, dpass=0, dfail=0, dates={}, lines={}, floors={}, defects={};
@@ -439,7 +437,6 @@
     function populateModels(ids){ if(!masterData.length)return; let m=[...new Set(masterData.map(r=>r[1]))].sort(); ids.forEach(x=>{ let s=document.getElementById(x+'-m'); s.innerHTML='<option value="">Select</option>'; m.forEach(v=>s.innerHTML+=`<option value="${v}">${v}</option>`) }); }
     function filterC(p){ let m=document.getElementById(p+'-m').value,s=document.getElementById(p+'-c'); s.innerHTML='<option value="">Select</option>'; [...new Set(masterData.filter(r=>r[1]==m).map(r=>r[2]))].sort().forEach(c=>s.innerHTML+=`<option value="${c}">${c}</option>`); }
     function fillP(p){ let m=document.getElementById(p+'-m').value,c=document.getElementById(p+'-c').value,f=masterData.find(r=>r[1]==m&&r[2]==c); if(f)document.getElementById(p+'-p').value=f[0]; }
-    function checkFloor(i,id){ let v=parseInt(i.value),e=document.getElementById(id); e.className="floor-badge"; if(v>=1&&v<=8){e.innerText="1st";e.classList.add("bg-f1");}else if(v>=9&&v<=16){e.innerText="2nd";e.classList.add("bg-f2");}else if(v>=17&&v<=24){e.innerText="Base";e.classList.add("bg-base");}else e.classList.add("hidden"); }
     function toggleOp(v){ document.querySelectorAll('.grp-pdi').forEach(e=>e.classList.toggle('hidden',v!='PDI')); document.querySelector('.grp-disp').classList.toggle('hidden',v!='Dispatch'); }
     function calcP(){ let f=(document.getElementById('off').value||0)-(document.getElementById('pas').value||0); document.getElementById('fal').value=f; document.getElementById('defBox').classList.toggle('hidden',f<=0); }
     function fmtDate(iso){ if(!iso)return ""; let d=new Date(iso); return d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0'); }
