@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Integrated System (Final Stable)</title>
+    <title>Integrated System (Full Screen & Large Font)</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -14,62 +14,83 @@
 
     <style>
         :root { --primary: #0f172a; --secondary: #334155; --accent: #0d6efd; --success: #10b981; --danger: #ef4444; }
-        body { background-color: #f4f6f9; font-family: 'Segoe UI', sans-serif; padding-bottom: 60px; font-size: 1.05rem; } 
+        
+        /* --- GLOBAL FONT SIZE INCREASE --- */
+        body { 
+            background-color: #f4f6f9; 
+            font-family: 'Segoe UI', sans-serif; 
+            padding-bottom: 60px; 
+            font-size: 1.2rem; /* Increased Base Font Size */
+        } 
+        
         .hidden { display: none !important; }
         .loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.95); z-index:9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .main-header { background: var(--primary); padding: 15px 25px; color: white; margin-bottom: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .nav-main .nav-link { color: rgba(255,255,255,0.8); font-weight: 600; margin-right: 10px; cursor: pointer; font-size: 1.1rem; }
+        
+        /* HEADER & NAV */
+        .main-header { background: var(--primary); padding: 15px 30px; color: white; margin-bottom: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .nav-main .nav-link { color: rgba(255,255,255,0.8); font-weight: 700; margin-right: 15px; cursor: pointer; font-size: 1.25rem; } /* Larger Nav */
         .nav-main .nav-link.active { background-color: var(--accent); color: white !important; }
-        .card { border: none; border-radius: 12px; box-shadow: 0 3px 8px rgba(0,0,0,0.08); margin-bottom: 25px; }
-        .table th { background-color: #343a40; color: white; vertical-align: middle; }
-        .app-logo { height: 50px; background: white; padding: 4px; border-radius: 6px; }
-        .btn-excel { background-color: #198754; color: white; border: none; } .btn-excel:hover { background-color: #157347; color: white; }
-        .btn-action { font-size: 1.1rem; padding: 2px 8px; }
-        .sub-nav .nav-link { font-size: 1rem; padding: 10px 20px; border: 1px solid #ddd; background: white; margin-right: 5px; border-radius: 30px; }
-        .sub-nav .nav-link.active { background-color: var(--secondary); color: white; border-color: var(--secondary); }
-        .stat-box { background: white; border-radius: 8px; padding: 15px; text-align: center; border-bottom: 4px solid #ccc; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .floor-badge { font-size: 0.8rem; padding: 4px 8px; border-radius: 4px; color: white; font-weight: bold; }
-        .bg-f1 { background-color: #28a745; } .bg-f2 { background-color: #ffc107; color: black; } .bg-base { background-color: #dc3545; }
-        .filter-group { display: flex; align-items: center; gap: 5px; background: #fff; padding: 5px; border: 1px solid #ccc; border-radius: 5px; }
+        
+        /* FULL WIDTH CONTAINER */
+        .container-fluid { max-width: 100% !important; padding-left: 30px; padding-right: 30px; } 
 
-        /* --- NEW PDI REPORT STYLES (2X FONT & CARDS) --- */
-        .report-2x { font-size: 1.4rem !important; } /* Base font size increased */
+        /* CARDS & FORMS */
+        .card { border: none; border-radius: 12px; box-shadow: 0 3px 8px rgba(0,0,0,0.08); margin-bottom: 25px; }
+        .form-label { font-weight: 600; font-size: 1.15rem; }
+        .form-control, .form-select { font-size: 1.15rem; padding: 10px; } /* Larger Inputs */
+        .btn { font-size: 1.2rem; padding: 10px 20px; font-weight: 600; } /* Larger Buttons */
+
+        /* TABLES */
+        .table th { background-color: #343a40; color: white; vertical-align: middle; font-size: 1.2rem; padding: 12px; }
+        .table td { font-size: 1.2rem; vertical-align: middle; padding: 10px; }
+        
+        .app-logo { height: 60px; background: white; padding: 5px; border-radius: 6px; }
+        .btn-excel { background-color: #198754; color: white; border: none; } .btn-excel:hover { background-color: #157347; color: white; }
+        .btn-action { font-size: 1.2rem; padding: 4px 10px; }
+        
+        /* SUB NAV */
+        .sub-nav .nav-link { font-size: 1.15rem; padding: 12px 25px; border: 1px solid #ddd; background: white; margin-right: 5px; border-radius: 30px; }
+        .sub-nav .nav-link.active { background-color: var(--secondary); color: white; border-color: var(--secondary); }
+        
+        .stat-box { background: white; border-radius: 8px; padding: 20px; text-align: center; border-bottom: 4px solid #ccc; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .floor-badge { font-size: 1rem; padding: 5px 10px; border-radius: 4px; color: white; font-weight: bold; }
+        .bg-f1 { background-color: #28a745; } .bg-f2 { background-color: #ffc107; color: black; } .bg-base { background-color: #dc3545; }
+        .filter-group { display: flex; align-items: center; gap: 10px; background: #fff; padding: 8px; border: 1px solid #ccc; border-radius: 5px; }
+
+        /* --- PDI REPORT STYLES (LARGE & CLEAR) --- */
+        .report-2x { font-size: 1.5rem !important; }
         .report-card { 
-            background: white; 
-            border-radius: 15px; 
-            padding: 25px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
-            text-align: center;
-            border-top: 5px solid #ccc;
-            margin-bottom: 20px;
+            background: white; border-radius: 15px; padding: 30px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center;
+            border-top: 6px solid #ccc; margin-bottom: 25px;
         }
         .rc-total { border-top-color: #000; }
         .rc-pass { border-top-color: #10b981; }
         .rc-fail { border-top-color: #ef4444; }
         .rc-rate { border-top-color: #0d6efd; }
         
-        .rc-num { font-size: 3.5rem; font-weight: 800; line-height: 1.2; } /* BIG NUMBERS */
-        .rc-label { font-size: 1.2rem; font-weight: bold; color: #666; text-transform: uppercase; }
-        .rc-sub { font-size: 1rem; color: #999; }
+        .rc-num { font-size: 4rem; font-weight: 800; line-height: 1.2; }
+        .rc-label { font-size: 1.4rem; font-weight: bold; color: #666; text-transform: uppercase; }
+        .rc-sub { font-size: 1.1rem; color: #999; }
         
-        .report-header { background: #e9ecef; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: center; font-weight: bold; font-size: 1.5rem; }
-        .table-report th { background-color: #f8f9fa; text-transform: uppercase; font-size: 1.1rem; color: #555; vertical-align: middle; }
-        .table-report td { font-size: 1.2rem; vertical-align: middle; font-weight: 500; }
-        .badge-lg { font-size: 1.1rem; padding: 8px 15px; }
+        .report-header { background: #e9ecef; padding: 20px; border-radius: 10px; margin-bottom: 25px; text-align: center; font-weight: bold; font-size: 1.8rem; }
+        .table-report th { font-size: 1.3rem; padding: 15px; }
+        .table-report td { font-size: 1.4rem; padding: 15px; }
+        .badge-lg { font-size: 1.2rem; padding: 10px 18px; }
     </style>
 </head>
 <body>
 
 <div id="global-loader" class="loading-overlay">
-    <div class="spinner-border text-primary" style="width: 4rem; height: 4rem;"></div>
-    <h4 id="loader-text" class="mt-3 fw-bold text-secondary">Loading System...</h4>
+    <div class="spinner-border text-primary" style="width: 5rem; height: 5rem;"></div>
+    <h3 id="loader-text" class="mt-3 fw-bold text-secondary">Loading System...</h3>
 </div>
 
 <!-- HEADER -->
 <div class="main-header d-flex justify-content-between align-items-center sticky-top">
-    <div class="d-flex align-items-center gap-3">
+    <div class="d-flex align-items-center gap-4">
         <img src="https://i.postimg.cc/5y7SN4xc/logo.png" class="app-logo" alt="Logo">
-        <h3 class="m-0 fw-bold d-none d-md-block">Inventory & PDI Master</h3>
+        <h2 class="m-0 fw-bold d-none d-md-block">Inventory & PDI Master</h2>
     </div>
     <ul class="nav nav-pills nav-main">
         <li class="nav-item"><a class="nav-link active" onclick="switchMainTab('prod')">Production</a></li>
@@ -80,11 +101,12 @@
     </ul>
 </div>
 
-<div class="container-fluid px-4" style="max-width: 1800px;">
+<!-- FULL WIDTH CONTAINER -->
+<div class="container-fluid">
 
     <!-- 1. PRODUCTION TAB -->
     <div id="view-prod" class="main-view">
-        <ul class="nav nav-pills sub-nav mb-3">
+        <ul class="nav nav-pills sub-nav mb-4">
             <li class="nav-item"><a class="nav-link active" data-bs-toggle="pill" href="#prod-entry">📝 Entry</a></li>
             <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#prod-perf">📊 Performance</a></li>
         </ul>
@@ -92,72 +114,63 @@
             <!-- Production Entry -->
             <div class="tab-pane fade show active" id="prod-entry">
                 <div class="card p-4">
-                    <h4 class="text-secondary fw-bold border-bottom pb-2 mb-3">Daily Production Entry</h4>
+                    <h3 class="text-secondary fw-bold border-bottom pb-3 mb-4">Daily Production Entry</h3>
                     <form id="form-prod">
                         <input type="hidden" id="editIdx-prod" value="">
-                        <div class="row g-3">
+                        <div class="row g-4">
                             <div class="col-md-2"><label class="form-label">Date</label><input type="date" name="date" id="prod-date" class="form-control" required></div>
                             <div class="col-md-2"><label class="form-label">Line</label><input type="number" name="line" id="prod-line" class="form-control" oninput="checkFloor(this, 'bdg-p')" required><span id="bdg-p" class="floor-badge hidden"></span></div>
                             <div class="col-md-3"><label class="form-label">Model</label><select name="model" id="prod-m" class="form-select" onchange="filterC('prod')" required></select></div>
                             <div class="col-md-3"><label class="form-label">Color</label><select name="color" id="prod-c" class="form-select" onchange="fillP('prod')" required></select></div>
                             <div class="col-md-2"><label class="form-label">FG Qty</label><input type="number" name="fgQty" id="prod-qty" class="form-control" required></div>
-                            <div class="col-12"><label class="text-muted">Part Code:</label><input type="text" name="partCode" id="prod-p" class="form-control bg-light" readonly></div>
+                            <div class="col-12"><label class="text-muted fs-5">Part Code:</label><input type="text" name="partCode" id="prod-p" class="form-control bg-light" readonly></div>
                         </div>
-                        <div class="d-flex gap-2 mt-4"><button type="button" class="btn btn-warning w-100 fw-bold py-2" id="btnAddProd" onclick="addQueue('prod')">+ Add to Queue</button><button type="button" class="btn btn-secondary w-100 hidden py-2" id="btnCancelProd" onclick="cancelEdit('prod')">Cancel Edit</button></div>
+                        <div class="d-flex gap-3 mt-5"><button type="button" class="btn btn-warning w-100 py-3" id="btnAddProd" onclick="addQueue('prod')">+ Add to Queue</button><button type="button" class="btn btn-secondary w-100 hidden py-3" id="btnCancelProd" onclick="cancelEdit('prod')">Cancel Edit</button></div>
                     </form>
-                    <div class="mt-4"><table class="table table-bordered mb-2"><tbody id="queue-prod"></tbody></table><button class="btn btn-primary w-100 py-2 fw-bold" onclick="submitQueue('prod', 'Production')">Save Queue to DB</button></div>
+                    <div class="mt-5"><table class="table table-bordered mb-2"><tbody id="queue-prod"></tbody></table><button class="btn btn-primary w-100 py-3" onclick="submitQueue('prod', 'Production')">Save Queue to DB</button></div>
                 </div>
                 <div class="card p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-                        <h5 class="fw-bold text-primary m-0">Recent Production Data</h5>
+                    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+                        <h4 class="fw-bold text-primary m-0">Recent Production Data</h4>
                         <div class="filter-group">
-                            <small class="fw-bold">From:</small> <input type="date" id="filter-prod-from" class="form-control form-control-sm w-auto" onchange="renderDBTable('prod')">
-                            <small class="fw-bold">To:</small> <input type="date" id="filter-prod-to" class="form-control form-control-sm w-auto" onchange="renderDBTable('prod')">
-                            <button class="btn btn-excel btn-sm" onclick="exportTableToExcel('tbl-prod-db', 'Production_Data')"><i class="bi bi-file-earmark-excel"></i></button>
+                            <span class="fw-bold">From:</span> <input type="date" id="filter-prod-from" class="form-control w-auto" onchange="renderDBTable('prod')">
+                            <span class="fw-bold">To:</span> <input type="date" id="filter-prod-to" class="form-control w-auto" onchange="renderDBTable('prod')">
+                            <button class="btn btn-excel" onclick="exportTableToExcel('tbl-prod-db', 'Production_Data')"><i class="bi bi-file-earmark-excel"></i></button>
                         </div>
                     </div>
-                    <div class="table-responsive" style="max-height: 500px;"><table class="table table-bordered text-center table-hover" id="tbl-prod-db"><thead class="table-light sticky-top"><tr><th>Date</th><th>Line</th><th>Model</th><th>Color</th><th>Part</th><th>Qty</th><th>Actions</th></tr></thead><tbody id="db-prod"></tbody></table></div>
+                    <div class="table-responsive" style="max-height: 600px;"><table class="table table-bordered text-center table-hover" id="tbl-prod-db"><thead class="table-light sticky-top"><tr><th>Date</th><th>Line</th><th>Model</th><th>Color</th><th>Part</th><th>Qty</th><th>Actions</th></tr></thead><tbody id="db-prod"></tbody></table></div>
                 </div>
             </div>
             
-            <!-- Production Performance (Updated) -->
+            <!-- Production Performance -->
             <div class="tab-pane fade" id="prod-perf">
-                <div class="card p-4 mb-3">
-                    <div class="row g-3 align-items-end">
+                <div class="card p-4 mb-4">
+                    <div class="row g-4 align-items-end">
                         <div class="col-md-3"><label class="form-label">From Date</label><input type="date" id="perf-prod-from" class="form-control"></div>
                         <div class="col-md-3"><label class="form-label">To Date</label><input type="date" id="perf-prod-to" class="form-control"></div>
-                        <div class="col-md-6 text-end"><button class="btn btn-excel fw-bold" onclick="exportTableToExcel('perf-res-table', 'Production_Analysis')">Download Excel</button></div>
+                        <div class="col-md-6 text-end"><button class="btn btn-excel py-3 px-4" onclick="exportTableToExcel('perf-res-table', 'Production_Analysis')">Download Excel</button></div>
                     </div>
                 </div>
 
-                <div class="card p-3">
-                    <ul class="nav nav-tabs mb-3" id="prodPerfTabs">
+                <div class="card p-4">
+                    <ul class="nav nav-tabs mb-4" id="prodPerfTabs">
                         <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#pp-tab1" onclick="runProdPerf('overview')">1. Overview (Date Wise)</a></li>
                         <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#pp-tab2" onclick="runProdPerf('line')">2. Line Wise</a></li>
                         <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#pp-tab3" onclick="runProdPerf('model')">3. Model Wise</a></li>
                     </ul>
                     <div class="tab-content" id="perf-res-container">
-                        <div class="tab-pane fade show active" id="pp-tab1">
-                            <!-- Filters for Tab 1 handled by Main Date -->
-                            <div id="res-pp-overview"></div>
-                        </div>
+                        <div class="tab-pane fade show active" id="pp-tab1"><div id="res-pp-overview"></div></div>
                         <div class="tab-pane fade" id="pp-tab2">
-                            <div class="d-flex align-items-center gap-3 mb-3">
-                                <label>Select Line:</label>
-                                <select id="pp-filter-line" class="form-select w-auto" onchange="runProdPerf('line')">
-                                    <option value="">All Lines</option>
-                                    <!-- Populated by JS -->
-                                </select>
+                            <div class="d-flex align-items-center gap-3 mb-4">
+                                <label class="fs-5 fw-bold">Select Line:</label>
+                                <select id="pp-filter-line" class="form-select w-auto" onchange="runProdPerf('line')"><option value="">All Lines</option></select>
                             </div>
                             <div id="res-pp-line"></div>
                         </div>
                         <div class="tab-pane fade" id="pp-tab3">
-                            <div class="d-flex align-items-center gap-3 mb-3">
-                                <label>Select Model:</label>
-                                <select id="pp-filter-model" class="form-select w-auto" onchange="runProdPerf('model')">
-                                    <option value="">All Models</option>
-                                    <!-- Populated by JS -->
-                                </select>
+                            <div class="d-flex align-items-center gap-3 mb-4">
+                                <label class="fs-5 fw-bold">Select Model:</label>
+                                <select id="pp-filter-model" class="form-select w-auto" onchange="runProdPerf('model')"><option value="">All Models</option></select>
                             </div>
                             <div id="res-pp-model"></div>
                         </div>
@@ -169,7 +182,7 @@
 
     <!-- 2. PDI MASTER TAB -->
     <div id="view-pdi-master" class="main-view hidden">
-        <ul class="nav nav-pills sub-nav mb-3">
+        <ul class="nav nav-pills sub-nav mb-4">
             <li class="nav-item"><a class="nav-link active" data-bs-toggle="pill" href="#pdi-entry">📝 Entry</a></li>
             <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#pdi-perf">📈 Charts</a></li>
             <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#pdi-close">✅ Closure</a></li>
@@ -177,84 +190,83 @@
         <div class="tab-content">
             <div class="tab-pane fade show active" id="pdi-entry">
                 <div class="card p-4" id="pdi-card-container">
-                    <h4 class="text-secondary fw-bold border-bottom pb-2 mb-3">PDI Master Entry</h4>
+                    <h3 class="text-secondary fw-bold border-bottom pb-3 mb-4">PDI Master Entry</h3>
                     <form id="form-pdi">
                         <input type="hidden" id="pdiEditIndex" value="">
-                        <div class="row g-3">
+                        <div class="row g-4">
                             <div class="col-md-2"><label class="form-label">Date</label><input type="date" name="date" id="pdi-date" class="form-control" required></div>
                             <div class="col-md-1"><label class="form-label">Line</label><input type="number" name="line" id="pdi-line" class="form-control" required></div>
                             <div class="col-md-2"><label class="form-label">Model</label><select name="model" id="pdi-m" class="form-select" onchange="filterC('pdi')" required></select></div>
                             <div class="col-md-2"><label class="form-label">Color</label><select name="color" id="pdi-c" class="form-select" onchange="fillP('pdi')" required></select></div>
                             <div class="col-md-2"><label class="form-label">Lot ID</label><input type="text" name="lotId" id="pdi-lot" class="form-control"></div>
-                            <div class="col-md-2"><label class="form-label">Type</label><select name="lotType" id="pdi-type" class="form-select"><option>Fresh</option><option>Rework</option><option>Warranty</option><option>Old FG</option><option>Market Return</option></select></div>
+                            <div class="col-md-3"><label class="form-label">Type</label><select name="lotType" id="pdi-type" class="form-select"><option>Fresh</option><option>Rework</option><option>Warranty</option><option>Old FG</option><option>Market Return</option></select></div>
                             <div class="col-md-1"><label class="form-label">Offer</label><input type="number" id="off" name="pdiOffer" class="form-control" oninput="calcP()" required></div>
                             <div class="col-md-1"><label class="form-label">Pass</label><input type="number" id="pas" name="pdiPass" class="form-control" oninput="calcP()" required></div>
                             <div class="col-md-1"><label class="form-label">Fail</label><input type="text" id="fal" class="form-control bg-light" readonly></div>
-                            <div class="col-md-8"><label class="form-label">Defect Reason</label><input type="text" name="defectReason" id="pdi-rsn" class="form-control"></div>
-                            <div class="col-md-2"><label class="form-label">Part Code</label><input type="text" name="partCode" id="pdi-p" class="form-control bg-light" readonly></div>
+                            <div class="col-md-9"><label class="form-label">Defect Reason</label><input type="text" name="defectReason" id="pdi-rsn" class="form-control"></div>
                         </div>
-                        <div class="d-flex gap-2 mt-4"><button type="button" class="btn btn-warning w-100 fw-bold py-2" id="btnAddPdi" onclick="addPdiQueue()">+ Add Pending</button><button type="button" class="btn btn-secondary w-100 hidden py-2" id="btnCancelEdit" onclick="cancelPdiEdit()">Cancel Edit</button></div>
+                        <div class="d-flex gap-3 mt-5"><button type="button" class="btn btn-warning w-100 py-3" id="btnAddPdi" onclick="addPdiQueue()">+ Add Pending</button><button type="button" class="btn btn-secondary w-100 hidden py-3" id="btnCancelEdit" onclick="cancelPdiEdit()">Cancel Edit</button></div>
                     </form>
-                    <div class="mt-4"><table class="table table-bordered mb-2"><tbody id="queue-pdi"></tbody></table><button class="btn btn-primary w-100 py-2 fw-bold" onclick="submitPdiQueue()">Save All Pending</button></div>
+                    <div class="mt-5"><table class="table table-bordered mb-2"><tbody id="queue-pdi"></tbody></table><button class="btn btn-primary w-100 py-3" onclick="submitPdiQueue()">Save All Pending</button></div>
                 </div>
                 <div class="card p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-                        <h5 class="fw-bold text-success m-0">Recent PDI Data</h5>
+                    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+                        <h4 class="fw-bold text-success m-0">Recent PDI Data</h4>
                         <div class="filter-group">
-                            <small class="fw-bold">From:</small> <input type="date" id="pdi-from" class="form-control form-control-sm w-auto" onchange="renderRecentTable()">
-                            <small class="fw-bold">To:</small> <input type="date" id="pdi-to" class="form-control form-control-sm w-auto" onchange="renderRecentTable()">
-                            <button class="btn btn-dark btn-sm" onclick="showDaySummary()">Preview Report</button>
-                            <button class="btn btn-excel btn-sm" onclick="exportTableToExcel('tbl-pdi-db', 'PDI_Data')">Excel</button>
+                            <span class="fw-bold">From:</span> <input type="date" id="pdi-from" class="form-control w-auto" onchange="renderRecentTable()">
+                            <span class="fw-bold">To:</span> <input type="date" id="pdi-to" class="form-control w-auto" onchange="renderRecentTable()">
+                            <button class="btn btn-dark" onclick="showDaySummary()">Preview Report</button>
+                            <button class="btn btn-excel" onclick="exportTableToExcel('tbl-pdi-db', 'PDI_Data')">Excel</button>
                         </div>
                     </div>
-                    <div class="table-responsive" style="max-height: 500px;"><table class="table table-bordered text-center table-hover" id="tbl-pdi-db"><thead class="table-light sticky-top"><tr><th>Date</th><th>Model</th><th>Lot ID</th><th>Type</th><th>Pass/Offer</th><th>Fail</th><th>Actions</th></tr></thead><tbody id="crudTable"></tbody></table></div>
+                    <div class="table-responsive" style="max-height: 600px;"><table class="table table-bordered text-center table-hover" id="tbl-pdi-db"><thead class="table-light sticky-top"><tr><th>Date</th><th>Model</th><th>Lot ID</th><th>Type</th><th>Pass/Offer</th><th>Fail</th><th>Actions</th></tr></thead><tbody id="crudTable"></tbody></table></div>
                 </div>
             </div>
             <div class="tab-pane fade" id="pdi-perf">
-                <div class="card p-4 mb-3"><div class="row g-3 align-items-end"><div class="col-md-3"><label class="form-label">From</label><input type="date" id="dashFrom" class="form-control"></div><div class="col-md-3"><label class="form-label">To</label><input type="date" id="dashTo" class="form-control"></div><div class="col-md-2"><button class="btn btn-primary w-100 py-2" onclick="runPdiAnalysis()">Analyze</button></div></div></div>
-                <div id="pdf-content"><div class="row g-3 mb-4"><div class="col-md-3"><div class="stat-box border-dark"><h2 class="fw-bold" id="d_total_qty">0</h2><small>TOTAL OFFER</small></div></div><div class="col-md-3"><div class="stat-box border-success"><h2 class="fw-bold text-success" id="d_passed_qty">0</h2><small>PASSED</small></div></div><div class="col-md-3"><div class="stat-box border-danger"><h2 class="fw-bold text-danger" id="d_rejected_qty">0</h2><small>FAILED</small></div></div><div class="col-md-3"><div class="stat-box border-primary"><h2 class="fw-bold text-primary" id="d_pass_rate">0%</h2><small>PASS RATE</small></div></div></div><div class="row g-3"><div class="col-md-6"><div class="card p-3"><div id="ch_trend" style="height:350px"></div></div></div><div class="col-md-6"><div class="card p-3"><div id="ch_line" style="height:350px"></div></div></div><div class="col-md-6"><div class="card p-3"><div id="ch_floor" style="height:350px"></div></div></div><div class="col-md-6"><div class="card p-3"><div id="ch_defects" style="height:350px"></div></div></div></div></div>
+                <div class="card p-4 mb-4"><div class="row g-4 align-items-end"><div class="col-md-3"><label class="form-label">From</label><input type="date" id="dashFrom" class="form-control"></div><div class="col-md-3"><label class="form-label">To</label><input type="date" id="dashTo" class="form-control"></div><div class="col-md-2"><button class="btn btn-primary w-100 py-3" onclick="runPdiAnalysis()">Analyze</button></div></div></div>
+                <div id="pdf-content"><div class="row g-4 mb-5"><div class="col-md-3"><div class="stat-box border-dark"><h2 class="fw-bold display-5" id="d_total_qty">0</h2><small class="fs-5">TOTAL OFFER</small></div></div><div class="col-md-3"><div class="stat-box border-success"><h2 class="fw-bold display-5 text-success" id="d_passed_qty">0</h2><small class="fs-5">PASSED</small></div></div><div class="col-md-3"><div class="stat-box border-danger"><h2 class="fw-bold display-5 text-danger" id="d_rejected_qty">0</h2><small class="fs-5">FAILED</small></div></div><div class="col-md-3"><div class="stat-box border-primary"><h2 class="fw-bold display-5 text-primary" id="d_pass_rate">0%</h2><small class="fs-5">PASS RATE</small></div></div></div><div class="row g-4"><div class="col-md-6"><div class="card p-3"><div id="ch_trend" style="height:400px"></div></div></div><div class="col-md-6"><div class="card p-3"><div id="ch_line" style="height:400px"></div></div></div><div class="col-md-6"><div class="card p-3"><div id="ch_floor" style="height:400px"></div></div></div><div class="col-md-6"><div class="card p-3"><div id="ch_defects" style="height:400px"></div></div></div></div></div>
             </div>
             <div class="tab-pane fade" id="pdi-close">
-                <div class="alert alert-info">Only lots that currently have failures and haven't passed subsequently are shown here.</div>
-                <div class="row g-4"><div class="col-md-4"><div class="card p-4 bg-light h-100"><h5 class="text-primary text-center">1st Floor Pending</h5><div id="list_f1"></div></div></div><div class="col-md-4"><div class="card p-4 bg-light h-100"><h5 class="text-warning text-center">2nd Floor Pending</h5><div id="list_f2"></div></div></div><div class="col-md-4"><div class="card p-4 bg-light h-100"><h5 class="text-danger text-center">Basement Pending</h5><div id="list_fb"></div></div></div></div>
+                <div class="alert alert-info fs-5">Only lots that currently have failures and haven't passed subsequently are shown here.</div>
+                <div class="row g-4"><div class="col-md-4"><div class="card p-4 bg-light h-100"><h4 class="text-primary text-center">1st Floor Pending</h4><div id="list_f1"></div></div></div><div class="col-md-4"><div class="card p-4 bg-light h-100"><h4 class="text-warning text-center">2nd Floor Pending</h4><div id="list_f2"></div></div></div><div class="col-md-4"><div class="card p-4 bg-light h-100"><h4 class="text-danger text-center">Basement Pending</h4><div id="list_fb"></div></div></div></div>
             </div>
         </div>
     </div>
 
     <!-- 3. DISPATCH TAB -->
     <div id="view-disp" class="main-view hidden">
-        <ul class="nav nav-pills sub-nav mb-3"><li class="nav-item"><a class="nav-link active" data-bs-toggle="pill" href="#disp-entry">📝 Entry</a></li><li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#disp-perf">📈 Performance</a></li></ul>
+        <ul class="nav nav-pills sub-nav mb-4"><li class="nav-item"><a class="nav-link active" data-bs-toggle="pill" href="#disp-entry">📝 Entry</a></li><li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#disp-perf">📈 Performance</a></li></ul>
         <div class="tab-content">
             <div class="tab-pane fade show active" id="disp-entry">
                 <div class="card p-4">
-                    <h4 class="text-secondary fw-bold border-bottom pb-2 mb-3">Dispatch Entry</h4>
+                    <h3 class="text-secondary fw-bold border-bottom pb-3 mb-4">Dispatch Entry</h3>
                     <form id="form-disp">
                         <input type="hidden" id="editIdx-disp" value="">
-                        <div class="row g-3">
+                        <div class="row g-4">
                             <div class="col-md-3"><label class="form-label">Date</label><input type="date" name="date" id="disp-date" class="form-control" required></div>
                             <div class="col-md-3"><label class="form-label">Model</label><select name="model" id="disp-m" class="form-select" onchange="filterC('disp')" required></select></div>
                             <div class="col-md-3"><label class="form-label">Color</label><select name="color" id="disp-c" class="form-select" onchange="fillP('disp')" required></select></div>
                             <div class="col-md-3"><label class="form-label">Qty</label><input type="number" name="dispatchQty" id="disp-qty" class="form-control" required></div>
-                            <div class="col-12"><label class="text-muted">Part Code:</label><input type="text" name="partCode" id="disp-p" class="form-control bg-light" readonly></div>
+                            <div class="col-12"><label class="text-muted fs-5">Part Code:</label><input type="text" name="partCode" id="disp-p" class="form-control bg-light" readonly></div>
                         </div>
-                        <div class="d-flex gap-2 mt-4"><button type="button" class="btn btn-warning w-100 fw-bold py-2" id="btnAddDisp" onclick="addQueue('disp')">Add</button><button type="button" class="btn btn-secondary w-100 hidden py-2" id="btnCancelDisp" onclick="cancelEdit('disp')">Cancel</button></div>
+                        <div class="d-flex gap-3 mt-5"><button type="button" class="btn btn-warning w-100 py-3" id="btnAddDisp" onclick="addQueue('disp')">Add</button><button type="button" class="btn btn-secondary w-100 hidden py-3" id="btnCancelDisp" onclick="cancelEdit('disp')">Cancel</button></div>
                     </form>
-                    <div class="mt-4"><table class="table table-bordered mb-2"><tbody id="queue-disp"></tbody></table><button class="btn btn-success w-100 py-2 fw-bold" onclick="submitQueue('disp', 'Dispatch')">Save</button></div>
+                    <div class="mt-5"><table class="table table-bordered mb-2"><tbody id="queue-disp"></tbody></table><button class="btn btn-success w-100 py-3" onclick="submitQueue('disp', 'Dispatch')">Save</button></div>
                 </div>
                 <div class="card p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-                        <h5 class="fw-bold m-0">Recent Dispatch</h5>
+                    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+                        <h4 class="fw-bold m-0">Recent Dispatch</h4>
                         <div class="filter-group">
-                            <small class="fw-bold">From:</small> <input type="date" id="filter-disp-from" class="form-control form-control-sm w-auto" onchange="renderDBTable('disp')">
-                            <small class="fw-bold">To:</small> <input type="date" id="filter-disp-to" class="form-control form-control-sm w-auto" onchange="renderDBTable('disp')">
-                            <button class="btn btn-excel btn-sm" onclick="exportTableToExcel('tbl-disp-db', 'Dispatch_Data')">Excel</button>
+                            <span class="fw-bold">From:</span> <input type="date" id="filter-disp-from" class="form-control w-auto" onchange="renderDBTable('disp')">
+                            <span class="fw-bold">To:</span> <input type="date" id="filter-disp-to" class="form-control w-auto" onchange="renderDBTable('disp')">
+                            <button class="btn btn-excel" onclick="exportTableToExcel('tbl-disp-db', 'Dispatch_Data')">Excel</button>
                         </div>
                     </div>
                     <div class="table-responsive"><table class="table table-bordered text-center table-hover" id="tbl-disp-db"><thead class="table-light"><tr><th>Date</th><th>Model</th><th>Color</th><th>Part</th><th>Qty</th><th>Actions</th></tr></thead><tbody id="db-disp"></tbody></table></div>
                 </div>
             </div>
             <div class="tab-pane fade" id="disp-perf">
-                <div class="card p-4 mb-3"><div class="row g-3 align-items-end"><div class="col-md-3"><label class="form-label">From</label><input type="date" id="disp-from" class="form-control"></div><div class="col-md-3"><label class="form-label">To</label><input type="date" id="disp-to" class="form-control"></div><div class="col-md-2"><button class="btn btn-primary w-100 py-2" onclick="calcPerf('disp')">Analyze</button></div></div></div>
+                <div class="card p-4 mb-4"><div class="row g-4 align-items-end"><div class="col-md-3"><label class="form-label">From</label><input type="date" id="disp-from" class="form-control"></div><div class="col-md-3"><label class="form-label">To</label><input type="date" id="disp-to" class="form-control"></div><div class="col-md-2"><button class="btn btn-primary w-100 py-3" onclick="calcPerf('disp')">Analyze</button></div></div></div>
                 <div id="res-disp-perf"></div>
             </div>
         </div>
@@ -262,14 +274,14 @@
 
     <!-- 4. OPENING TAB -->
     <div id="view-open" class="main-view hidden">
-        <ul class="nav nav-pills sub-nav mb-3"><li class="nav-item"><a class="nav-link active" data-bs-toggle="pill" href="#open-entry">📝 Entry</a></li><li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#open-perf">📈 Overview</a></li></ul>
+        <ul class="nav nav-pills sub-nav mb-4"><li class="nav-item"><a class="nav-link active" data-bs-toggle="pill" href="#open-entry">📝 Entry</a></li><li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#open-perf">📈 Overview</a></li></ul>
         <div class="tab-content">
             <div class="tab-pane fade show active" id="open-entry">
                 <div class="card p-4 border-info">
-                    <h4 class="text-info fw-bold border-bottom pb-2 mb-3">Opening Balance</h4>
+                    <h3 class="text-info fw-bold border-bottom pb-3 mb-4">Opening Balance</h3>
                     <form id="form-open">
                         <input type="hidden" id="editIdx-open" value="">
-                        <div class="row g-3">
+                        <div class="row g-4">
                             <div class="col-md-2"><label class="form-label">Month</label><input type="month" name="month" id="open-month" class="form-control" required></div>
                             <div class="col-md-2"><label class="form-label">Type</label><select name="openType" id="open-type" class="form-select" onchange="toggleOp(this.value)"><option value="PDI">PDI Opening</option><option value="Dispatch">Dispatch Opening</option></select></div>
                             <div class="col-md-2"><label class="form-label">Model</label><select name="model" id="open-m" class="form-select" onchange="filterC('open')" required></select></div>
@@ -281,24 +293,24 @@
                             <div class="col-12"><input type="text" name="partCode" id="open-p" class="form-control bg-light" readonly placeholder="Part Code"></div>
                             <input type="hidden" name="reworkReason">
                         </div>
-                        <div class="d-flex gap-2 mt-4"><button type="button" class="btn btn-info w-100 text-white fw-bold py-2" id="btnAddOpen" onclick="addQueue('open')">Add</button><button type="button" class="btn btn-secondary w-100 hidden py-2" id="btnCancelOpen" onclick="cancelEdit('open')">Cancel</button></div>
+                        <div class="d-flex gap-3 mt-5"><button type="button" class="btn btn-info w-100 text-white py-3" id="btnAddOpen" onclick="addQueue('open')">Add</button><button type="button" class="btn btn-secondary w-100 hidden py-3" id="btnCancelOpen" onclick="cancelEdit('open')">Cancel</button></div>
                     </form>
-                    <div class="mt-4"><table class="table table-bordered mb-2"><tbody id="queue-open"></tbody></table><button class="btn btn-dark w-100 py-2 fw-bold" onclick="submitQueue('open', 'Opening')">Save</button></div>
+                    <div class="mt-5"><table class="table table-bordered mb-2"><tbody id="queue-open"></tbody></table><button class="btn btn-dark w-100 py-3" onclick="submitQueue('open', 'Opening')">Save</button></div>
                 </div>
                 <div class="card p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-                        <h5 class="fw-bold m-0">Recent Opening</h5>
+                    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+                        <h4 class="fw-bold m-0">Recent Opening</h4>
                         <div class="filter-group">
-                            <small class="fw-bold">From:</small> <input type="month" id="filter-open-from" class="form-control form-control-sm w-auto" onchange="renderDBTable('open')">
-                            <small class="fw-bold">To:</small> <input type="month" id="filter-open-to" class="form-control form-control-sm w-auto" onchange="renderDBTable('open')">
-                            <button class="btn btn-excel btn-sm" onclick="exportTableToExcel('tbl-open-db', 'Opening_Data')">Excel</button>
+                            <span class="fw-bold">From:</span> <input type="month" id="filter-open-from" class="form-control w-auto" onchange="renderDBTable('open')">
+                            <span class="fw-bold">To:</span> <input type="month" id="filter-open-to" class="form-control w-auto" onchange="renderDBTable('open')">
+                            <button class="btn btn-excel" onclick="exportTableToExcel('tbl-open-db', 'Opening_Data')">Excel</button>
                         </div>
                     </div>
                     <div class="table-responsive"><table class="table table-bordered text-center table-hover" id="tbl-open-db"><thead class="table-light"><tr><th>Month</th><th>Type</th><th>Model</th><th>Part</th><th>Qty</th><th>Actions</th></tr></thead><tbody id="db-open"></tbody></table></div>
                 </div>
             </div>
             <div class="tab-pane fade" id="open-perf">
-                <div class="card p-4 mb-3"><div class="row"><div class="col-md-4"><label class="form-label">Select Month</label><input type="month" id="open-perf-month" class="form-control"></div><div class="col-md-2"><br><button class="btn btn-primary w-100 py-2" onclick="calcPerf('open')">Analyze</button></div></div></div>
+                <div class="card p-4 mb-4"><div class="row"><div class="col-md-4"><label class="form-label">Select Month</label><input type="month" id="open-perf-month" class="form-control"></div><div class="col-md-2"><br><button class="btn btn-primary w-100 py-3" onclick="calcPerf('open')">Analyze</button></div></div></div>
                 <div id="res-open-perf"></div>
             </div>
         </div>
@@ -306,23 +318,23 @@
 
     <!-- 5. LIVE REPORTS -->
     <div id="view-dash" class="main-view hidden">
-        <div class="card p-3">
-            <ul class="nav nav-tabs mb-3"><li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#d-line">📊 Line Live (Detailed)</a></li><li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#d-master">📈 Master Sheet</a></li></ul>
+        <div class="card p-4">
+            <ul class="nav nav-tabs mb-4"><li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#d-line">📊 Line Live (Detailed)</a></li><li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#d-master">📈 Master Sheet</a></li></ul>
             <div class="tab-content">
                 <div class="tab-pane fade show active" id="d-line">
-                    <div class="d-flex justify-content-between align-items-center mb-3 gap-3 p-3 bg-white rounded shadow-sm border">
-                        <div class="d-flex gap-2 align-items-center">
+                    <div class="d-flex justify-content-between align-items-center mb-4 gap-3 p-4 bg-white rounded shadow-sm border">
+                        <div class="d-flex gap-3 align-items-center">
                             <label class="fw-bold fs-5">Filter Line:</label>
                             <input type="number" id="dashLineInput" placeholder="1-24" class="form-control w-auto">
-                            <button class="btn btn-dark" onclick="renderDash1()">Show</button>
+                            <button class="btn btn-dark py-2 px-4" onclick="renderDash1()">Show</button>
                         </div>
-                        <button class="btn btn-excel" onclick="exportTableToExcel('tbl-dash1', 'Line_Live_Report')"><i class="bi bi-file-earmark-excel"></i> Download Excel</button>
+                        <button class="btn btn-excel py-2 px-4" onclick="exportTableToExcel('tbl-dash1', 'Line_Live_Report')"><i class="bi bi-file-earmark-excel"></i> Download Excel</button>
                     </div>
                     <div class="table-responsive"><table class="table table-bordered text-center table-dash" id="tbl-dash1"><thead class="table-dark"><tr><th rowspan="2">Model</th><th rowspan="2">Color</th><th colspan="3" class="bg-primary">Input</th><th colspan="5" class="bg-success">PDI PASS</th><th colspan="4" class="bg-warning text-dark">Balances</th></tr><tr><th>Opn PDI</th><th>Opn Rew</th><th>FG Out</th><th>Fresh</th><th>Warr</th><th>Mkt</th><th>OldFG</th><th>Rew</th><th class="bg-info text-white">Bal(PDI)</th><th>OldFG Bal</th><th>For Rework</th><th>Reason</th></tr></thead><tbody id="dash1-res"></tbody></table></div>
                 </div>
                 <div class="tab-pane fade" id="d-master">
                     <div class="d-flex justify-content-end p-2 mb-2">
-                         <button class="btn btn-excel" onclick="exportTableToExcel('tbl-dash2', 'Master_Sheet_Report')"><i class="bi bi-file-earmark-excel"></i> Download Excel</button>
+                         <button class="btn btn-excel py-2 px-4" onclick="exportTableToExcel('tbl-dash2', 'Master_Sheet_Report')"><i class="bi bi-file-earmark-excel"></i> Download Excel</button>
                     </div>
                     <div class="table-responsive"><table class="table table-bordered table-striped text-center table-dash" id="tbl-dash2"><thead class="table-dark"><tr><th>Model</th><th>Color</th><th>Opn(PDI)+Opn(Rew)</th><th>FG Out</th><th>PDI Pass (Total)</th><th>Opn(Disp)</th><th>Dispatched</th><th class="bg-primary">Bal(PDI)</th><th class="bg-success">Bal(Disp)</th></tr></thead><tbody id="master-body"></tbody></table></div>
                 </div>
@@ -333,10 +345,10 @@
 </div>
 
 <!-- PREVIEW MODAL -->
-<div class="modal fade" id="summaryModal" tabindex="-1"><div class="modal-dialog modal-xl"><div class="modal-content"><div class="modal-header bg-primary text-white"><div class="d-flex align-items-center"><img src="https://i.postimg.cc/5y7SN4xc/logo.png" class="app-logo me-2"><h5 class="modal-title">Report</h5></div><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body bg-light" id="summaryBody"></div></div></div></div>
+<div class="modal fade" id="summaryModal" tabindex="-1"><div class="modal-dialog modal-xl"><div class="modal-content"><div class="modal-header bg-primary text-white"><div class="d-flex align-items-center"><img src="https://i.postimg.cc/5y7SN4xc/logo.png" class="app-logo me-2"><h3 class="modal-title">Report</h3></div><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body bg-light" id="summaryBody"></div></div></div></div>
 
 <!-- DETAIL MODAL -->
-<div class="modal fade" id="detailModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header bg-primary text-white"><h5 class="modal-title">Full Details</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body bg-light p-4" id="detailBody"></div></div></div></div>
+<div class="modal fade" id="detailModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header bg-primary text-white"><h3 class="modal-title">Full Details</h3><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body bg-light p-5" id="detailBody"></div></div></div></div>
 
 <script>
     // ***************************************************************
@@ -439,10 +451,10 @@
             
             // Generate Summary HTML
             let sumHTML = `<div class="row g-3 mb-4">
-                <div class="col-md-3"><div class="stat-box bg-dark text-white"><h4 class="fw-bold">${total}</h4><small>OVERALL PRODUCTION</small></div></div>
-                <div class="col-md-3"><div class="stat-box bg-f1 text-white"><h4 class="fw-bold">${floorMap['1st Floor']||0}</h4><small>1st Floor</small></div></div>
-                <div class="col-md-3"><div class="stat-box bg-f2 text-dark"><h4 class="fw-bold">${floorMap['2nd Floor']||0}</h4><small>2nd Floor</small></div></div>
-                <div class="col-md-3"><div class="stat-box bg-base text-white"><h4 class="fw-bold">${floorMap['Basement']||0}</h4><small>Basement</small></div></div>
+                <div class="col-md-3"><div class="stat-box bg-dark text-white"><h4 class="fw-bold display-6">${total}</h4><small>OVERALL PRODUCTION</small></div></div>
+                <div class="col-md-3"><div class="stat-box bg-f1 text-white"><h4 class="fw-bold display-6">${floorMap['1st Floor']||0}</h4><small>1st Floor</small></div></div>
+                <div class="col-md-3"><div class="stat-box bg-f2 text-dark"><h4 class="fw-bold display-6">${floorMap['2nd Floor']||0}</h4><small>2nd Floor</small></div></div>
+                <div class="col-md-3"><div class="stat-box bg-base text-white"><h4 class="fw-bold display-6">${floorMap['Basement']||0}</h4><small>Basement</small></div></div>
             </div>`;
 
             // Detailed Rows
@@ -512,7 +524,7 @@
             let filtered = dbData.disp.filter(r => { let d = getCleanDate(r[0]); return d >= from && d <= to; });
             let total = 0, mMap = {}; filtered.forEach(r => { let q = Number(r[4]||0); total += q; mMap[r[1]] = (mMap[r[1]] || 0) + q; });
             let mRows = ""; for(let k in mMap) mRows += `<tr><td>${k}</td><td>${mMap[k]}</td></tr>`;
-            h = `<div class="row g-3 mb-4"><div class="col-md-12"><div class="stat-box border-primary"><h2 class="fw-bold text-primary">${total}</h2><div class="text-muted">TOTAL DISPATCHED</div></div></div></div>
+            h = `<div class="row g-3 mb-4"><div class="col-md-12"><div class="stat-box border-primary"><h2 class="fw-bold display-5 text-primary">${total}</h2><div class="text-muted">TOTAL DISPATCHED</div></div></div></div>
                  <h5 class="text-center fw-bold">Model Wise Dispatch</h5><table class="table table-bordered text-center table-striped w-50 mx-auto"><thead class="table-dark"><tr><th>Model</th><th>Qty</th></tr></thead><tbody>${mRows}</tbody></table>`;
             document.getElementById('res-disp-perf').innerHTML = h;
         } else if (tab === 'open') {
@@ -525,8 +537,8 @@
                 else { let q = Number(r[9]||0); dispTot += q; dispMap[r[3]] = (dispMap[r[3]] || 0) + q; }
             });
             let pRow="", dRow=""; for(let k in pdiMap) pRow += `<tr><td>${k}</td><td>${pdiMap[k]}</td></tr>`; for(let k in dispMap) dRow += `<tr><td>${k}</td><td>${dispMap[k]}</td></tr>`;
-            h = `<div class="row g-3 mb-4"><div class="col-md-6"><div class="stat-box border-info"><h2 class="fw-bold text-info">${pdiTot}</h2><div class="text-muted">Total PDI Opening</div></div></div>
-                 <div class="col-md-6"><div class="stat-box border-dark"><h2 class="fw-bold text-dark">${dispTot}</h2><div class="text-muted">Total Dispatch Opening</div></div></div></div>
+            h = `<div class="row g-3 mb-4"><div class="col-md-6"><div class="stat-box border-info"><h2 class="fw-bold display-5 text-info">${pdiTot}</h2><div class="text-muted">Total PDI Opening</div></div></div>
+                 <div class="col-md-6"><div class="stat-box border-dark"><h2 class="fw-bold display-5 text-dark">${dispTot}</h2><div class="text-muted">Total Dispatch Opening</div></div></div></div>
                  <div class="row"><div class="col-md-6"><h6 class="text-center">PDI Opening (Model-wise)</h6><table class="table table-bordered text-center"><thead class="table-secondary"><tr><th>Model</th><th>Qty</th></tr></thead><tbody>${pRow}</tbody></table></div>
                  <div class="col-md-6"><h6 class="text-center">Dispatch Opening (Model-wise)</h6><table class="table table-bordered text-center"><thead class="table-secondary"><tr><th>Model</th><th>Qty</th></tr></thead><tbody>${dRow}</tbody></table></div></div>`;
             document.getElementById('res-open-perf').innerHTML = h;
@@ -537,9 +549,9 @@
     function viewDetail(tab, idx) {
         if(!dbData[tab] || !dbData[tab][idx]) return;
         let r = dbData[tab][idx];
-        let h = `<table class="table table-bordered table-striped fs-5">`;
-        if(tab==='prod') h += `<tr><th>Date</th><td>${fmtDate(r[0])}</td></tr><tr><th>Line</th><td>${r[1]}</td></tr><tr><th>Floor</th><td>${r[2]}</td></tr><tr><th>Model</th><td>${r[3]}</td></tr><tr><th>Color</th><td>${r[4]}</td></tr><tr><th>Part Code</th><td>${r[5]}</td></tr><tr><th>Quantity</th><td class="fw-bold fs-4">${r[6]}</td></tr>`;
-        else if(tab==='disp') h += `<tr><th>Date</th><td>${fmtDate(r[0])}</td></tr><tr><th>Model</th><td>${r[1]}</td></tr><tr><th>Color</th><td>${r[2]}</td></tr><tr><th>Part Code</th><td>${r[3]}</td></tr><tr><th>Quantity</th><td class="fw-bold fs-4">${r[4]}</td></tr>`;
+        let h = `<table class="table table-bordered table-striped fs-4">`;
+        if(tab==='prod') h += `<tr><th>Date</th><td>${fmtDate(r[0])}</td></tr><tr><th>Line</th><td>${r[1]}</td></tr><tr><th>Floor</th><td>${r[2]}</td></tr><tr><th>Model</th><td>${r[3]}</td></tr><tr><th>Color</th><td>${r[4]}</td></tr><tr><th>Part Code</th><td>${r[5]}</td></tr><tr><th>Quantity</th><td class="fw-bold fs-3">${r[6]}</td></tr>`;
+        else if(tab==='disp') h += `<tr><th>Date</th><td>${fmtDate(r[0])}</td></tr><tr><th>Model</th><td>${r[1]}</td></tr><tr><th>Color</th><td>${r[2]}</td></tr><tr><th>Part Code</th><td>${r[3]}</td></tr><tr><th>Quantity</th><td class="fw-bold fs-3">${r[4]}</td></tr>`;
         else if(tab==='open') {
             h += `<tr><th>Month</th><td>${r[0]}</td></tr><tr><th>Type</th><td>${r[1]}</td></tr><tr><th>Line</th><td>${r[2]}</td></tr><tr><th>Model</th><td>${r[3]}</td></tr><tr><th>Color</th><td>${r[4]}</td></tr><tr><th>Part Code</th><td>${r[5]}</td></tr>`;
             if(r[1]=='PDI') h+= `<tr><th>PDI Open</th><td>${r[6]}</td></tr><tr><th>Rework Open</th><td>${r[7]}</td></tr><tr><th>Reason</th><td>${r[8]}</td></tr>`;
@@ -553,7 +565,7 @@
     function viewPdiDetail(idx) {
         if(!pdiData[idx]) return;
         let r = pdiData[idx];
-        let h = `<table class="table table-bordered table-striped fs-5">
+        let h = `<table class="table table-bordered table-striped fs-4">
             <tr><th>Date</th><td>${fmtDate(r[0])}</td></tr><tr><th>Line</th><td>${r[1]}</td></tr><tr><th>Model</th><td>${r[2]}</td></tr><tr><th>Color</th><td>${r[3]}</td></tr><tr><th>Part Code</th><td>${r[4]}</td></tr>
             <tr><th>Lot ID</th><td class="fw-bold">${r[5]}</td></tr><tr><th>Type</th><td>${r[6]}</td></tr><tr><th>Offer Qty</th><td>${r[7]}</td></tr><tr><th>Pass Qty</th><td class="text-success fw-bold">${r[8]}</td></tr>
             <tr><th>Fail Qty</th><td class="text-danger fw-bold">${r[7]-r[8]}</td></tr><tr><th>Reason</th><td>${r[9]}</td></tr>
