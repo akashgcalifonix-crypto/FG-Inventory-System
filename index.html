@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Integrated System (Updated)</title>
+    <title>Integrated System (Final Updated)</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -64,6 +64,7 @@
             <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#prod-perf">📊 Performance</a></li>
         </ul>
         <div class="tab-content">
+            <!-- Production Entry -->
             <div class="tab-pane fade show active" id="prod-entry">
                 <div class="card p-4">
                     <h4 class="text-secondary fw-bold border-bottom pb-2 mb-3">Daily Production Entry</h4>
@@ -93,9 +94,50 @@
                     <div class="table-responsive" style="max-height: 500px;"><table class="table table-bordered text-center table-hover" id="tbl-prod-db"><thead class="table-light sticky-top"><tr><th>Date</th><th>Line</th><th>Model</th><th>Color</th><th>Part</th><th>Qty</th><th>Actions</th></tr></thead><tbody id="db-prod"></tbody></table></div>
                 </div>
             </div>
+            
+            <!-- Production Performance (Updated) -->
             <div class="tab-pane fade" id="prod-perf">
-                <div class="card p-4 mb-3"><div class="row g-3 align-items-end"><div class="col-md-3"><label class="form-label">From Date</label><input type="date" id="prod-from" class="form-control"></div><div class="col-md-3"><label class="form-label">To Date</label><input type="date" id="prod-to" class="form-control"></div><div class="col-md-4"><div class="d-flex gap-2"><button class="btn btn-primary w-100 fw-bold py-2" onclick="calcPerf('prod')">Show Analysis</button> <button class="btn btn-excel w-100 fw-bold py-2" onclick="exportPerformance('prod')">Excel</button></div></div></div></div>
-                <div id="res-prod-perf"></div>
+                <div class="card p-4 mb-3">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-3"><label class="form-label">From Date</label><input type="date" id="perf-prod-from" class="form-control"></div>
+                        <div class="col-md-3"><label class="form-label">To Date</label><input type="date" id="perf-prod-to" class="form-control"></div>
+                        <div class="col-md-6 text-end"><button class="btn btn-excel fw-bold" onclick="exportTableToExcel('perf-res-table', 'Production_Analysis')">Download Excel</button></div>
+                    </div>
+                </div>
+
+                <div class="card p-3">
+                    <ul class="nav nav-tabs mb-3" id="prodPerfTabs">
+                        <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#pp-tab1" onclick="runProdPerf('overview')">1. Overview (Date Wise)</a></li>
+                        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#pp-tab2" onclick="runProdPerf('line')">2. Line Wise</a></li>
+                        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#pp-tab3" onclick="runProdPerf('model')">3. Model Wise</a></li>
+                    </ul>
+                    <div class="tab-content" id="perf-res-container">
+                        <div class="tab-pane fade show active" id="pp-tab1">
+                            <!-- Filters for Tab 1 handled by Main Date -->
+                            <div id="res-pp-overview"></div>
+                        </div>
+                        <div class="tab-pane fade" id="pp-tab2">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <label>Select Line:</label>
+                                <select id="pp-filter-line" class="form-select w-auto" onchange="runProdPerf('line')">
+                                    <option value="">All Lines</option>
+                                    <!-- Populated by JS -->
+                                </select>
+                            </div>
+                            <div id="res-pp-line"></div>
+                        </div>
+                        <div class="tab-pane fade" id="pp-tab3">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <label>Select Model:</label>
+                                <select id="pp-filter-model" class="form-select w-auto" onchange="runProdPerf('model')">
+                                    <option value="">All Models</option>
+                                    <!-- Populated by JS -->
+                                </select>
+                            </div>
+                            <div id="res-pp-model"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -136,6 +178,7 @@
                         <div class="filter-group">
                             <small class="fw-bold">From:</small> <input type="date" id="pdi-from" class="form-control form-control-sm w-auto" onchange="renderRecentTable()">
                             <small class="fw-bold">To:</small> <input type="date" id="pdi-to" class="form-control form-control-sm w-auto" onchange="renderRecentTable()">
+                            <button class="btn btn-dark btn-sm" onclick="showDaySummary()">Preview Report</button>
                             <button class="btn btn-excel btn-sm" onclick="exportTableToExcel('tbl-pdi-db', 'PDI_Data')">Excel</button>
                         </div>
                     </div>
@@ -147,6 +190,7 @@
                 <div id="pdf-content"><div class="row g-3 mb-4"><div class="col-md-3"><div class="stat-box border-dark"><h2 class="fw-bold" id="d_total_qty">0</h2><small>TOTAL OFFER</small></div></div><div class="col-md-3"><div class="stat-box border-success"><h2 class="fw-bold text-success" id="d_passed_qty">0</h2><small>PASSED</small></div></div><div class="col-md-3"><div class="stat-box border-danger"><h2 class="fw-bold text-danger" id="d_rejected_qty">0</h2><small>FAILED</small></div></div><div class="col-md-3"><div class="stat-box border-primary"><h2 class="fw-bold text-primary" id="d_pass_rate">0%</h2><small>PASS RATE</small></div></div></div><div class="row g-3"><div class="col-md-6"><div class="card p-3"><div id="ch_trend" style="height:350px"></div></div></div><div class="col-md-6"><div class="card p-3"><div id="ch_line" style="height:350px"></div></div></div><div class="col-md-6"><div class="card p-3"><div id="ch_floor" style="height:350px"></div></div></div><div class="col-md-6"><div class="card p-3"><div id="ch_defects" style="height:350px"></div></div></div></div></div>
             </div>
             <div class="tab-pane fade" id="pdi-close">
+                <div class="alert alert-info">Only lots that currently have failures and haven't passed subsequently are shown here.</div>
                 <div class="row g-4"><div class="col-md-4"><div class="card p-4 bg-light h-100"><h5 class="text-primary text-center">1st Floor Pending</h5><div id="list_f1"></div></div></div><div class="col-md-4"><div class="card p-4 bg-light h-100"><h5 class="text-warning text-center">2nd Floor Pending</h5><div id="list_f2"></div></div></div><div class="col-md-4"><div class="card p-4 bg-light h-100"><h5 class="text-danger text-center">Basement Pending</h5><div id="list_fb"></div></div></div></div>
             </div>
         </div>
@@ -271,11 +315,10 @@
 
 <script>
     // ***************************************************************
-    // IMPORTANT: REPLACE THIS URL WITH YOUR NEW DEPLOYMENT URL
+    // SCRIPT URL
     // ***************************************************************
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx_b0br1-CCp7Z1q9b0ElRJnH5gtAwbILhkGgDsRiD0O6YFzelESPLB4GVc-CFcQMuvbg/exec"; 
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx_b0br1-CCp7Z1q9b0ElRJnH5gtAwbILhkGgDsRiD0O6YFzelESPLB4GVc-CFcQMuvbg/exec";
     
-    // We use the same URL for both because the script handles both logics
     const INV_URL = WEB_APP_URL;
     const PDI_URL = WEB_APP_URL;
     
@@ -286,8 +329,8 @@
     window.onload = function() {
         let today = new Date().toLocaleDateString('en-CA');
         let curMonth = today.substring(0, 7);
-        // Set Defaults for Date Inputs
-        ['filter-prod-from','filter-prod-to','filter-disp-from','filter-disp-to','pdi-from','pdi-to','pdi-date', 'prod-date', 'disp-date', 'dashFrom', 'dashTo', 'prod-from', 'prod-to', 'disp-from', 'disp-to'].forEach(id=>{ let e=document.getElementById(id); if(e)e.value=today; });
+        // Defaults
+        ['filter-prod-from','filter-prod-to','filter-disp-from','filter-disp-to','pdi-from','pdi-to','pdi-date', 'prod-date', 'disp-date', 'dashFrom', 'dashTo', 'perf-prod-from', 'perf-prod-to', 'disp-from', 'disp-to'].forEach(id=>{ let e=document.getElementById(id); if(e)e.value=today; });
         ['filter-open-from', 'filter-open-to', 'open-month', 'open-perf-month'].forEach(id=>{ let e=document.getElementById(id); if(e)e.value=curMonth; });
         
         toggleLoader(true);
@@ -297,13 +340,14 @@
         }).then(r=>r.json()).then(d=>{
             dbData.prod=d.prod||[]; dbData.disp=d.disp||[]; dbData.open=d.open||[];
             renderDBTable('prod'); renderDBTable('disp'); renderDBTable('open');
-            // Auto Load Reports to fix "function not working"
             setTimeout(()=>{ renderDash1(); renderDash2(); }, 1000); 
+            // Populate Filters for Prod Perf
+            popProdFilters();
             return fetch(PDI_URL);
         }).then(r=>r.json()).then(d=>{
             pdiData = d.data || []; if(pdiData[0] && pdiData[0][0]==="Date") pdiData.shift();
             renderRecentTable(); 
-            // Re-render reports once PDI data is here
+            runClosureReport(); // Update Closure Logic on load
             setTimeout(()=>{ renderDash1(); renderDash2(); }, 500);
             toggleLoader(false);
         }).catch(e=>{ console.error(e); toggleLoader(false); alert("Connection Error. Check URL."); });
@@ -312,7 +356,7 @@
     // --- SAFETY CHECK ---
     function safeLen(arr){ return arr ? arr.length : 0; }
 
-    // --- SUBMIT QUEUE FUNCTION ---
+    // --- SUBMIT QUEUE ---
     function submitQueue(tab, type) {
         if (!queueData[tab].length) return alert("Queue is empty!");
         toggleLoader(true);
@@ -335,31 +379,109 @@
         }).catch(e => { console.error(e); alert("Connection Failed"); toggleLoader(false); });
     }
 
-    // --- PERFORMANCE LOGIC ---
-    function calcPerf(tab) {
-        let h = "";
-        if (tab === 'prod') {
-            let from = document.getElementById('prod-from').value;
-            let to = document.getElementById('prod-to').value;
-            if(!dbData.prod) return;
-            let filtered = dbData.prod.filter(r => { let d = getCleanDate(r[0]); return d >= from && d <= to; });
-            let total = 0, fMap = {}, lMap = {}, mMap = {};
+    // --- POPULATE FILTERS FOR PROD PERF ---
+    function popProdFilters() {
+        if(!masterData) return;
+        let lines = new Set();
+        if(dbData.prod) dbData.prod.forEach(r => lines.add(r[1]));
+        let lm = document.getElementById('pp-filter-line');
+        lm.innerHTML = '<option value="">All Lines</option>';
+        [...lines].sort((a,b)=>a-b).forEach(l => lm.innerHTML += `<option value="${l}">Line ${l}</option>`);
+
+        let models = [...new Set(masterData.map(r=>r[1]))].sort();
+        let mm = document.getElementById('pp-filter-model');
+        mm.innerHTML = '<option value="">All Models</option>';
+        models.forEach(m => mm.innerHTML += `<option value="${m}">${m}</option>`);
+    }
+
+    // --- PRODUCTION PERFORMANCE (3 TABS) ---
+    function runProdPerf(mode) {
+        let from = document.getElementById('perf-prod-from').value;
+        let to = document.getElementById('perf-prod-to').value;
+        if(!dbData.prod) return;
+        let filtered = dbData.prod.filter(r => { let d = getCleanDate(r[0]); return d >= from && d <= to; });
+
+        let html = "";
+        
+        if (mode === 'overview') {
+            // Summary Calculation
+            let total = 0, floorMap = {};
             filtered.forEach(r => {
-                let q = Number(r[6]||0); total += q;
-                let ln = Number(r[1]||0);
-                let floor = (ln>=1 && ln<=8) ? "1st Floor" : (ln>=9 && ln<=16) ? "2nd Floor" : "Basement";
-                fMap[floor] = (fMap[floor] || 0) + q; lMap[ln] = (lMap[ln] || 0) + q; mMap[r[3]] = (mMap[r[3]] || 0) + q;
+                let q = Number(r[6]||0);
+                total += q;
+                floorMap[r[2]] = (floorMap[r[2]] || 0) + q;
             });
-            let fRows="", lRows="", mRows="";
-            for(let k in fMap) fRows += `<tr><td>${k}</td><td>${fMap[k]}</td></tr>`;
-            for(let k in lMap) lRows += `<tr><td>Line ${k}</td><td>${lMap[k]}</td></tr>`;
-            for(let k in mMap) mRows += `<tr><td>${k}</td><td>${mMap[k]}</td></tr>`;
-            h = `<div class="row g-3 mb-4"><div class="col-md-12"><div class="stat-box border-dark"><h2 class="fw-bold">${total}</h2><div class="text-muted">TOTAL PRODUCTION</div></div></div></div>
-                 <div id="perf-tables" class="row g-4"><div class="col-md-4"><h5 class="text-center fw-bold">Floor Wise</h5><table class="table table-bordered text-center table-striped"><thead class="table-dark"><tr><th>Floor</th><th>Qty</th></tr></thead><tbody>${fRows}</tbody></table></div>
-                 <div class="col-md-4"><h5 class="text-center fw-bold">Line Wise</h5><table class="table table-bordered text-center table-striped"><thead class="table-dark"><tr><th>Line</th><th>Qty</th></tr></thead><tbody>${lRows}</tbody></table></div>
-                 <div class="col-md-4"><h5 class="text-center fw-bold">Model Wise</h5><table class="table table-bordered text-center table-striped"><thead class="table-dark"><tr><th>Model</th><th>Qty</th></tr></thead><tbody>${mRows}</tbody></table></div></div>`;
-            document.getElementById('res-prod-perf').innerHTML = h;
-        } else if (tab === 'disp') {
+            
+            // Generate Summary HTML
+            let sumHTML = `<div class="row g-3 mb-4">
+                <div class="col-md-3"><div class="stat-box bg-dark text-white"><h4 class="fw-bold">${total}</h4><small>OVERALL PRODUCTION</small></div></div>
+                <div class="col-md-3"><div class="stat-box bg-f1 text-white"><h4 class="fw-bold">${floorMap['1st Floor']||0}</h4><small>1st Floor</small></div></div>
+                <div class="col-md-3"><div class="stat-box bg-f2 text-dark"><h4 class="fw-bold">${floorMap['2nd Floor']||0}</h4><small>2nd Floor</small></div></div>
+                <div class="col-md-3"><div class="stat-box bg-base text-white"><h4 class="fw-bold">${floorMap['Basement']||0}</h4><small>Basement</small></div></div>
+            </div>`;
+
+            // Detailed Rows
+            let rows = "";
+            filtered.forEach(r => {
+                rows += `<tr><td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[6]}</td></tr>`;
+            });
+
+            html = sumHTML + `<table id="perf-res-table" class="table table-bordered table-striped text-center">
+                <thead class="table-dark"><tr><th>Date</th><th>Line</th><th>Model</th><th>Color</th><th>Qty</th></tr></thead>
+                <tbody>${rows}</tbody>
+            </table>`;
+            document.getElementById('res-pp-overview').innerHTML = html;
+        
+        } else if (mode === 'line') {
+            let selLine = document.getElementById('pp-filter-line').value;
+            if(selLine) filtered = filtered.filter(r => r[1] == selLine);
+            
+            // Group by Line, Model, Color
+            let map = {};
+            filtered.forEach(r => {
+                let k = r[1] + "|" + r[3] + "|" + r[4];
+                if(!map[k]) map[k] = { l:r[1], m:r[3], c:r[4], q:0 };
+                map[k].q += Number(r[6]||0);
+            });
+            
+            let rows = "";
+            for(let k in map) {
+                rows += `<tr><td>${map[k].l}</td><td>${map[k].m}</td><td>${map[k].c}</td><td>${map[k].q}</td></tr>`;
+            }
+             html = `<table id="perf-res-table" class="table table-bordered text-center">
+                <thead class="table-dark"><tr><th>Line</th><th>Model</th><th>Color</th><th>FG Qty</th></tr></thead>
+                <tbody>${rows}</tbody>
+            </table>`;
+            document.getElementById('res-pp-line').innerHTML = html;
+
+        } else if (mode === 'model') {
+            let selModel = document.getElementById('pp-filter-model').value;
+            if(selModel) filtered = filtered.filter(r => r[3] == selModel);
+            
+            // Group by Model, Color, Part
+            let map = {};
+            filtered.forEach(r => {
+                let k = r[3] + "|" + r[4] + "|" + r[5];
+                if(!map[k]) map[k] = { m:r[3], c:r[4], p:r[5], q:0 };
+                map[k].q += Number(r[6]||0);
+            });
+             
+            let rows = "";
+            for(let k in map) {
+                rows += `<tr><td>${map[k].m}</td><td>${map[k].c}</td><td>${map[k].p}</td><td>${map[k].q}</td></tr>`;
+            }
+             html = `<table id="perf-res-table" class="table table-bordered text-center">
+                <thead class="table-dark"><tr><th>Model</th><th>Color</th><th>Part Code</th><th>FG Qty</th></tr></thead>
+                <tbody>${rows}</tbody>
+            </table>`;
+            document.getElementById('res-pp-model').innerHTML = html;
+        }
+    }
+
+    // --- OTHER PERFORMANCE (Disp/Open) ---
+    function calcPerf(tab) {
+         let h = "";
+         if (tab === 'disp') {
             let from = document.getElementById('disp-from').value; let to = document.getElementById('disp-to').value;
             if(!dbData.disp) return;
             let filtered = dbData.disp.filter(r => { let d = getCleanDate(r[0]); return d >= from && d <= to; });
@@ -417,7 +539,6 @@
 
     // --- DASHBOARD LOGIC (Line & Master) ---
     function renderDash1() {
-        // Fix for "Not Working": Ensure map is created safely
         let selectedLine = document.getElementById('dashLineInput').value;
         let map = {};
         const get = (m,c) => { 
@@ -479,12 +600,13 @@
     function renderPdiQueue(){ let tb=document.getElementById('queue-pdi'); tb.innerHTML=""; queueData.pdi.forEach((r,i)=>tb.innerHTML+=`<tr><td>${r.lotId}</td><td>${r.model}</td><td>${r.pdiPass}/${r.pdiOffer}</td><td>${r.pdiOffer-r.pdiPass}</td><td><button class="btn btn-sm btn-danger btn-action" onclick="queueData.pdi.splice(${i},1);renderPdiQueue()"><i class="bi bi-x-lg"></i></button></td></tr>`); }
     function submitPdiQueue(){ if(!queueData.pdi.length)return; toggleLoader(true); let rows = queueData.pdi.map(r=>[r.date, r.line, r.model, r.color, r.partCode, r.lotId, r.lotType, r.pdiOffer, r.pdiPass, r.defectReason]); fetch(PDI_URL, {method:'POST', body:JSON.stringify({action:'save', data:rows})}).then(r=>r.json()).then(d=>{ alert("Saved"); queueData.pdi=[]; renderPdiQueue(); window.onload(); toggleLoader(false); }); }
 
-    // --- RENDER TABLES (UPDATED WITH FROM-TO FILTER) ---
+    // --- RENDER TABLES ---
     function renderDBTable(tab) { 
         let tb=document.getElementById('db-'+tab); tb.innerHTML=""; 
         let data = dbData[tab]; if(!data || data.length===0) { tb.innerHTML="<tr><td colspan='8'>No data found</td></tr>"; return; } 
         
         let from, to;
+        // FIX FOR OPENING DATE COMPARISON (String comparison for YYYY-MM works)
         if(tab==='open') {
              from = document.getElementById('filter-open-from').value;
              to = document.getElementById('filter-open-to').value;
@@ -496,9 +618,10 @@
         data.slice().reverse().forEach((r, idx)=>{ 
             if(!r) return; 
             let realIdx = data.length - 1 - idx; 
+            // Handle raw month string vs full date
             let rowDate = tab==='open' ? r[0] : getCleanDate(r[0]);
             
-            // Range Logic
+            // Logic: Compare as strings, this works for YYYY-MM and YYYY-MM-DD
             if(rowDate >= from && rowDate <= to) { 
                 let row = tab=='prod' ? `<td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td>` : tab=='disp' ? `<td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td>` : `<td>${r[0]}</td><td>${r[1]}</td><td>${r[3]}</td><td>${r[5]}</td><td>${r[1]=='PDI'?r[6]:r[9]}</td>`; 
                 tb.innerHTML += `<tr>${row}<td><button class="btn btn-sm btn-link p-0 btn-action" onclick="viewDetail('${tab}', ${realIdx})"><i class="bi bi-eye"></i></button> <button class="btn btn-sm btn-link p-0 mx-1 btn-action" onclick="editDB('${tab}',${realIdx})"><i class="bi bi-pencil-square"></i></button> <button class="btn btn-sm btn-link text-danger p-0 btn-action" onclick="delDB('${tab}',${realIdx})"><i class="bi bi-trash"></i></button></td></tr>`; 
@@ -534,23 +657,6 @@
     
     function exportTableToExcel(tid, fname) { let wb=XLSX.utils.table_to_book(document.getElementById(tid),{sheet:"Sheet1"}); XLSX.writeFile(wb,fname+".xlsx"); }
     function downloadPDF() { html2pdf().set({margin:10,filename:'Report.pdf',jsPDF:{unit:'mm',format:'a4',orientation:'landscape'}}).from(document.getElementById('pdf-content')).save(); }
-    function exportPerformance(tab) {
-        if(tab === 'prod') {
-             // Create a temporary container
-             let tempDiv = document.createElement('div');
-             let h = document.getElementById('res-prod-perf').innerHTML;
-             tempDiv.innerHTML = h;
-             // Extract tables
-             let tables = tempDiv.getElementsByTagName('table');
-             if(tables.length === 0) return alert("No analysis to export");
-             
-             let wb = XLSX.utils.book_new();
-             XLSX.utils.book_append_sheet(wb, XLSX.utils.table_to_sheet(tables[0]), "Floor_Wise");
-             if(tables[1]) XLSX.utils.book_append_sheet(wb, XLSX.utils.table_to_sheet(tables[1]), "Line_Wise");
-             if(tables[2]) XLSX.utils.book_append_sheet(wb, XLSX.utils.table_to_sheet(tables[2]), "Model_Wise");
-             XLSX.writeFile(wb, "Production_Performance.xlsx");
-        }
-    }
     
     function runPdiAnalysis(){
         let from=document.getElementById('dashFrom').value, to=document.getElementById('dashTo').value;
@@ -560,11 +666,63 @@
         drawChart('ch_trend',Object.keys(dates).map(k=>[k.substr(5),(dates[k].p/dates[k].o)*100]),'Daily %'); drawChart('ch_line',Object.keys(lines).map(k=>[k,(lines[k].p/lines[k].o)*100]),'Line %'); drawChart('ch_floor',Object.keys(floors).map(k=>[k,(floors[k].p/floors[k].o)*100]),'Floor %'); drawChart('ch_defects',Object.keys(defects).map(k=>[k,defects[k]]), 'Defects');
     }
     function drawChart(id, arr, title) { let dt=new google.visualization.DataTable(); dt.addColumn('string','L'); dt.addColumn('number','V'); dt.addRows(arr); new google.visualization.ColumnChart(document.getElementById(id)).draw(dt,{title:title,legend:'none'}); }
+    
+    // --- UPDATED CLOSURE REPORT (Smart Tracking) ---
     function runClosureReport(){
-        let f1=document.getElementById('list_f1'), f2=document.getElementById('list_f2'), fb=document.getElementById('list_fb'); f1.innerHTML=f2.innerHTML=fb.innerHTML="";
-        pdiData.forEach(r => { let fail = (r[7] - r[8]); if(fail > 0) { let fl=(r[1]<=8?"Floor 1":(r[1]<=16?"Floor 2":"Basement")); let h = `<div class="ticket"><div class="d-flex justify-content-between fw-bold"><span>${r[5]||"No ID"}</span><span class="text-danger">L${r[1]}</span></div><div class="small">${r[2]}</div><div class="text-danger small fw-bold">Failed: ${fail} (${r[9]||"N/A"})</div></div>`; if(fl=='Floor 1') f1.innerHTML+=h; else if(fl=='Floor 2') f2.innerHTML+=h; else fb.innerHTML+=h; } });
+        let f1=document.getElementById('list_f1'), f2=document.getElementById('list_f2'), fb=document.getElementById('list_fb'); 
+        f1.innerHTML=f2.innerHTML=fb.innerHTML="";
+        
+        let lotStatus = {};
+        
+        // 1. Sort Data by Date (Oldest to Newest)
+        let sortedPDI = [...pdiData].sort((a,b) => new Date(a[0]) - new Date(b[0]));
+
+        // 2. Track latest status of each Lot ID
+        sortedPDI.forEach(r => {
+            let lot = r[5]; // Lot ID
+            if(lot) {
+                let fail = Number(r[7]) - Number(r[8]); // Offer - Pass
+                lotStatus[lot] = {
+                    fails: fail,
+                    row: r
+                };
+            }
+        });
+
+        // 3. Render only Lots that currently have Fails > 0
+        for(let lot in lotStatus) {
+            let item = lotStatus[lot];
+            if(item.fails > 0) {
+                let r = item.row;
+                let fl=(r[1]<=8?"Floor 1":(r[1]<=16?"Floor 2":"Basement")); 
+                let h = `<div class="ticket"><div class="d-flex justify-content-between fw-bold"><span>${lot}</span><span class="text-danger">L${r[1]}</span></div><div class="small">${r[2]}</div><div class="text-danger small fw-bold">Failed: ${item.fails} (${r[9]||"N/A"})</div></div>`; 
+                if(fl=='Floor 1') f1.innerHTML+=h; else if(fl=='Floor 2') f2.innerHTML+=h; else fb.innerHTML+=h;
+            }
+        }
     }
+
+    // --- PDI PREVIEW REPORT (Updated Format) ---
+    function showDaySummary(){ 
+        let f=document.getElementById('pdi-from').value; 
+        let t=document.getElementById('pdi-to').value;
+        let d=pdiData.filter(r=>{ let dt=getCleanDate(r[0]); return dt >= f && dt <= t; });
+        
+        if(!d.length) return alert("No Data in Range"); 
+        
+        let h=`<h5 class='text-center mb-3 text-success'>PDI Report: ${f} to ${t}</h5>
+        <div class="table-responsive">
+            <table class='table table-bordered table-striped text-center align-middle'>
+                <thead class='table-dark'><tr><th>Date</th><th>Line</th><th>Model</th><th>Lot ID</th><th>Offer</th><th>Pass</th><th>Fail</th><th>Reason</th></tr></thead>
+                <tbody>`;
+        d.forEach(r=>{ 
+            let fail = r[7]-r[8]; 
+            h+=`<tr><td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[5]}</td><td>${r[7]}</td><td class="text-success fw-bold">${r[8]}</td><td class="${fail>0?'text-danger fw-bold':''}">${fail}</td><td>${r[9]}</td></tr>`; 
+        }); 
+        h += `</tbody></table></div>`; 
+        document.getElementById('summaryBody').innerHTML=h; 
+        new bootstrap.Modal(document.getElementById('summaryModal')).show(); 
+    }
+
 </script>
 </body>
 </html>
-
