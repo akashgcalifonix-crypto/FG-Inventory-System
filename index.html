@@ -139,7 +139,31 @@
                         <div class="col-md-6 text-end"><button class="btn btn-excel py-3 px-4" onclick="exportTableToExcel('perf-res-table', 'Production_Analysis')">Download Excel</button></div>
                     </div>
                 </div>
-                <div class="card p-4"><div id="res-pp-overview"></div></div>
+
+                <div class="card p-4">
+                    <ul class="nav nav-tabs mb-4" id="prodPerfTabs">
+                        <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#pp-tab1" onclick="runProdPerf('overview')">1. Overview (Date Wise)</a></li>
+                        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#pp-tab2" onclick="runProdPerf('line')">2. Line Wise</a></li>
+                        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#pp-tab3" onclick="runProdPerf('model')">3. Model Wise</a></li>
+                    </ul>
+                    <div class="tab-content" id="perf-res-container">
+                        <div class="tab-pane fade show active" id="pp-tab1"><div id="res-pp-overview"></div></div>
+                        <div class="tab-pane fade" id="pp-tab2">
+                            <div class="d-flex align-items-center gap-3 mb-4">
+                                <label class="fs-5 fw-bold">Select Line:</label>
+                                <select id="pp-filter-line" class="form-select w-auto" onchange="runProdPerf('line')"><option value="">All Lines</option></select>
+                            </div>
+                            <div id="res-pp-line"></div>
+                        </div>
+                        <div class="tab-pane fade" id="pp-tab3">
+                            <div class="d-flex align-items-center gap-3 mb-4">
+                                <label class="fs-5 fw-bold">Select Model:</label>
+                                <select id="pp-filter-model" class="form-select w-auto" onchange="runProdPerf('model')"><option value="">All Models</option></select>
+                            </div>
+                            <div id="res-pp-model"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -186,6 +210,7 @@
                             <button class="btn btn-excel" onclick="exportTableToExcel('tbl-pdi-db', 'PDI_Data')">Excel</button>
                         </div>
                     </div>
+                    <!-- Updated Table Structure -->
                     <div class="table-responsive" style="max-height: 600px;">
                         <table class="table table-bordered text-center table-hover" id="tbl-pdi-db">
                             <thead class="table-light sticky-top">
@@ -343,9 +368,9 @@
 
 <script>
     // ***************************************************************
-    // ⚠️ PASTE YOUR NEW WEB APP URL BELOW
+    // SCRIPT URL
     // ***************************************************************
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyVfAUyBNdoY5G4uukrjPBabcWSo7PFai9c4iCrTXXx-WJc1m0hiELfjMH62khW6hRJ2Q/exec"; 
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwsK1ct-deLcSgzpj-NSBQnbIytft2Bdv_ec22J-tBr-cBvDrC5YMStZ21cUWhQ_WG78Q/exec";
     
     const INV_URL = WEB_APP_URL;
     const PDI_URL = WEB_APP_URL;
@@ -363,7 +388,7 @@
         
         toggleLoader(true);
         fetch(INV_URL + "?action=getMasters").then(r=>r.json()).then(d=>{
-            masterData = d.data || d; populateModels(['prod','disp','open','pdi']);
+            masterData = d; populateModels(['prod','disp','open','pdi']);
             return fetch(INV_URL + "?action=getDashboard");
         }).then(r=>r.json()).then(d=>{
             dbData.prod=d.prod||[]; dbData.disp=d.disp||[]; dbData.open=d.open||[];
@@ -377,15 +402,26 @@
             runClosureReport(); 
             setTimeout(()=>{ renderDash1(); renderDash2(); }, 500);
             toggleLoader(false);
-        }).catch(e=>{ console.error(e); toggleLoader(false); alert("Connection Error. Please check Web App URL."); });
+        }).catch(e=>{ console.error(e); toggleLoader(false); alert("Connection Error. Check URL."); });
     };
 
     function safeLen(arr){ return arr ? arr.length : 0; }
 
+    // --- UPDATED DATE HELPER TO FIX SHIFTING ---
     function getCleanDate(iso){
         if(!iso) return "";
-        if(typeof iso === 'string' && iso.length >= 10) return iso.substring(0,10);
-        return iso;
+        // If already formatted like 2025-12, return it
+        if(typeof iso === 'string' && iso.length === 7) return iso;
+        // If already formatted like 2025-12-28, return it
+        if(typeof iso === 'string' && iso.length === 10) return iso;
+        
+        // Handle ISO Date Objects (Prevent Timezone shift)
+        let d = new Date(iso);
+        // Manually format to YYYY-MM-DD using local time concept
+        let year = d.getFullYear();
+        let month = (d.getMonth() + 1).toString().padStart(2, '0');
+        let day = d.getDate().toString().padStart(2, '0');
+        return `${year}-${month}-${day}`;
     }
 
     function submitQueue(tab, type) {
@@ -403,11 +439,7 @@
         } else if (tab === 'open') {
             dataToSend = queueData[tab].map(r => [r.month, r.openType, r.line || "", r.model, r.color, r.partCode, r.pdiOpenQty || 0, r.reworkOpenQty || 0, r.reworkReason || "", r.dispatchOpenQty || 0]);
         }
-        
-        fetch(INV_URL, { 
-            method: 'POST', 
-            body: JSON.stringify({ action: 'save', type: type, data: dataToSend }) 
-        })
+        fetch(INV_URL, { method: 'POST', body: JSON.stringify({ type: type, data: dataToSend }) })
         .then(r => r.json()).then(d => {
             if (d.status == 'success') { alert("Saved Successfully!"); queueData[tab] = []; renderQueue(tab); window.onload(); } else { alert("Error: " + d.message); }
             toggleLoader(false);
@@ -590,38 +622,48 @@
     function fillP(p){ let m=document.getElementById(p+'-m').value,c=document.getElementById(p+'-c').value,f=masterData.find(r=>r[1]==m&&r[2]==c); if(f)document.getElementById(p+'-p').value=f[0]; }
     function toggleOp(v){ document.querySelectorAll('.grp-pdi').forEach(e=>e.classList.toggle('hidden',v!='PDI')); document.querySelector('.grp-disp').classList.toggle('hidden',v!='Dispatch'); }
     function calcP(){ let f=(document.getElementById('off').value||0)-(document.getElementById('pas').value||0); document.getElementById('fal').value=f; document.getElementById('defBox').classList.toggle('hidden',f<=0); }
-    function fmtDate(iso){ if(!iso)return ""; if(iso.length >= 10) { const y = iso.substring(0,4), m = iso.substring(5,7), d = iso.substring(8,10); return `${d}/${m}`; } return iso; }
+    function fmtDate(iso){ if(!iso)return ""; let d=new Date(iso); d.setHours(12); return d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0'); }
     function checkFloor(i,id){ let v=parseInt(i.value),e=document.getElementById(id); e.className="floor-badge"; if(v>=1&&v<=8){e.innerText="1st";e.classList.add("bg-f1");}else if(v>=9&&v<=16){e.innerText="2nd";e.classList.add("bg-f2");}else if(v>=17&&v<=24){e.innerText="Base";e.classList.add("bg-base");}else e.classList.add("hidden"); }
     function addQueue(tab) { let form=document.getElementById('form-'+tab); if(document.getElementById('editIdx-'+tab).value!="") { submitEdit(tab); return; } if(!form.checkValidity()){ form.reportValidity(); return; } let fd=Object.fromEntries(new FormData(form)); queueData[tab].push(fd); renderQueue(tab); form.reset(); document.getElementById(tab+'-date').value=new Date().toLocaleDateString('en-CA'); }
     function renderQueue(tab) { let tb=document.getElementById('queue-'+tab); tb.innerHTML=""; queueData[tab].forEach((i,x)=>{ let row = tab=='prod' ? `<td>${i.date}</td><td>${i.line}</td><td>${i.model}</td><td>${i.color}</td><td>${i.fgQty}</td>` : tab=='disp' ? `<td>${i.date}</td><td>${i.model}</td><td>${i.color}</td><td>${i.dispatchQty}</td>` : `<td>${i.openType}</td><td>${i.model}</td><td>${i.color}</td><td>${i.openType=='PDI'?i.pdiOpenQty:i.dispatchOpenQty}</td>`; tb.innerHTML+=`<tr>${row}<td><button class="btn btn-sm btn-danger btn-action" onclick="queueData['${tab}'].splice(${x},1);renderQueue('${tab}')"><i class="bi bi-x-lg"></i></button></td></tr>`; }); }
     
     function addPdiQueue(){ let form=document.getElementById('form-pdi'); if(!form.checkValidity()){ form.reportValidity(); return; } if(document.getElementById('pdiEditIndex').value!==""){ submitPdiEdit(); return; } let fd=new FormData(form), r={date:fd.get('date'), line:fd.get('line'), model:fd.get('model'), color:fd.get('color'), partCode:fd.get('partCode'), lotId:fd.get('lotId'), lotType:fd.get('lotType'), pdiOffer:fd.get('pdiOffer'), pdiPass:fd.get('pdiPass'), defectReason:fd.get('defectReason')}; queueData.pdi.push(r); renderPdiQueue(); form.reset(); document.getElementById('pdi-date').value=new Date().toLocaleDateString('en-CA'); }
     function renderPdiQueue(){ let tb=document.getElementById('queue-pdi'); tb.innerHTML=""; queueData.pdi.forEach((r,i)=>tb.innerHTML+=`<tr><td>${r.lotId}</td><td>${r.model}</td><td>${r.pdiPass}/${r.pdiOffer}</td><td>${r.pdiOffer-r.pdiPass}</td><td><button class="btn btn-sm btn-danger btn-action" onclick="queueData.pdi.splice(${i},1);renderPdiQueue()"><i class="bi bi-x-lg"></i></button></td></tr>`); }
-    function submitPdiQueue(){ if(!queueData.pdi.length)return; toggleLoader(true); let rows = queueData.pdi.map(r=>[r.date, r.line, r.model, r.color, r.partCode, r.lotId, r.lotType, r.pdiOffer, r.pdiPass, r.defectReason]); 
-    fetch(PDI_URL, { method: 'POST', body: JSON.stringify({ action: 'save', data: rows }) })
-    .then(r=>r.json()).then(d=>{ alert("Saved"); queueData.pdi=[]; renderPdiQueue(); window.onload(); toggleLoader(false); }); }
+    function submitPdiQueue(){ if(!queueData.pdi.length)return; toggleLoader(true); let rows = queueData.pdi.map(r=>[r.date, r.line, r.model, r.color, r.partCode, r.lotId, r.lotType, r.pdiOffer, r.pdiPass, r.defectReason]); fetch(PDI_URL, {method:'POST', body:JSON.stringify({action:'save', data:rows})}).then(r=>r.json()).then(d=>{ alert("Saved"); queueData.pdi=[]; renderPdiQueue(); window.onload(); toggleLoader(false); }); }
 
     function renderDBTable(tab) { 
         let tb=document.getElementById('db-'+tab); tb.innerHTML=""; 
         let data = dbData[tab]; if(!data || data.length===0) { tb.innerHTML="<tr><td colspan='8'>No data found</td></tr>"; return; } 
         
         let from, to;
-        if(tab==='open') { from = document.getElementById('filter-open-from').value; to = document.getElementById('filter-open-to').value; } 
-        else { from = document.getElementById('filter-'+tab+'-from').value; to = document.getElementById('filter-'+tab+'-to').value; }
+        // FIXED OPENING MONTH COMPARISON
+        if(tab==='open') {
+             from = document.getElementById('filter-open-from').value;
+             to = document.getElementById('filter-open-to').value;
+        } else {
+             from = document.getElementById('filter-'+tab+'-from').value;
+             to = document.getElementById('filter-'+tab+'-to').value;
+        }
 
         data.slice().reverse().forEach((r, idx)=>{ 
             if(!r) return; 
             let realIdx = data.length - 1 - idx; 
             let rowDate = getCleanDate(r[0]);
-            if(tab === 'open') rowDate = rowDate.substring(0, 7);
+            
+            // For Opening, handle YYYY-MM
+            if(tab === 'open') {
+               rowDate = rowDate.substring(0, 7);
+            }
 
             if(rowDate >= from && rowDate <= to) { 
                 let row = tab=='prod' ? `<td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td>` : tab=='disp' ? `<td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td>` : `<td>${r[0]}</td><td>${r[1]}</td><td>${r[3]}</td><td>${r[5]}</td><td>${r[1]=='PDI'?r[6]:r[9]}</td>`; 
+                // FIXED: Passed realIdx correctly to functions
                 tb.innerHTML += `<tr>${row}<td><button class="btn btn-sm btn-link p-0 btn-action" onclick="viewDetail('${tab}', ${realIdx})"><i class="bi bi-eye"></i></button> <button class="btn btn-sm btn-link p-0 mx-1 btn-action" onclick="editDB('${tab}',${realIdx})"><i class="bi bi-pencil-square"></i></button> <button class="btn btn-sm btn-link text-danger p-0 btn-action" onclick="delDB('${tab}',${realIdx})"><i class="bi bi-trash"></i></button></td></tr>`; 
             } 
         }); 
     }
     
+    // --- UPDATED PDI TABLE TO SHOW ALL DETAILS ---
     function renderRecentTable(){ 
         let tb=document.getElementById('crudTable'); tb.innerHTML=""; 
         let from = document.getElementById('pdi-from').value;
@@ -632,6 +674,7 @@
             let realIdx = pdiData.length - 1 - idx; 
             let d = getCleanDate(r[0]);
             if(d >= from && d <= to) 
+                // Added missing columns: Line(r1), Color(r3), Defect(r9)
                 tb.innerHTML+=`<tr>
                     <td>${fmtDate(r[0])}</td>
                     <td>${r[1]}</td>
@@ -651,25 +694,54 @@
         }); 
     }
 
+    // --- UPDATED EDIT FUNCTIONS WITH SCROLL AND BUTTON STATE ---
+
     function editDB(tab, idx){ 
         if(!dbData[tab] || !dbData[tab][idx]) return;
         let r=dbData[tab][idx]; 
+        
+        // Scroll to form so user sees it
         document.getElementById('form-' + tab).scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
         document.getElementById('editIdx-'+tab).value=idx+2; 
         
         if(tab=='prod'){ 
-            document.getElementById('prod-date').value=getCleanDate(r[0]); document.getElementById('prod-line').value=r[1]; document.getElementById('prod-m').value=r[3]; filterC('prod'); document.getElementById('prod-c').value=r[4]; document.getElementById('prod-p').value=r[5]; document.getElementById('prod-qty').value=r[6]; 
-            let btn = document.getElementById('btnAddProd'); btn.innerText = "Update Queue"; btn.classList.replace('btn-warning', 'btn-primary');
+            document.getElementById('prod-date').value=getCleanDate(r[0]); 
+            document.getElementById('prod-line').value=r[1]; 
+            document.getElementById('prod-m').value=r[3]; 
+            filterC('prod'); 
+            document.getElementById('prod-c').value=r[4]; 
+            document.getElementById('prod-p').value=r[5]; 
+            document.getElementById('prod-qty').value=r[6]; 
+            document.getElementById('btnAddProd').innerText = "Update Queue"; // Visual change
+            document.getElementById('btnAddProd').classList.replace('btn-warning', 'btn-primary');
         } 
         if(tab=='disp'){ 
-            document.getElementById('disp-date').value=getCleanDate(r[0]); document.getElementById('disp-m').value=r[1]; filterC('disp'); document.getElementById('disp-c').value=r[2]; document.getElementById('disp-p').value=r[3]; document.getElementById('disp-qty').value=r[4]; 
-            let btn = document.getElementById('btnAddDisp'); btn.innerText = "Update Queue"; btn.classList.replace('btn-warning', 'btn-primary');
+            document.getElementById('disp-date').value=getCleanDate(r[0]); 
+            document.getElementById('disp-m').value=r[1]; 
+            filterC('disp'); 
+            document.getElementById('disp-c').value=r[2]; 
+            document.getElementById('disp-p').value=r[3]; 
+            document.getElementById('disp-qty').value=r[4]; 
+            document.getElementById('btnAddDisp').innerText = "Update Queue"; // Visual change
+            document.getElementById('btnAddDisp').classList.replace('btn-warning', 'btn-primary');
         } 
         if(tab=='open'){ 
-            document.getElementById('open-month').value=getCleanDate(r[0]).substring(0,7); 
-            document.getElementById('open-type').value=r[1]; toggleOp(r[1]); document.getElementById('open-line').value=r[2]; document.getElementById('open-m').value=r[3]; filterC('open'); document.getElementById('open-c').value=r[4]; document.getElementById('open-p').value=r[5]; 
-            if(r[1]=='PDI'){document.getElementById('open-qpdi').value=r[6];document.getElementById('open-qrew').value=r[7];} else{document.getElementById('open-qdisp').value=r[9];} 
-            let btn = document.getElementById('btnAddOpen'); btn.innerText = "Update Queue"; btn.classList.replace('btn-info', 'btn-primary');
+            // Fix: Handle Date object for month input
+            let mVal = getCleanDate(r[0]).substring(0, 7);
+            document.getElementById('open-month').value=mVal; 
+            
+            document.getElementById('open-type').value=r[1]; 
+            toggleOp(r[1]); 
+            document.getElementById('open-line').value=r[2]; 
+            document.getElementById('open-m').value=r[3]; 
+            filterC('open'); 
+            document.getElementById('open-c').value=r[4]; 
+            document.getElementById('open-p').value=r[5]; 
+            if(r[1]=='PDI'){document.getElementById('open-qpdi').value=r[6];document.getElementById('open-qrew').value=r[7];}
+            else{document.getElementById('open-qdisp').value=r[9];} 
+            document.getElementById('btnAddOpen').innerText = "Update Queue"; // Visual change
+            document.getElementById('btnAddOpen').classList.replace('btn-info', 'btn-primary');
         } 
         document.getElementById('btnCancel'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.remove('hidden'); 
     }
@@ -691,11 +763,16 @@
     function cancelEdit(tab){ 
         document.getElementById('form-'+tab).reset(); 
         document.getElementById('editIdx-'+tab).value=""; 
+        
         let btnId = tab=='prod'?'btnAddProd':(tab=='disp'?'btnAddDisp':'btnAddOpen');
         let btnText = tab=='disp'?'Add':(tab=='open'?'Add':'+ Add to Queue');
         let btnEl = document.getElementById(btnId);
-        btnEl.innerText = btnText; btnEl.classList.remove('btn-primary');
-        if(tab=='prod' || tab=='disp') btnEl.classList.add('btn-warning'); if(tab=='open') btnEl.classList.add('btn-info');
+        
+        btnEl.innerText = btnText;
+        btnEl.classList.remove('btn-primary');
+        if(tab=='prod' || tab=='disp') btnEl.classList.add('btn-warning');
+        if(tab=='open') btnEl.classList.add('btn-info');
+
         document.getElementById('btnCancel'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.add('hidden'); 
     }
     
@@ -703,9 +780,15 @@
         if(confirm("Are you sure you want to delete this record?")){ 
             toggleLoader(true); 
             let type=(tab=='prod'?'Production':(tab=='disp'?'Dispatch':'Opening')); 
+            // Send request to delete
             fetch(INV_URL, {method:'POST', body:JSON.stringify({action:'delete', type:type, rowIndex:idx+2})})
-            .then(r=>r.json()).then(d=>{ alert("Deleted Successfully"); window.onload(); })
-            .catch(e => { toggleLoader(false); alert("Delete Failed: " + e.message); });
+            .then(r=>r.json())
+            .then(d=>{ 
+                alert("Deleted Successfully"); window.onload(); 
+            })
+            .catch(e => {
+                toggleLoader(false); alert("Delete Failed: " + e.message);
+            });
         } 
     }
     
@@ -714,8 +797,18 @@
         let r=pdiData[idx]; 
         document.getElementById('pdi-card-container').scrollIntoView({ behavior: 'smooth', block: 'center' });
         document.getElementById('pdiEditIndex').value=idx+2; 
-        document.getElementById('pdi-date').value=getCleanDate(r[0]); document.getElementById('pdi-line').value=r[1]; document.getElementById('pdi-m').value=r[2]; filterC('pdi'); document.getElementById('pdi-c').value=r[3]; document.getElementById('pdi-p').value=r[4]; document.getElementById('pdi-lot').value=r[5]; document.getElementById('pdi-type').value=r[6]; document.getElementById('off').value=r[7]; document.getElementById('pas').value=r[8]; 
-        let btn = document.getElementById('btnAddPdi'); btn.innerText = "Update Entry"; btn.classList.replace('btn-warning', 'btn-primary');
+        document.getElementById('pdi-date').value=getCleanDate(r[0]); 
+        document.getElementById('pdi-line').value=r[1]; 
+        document.getElementById('pdi-m').value=r[2]; 
+        filterC('pdi'); 
+        document.getElementById('pdi-c').value=r[3]; 
+        document.getElementById('pdi-p').value=r[4]; 
+        document.getElementById('pdi-lot').value=r[5]; 
+        document.getElementById('pdi-type').value=r[6]; 
+        document.getElementById('off').value=r[7]; 
+        document.getElementById('pas').value=r[8]; 
+        document.getElementById('btnAddPdi').innerText = "Update Entry";
+        document.getElementById('btnAddPdi').classList.replace('btn-warning', 'btn-primary');
         document.getElementById('btnCancelEdit').classList.remove('hidden'); 
     }
     
@@ -727,15 +820,25 @@
     }
     
     function cancelPdiEdit(){ 
-        document.getElementById('form-pdi').reset(); document.getElementById('pdiEditIndex').value=""; 
-        let btn = document.getElementById('btnAddPdi'); btn.innerText = "+ Add Pending"; btn.classList.replace('btn-primary', 'btn-warning');
+        document.getElementById('form-pdi').reset(); 
+        document.getElementById('pdiEditIndex').value=""; 
+        let btn = document.getElementById('btnAddPdi');
+        btn.innerText = "+ Add Pending";
+        btn.classList.replace('btn-primary', 'btn-warning');
         document.getElementById('btnCancelEdit').classList.add('hidden'); 
     }
     
     async function deletePdiSaved(idx){ 
-        if(!confirm("Delete PDI Record?"))return; toggleLoader(true); 
-        try { await fetch(PDI_URL,{method:'POST',body:JSON.stringify({action:'delete',rowIndex:idx+2})}); alert("Deleted"); window.onload(); } 
-        catch(e) { toggleLoader(false); alert("Error deleting PDI record"); }
+        if(!confirm("Delete PDI Record?"))return; 
+        toggleLoader(true); 
+        try {
+            await fetch(PDI_URL,{method:'POST',body:JSON.stringify({action:'delete',rowIndex:idx+2})}); 
+            alert("Deleted");
+            window.onload(); 
+        } catch(e) {
+            toggleLoader(false);
+            alert("Error deleting PDI record");
+        }
     }
     
     function exportTableToExcel(tid, fname) { let wb=XLSX.utils.table_to_book(document.getElementById(tid),{sheet:"Sheet1"}); XLSX.writeFile(wb,fname+".xlsx"); }
@@ -753,13 +856,21 @@
     function runClosureReport(){
         let f1=document.getElementById('list_f1'), f2=document.getElementById('list_f2'), fb=document.getElementById('list_fb'); 
         f1.innerHTML=f2.innerHTML=fb.innerHTML="";
+        
         let lotStatus = {};
         let sortedPDI = [...pdiData].sort((a,b) => new Date(a[0]) - new Date(b[0]));
-        sortedPDI.forEach(r => { let lot = r[5]; if(lot) { let fail = Number(r[7]) - Number(r[8]); lotStatus[lot] = { fails: fail, row: r }; } });
+        sortedPDI.forEach(r => {
+            let lot = r[5]; 
+            if(lot) {
+                let fail = Number(r[7]) - Number(r[8]); 
+                lotStatus[lot] = { fails: fail, row: r };
+            }
+        });
         for(let lot in lotStatus) {
             let item = lotStatus[lot];
             if(item.fails > 0) {
-                let r = item.row; let fl=(r[1]<=8?"Floor 1":(r[1]<=16?"Floor 2":"Basement")); 
+                let r = item.row;
+                let fl=(r[1]<=8?"Floor 1":(r[1]<=16?"Floor 2":"Basement")); 
                 let h = `<div class="ticket"><div class="d-flex justify-content-between fw-bold"><span>${lot}</span><span class="text-danger">L${r[1]}</span></div><div class="small">${r[2]}</div><div class="text-danger small fw-bold">Failed: ${item.fails} (${r[9]||"N/A"})</div></div>`; 
                 if(fl=='Floor 1') f1.innerHTML+=h; else if(fl=='Floor 2') f2.innerHTML+=h; else fb.innerHTML+=h;
             }
@@ -767,7 +878,8 @@
     }
 
     function showDaySummary(){ 
-        let f = document.getElementById('pdi-from').value; let t = document.getElementById('pdi-to').value;
+        let f = document.getElementById('pdi-from').value; 
+        let t = document.getElementById('pdi-to').value;
         let d = pdiData.filter(r => { let dt = getCleanDate(r[0]); return dt >= f && dt <= t; });
         if(!d.length) return alert("No Data in Range"); 
 
@@ -775,7 +887,8 @@
         let rejectedList = [];
 
         d.forEach(r => {
-            let ln = parseInt(r[1]); let floor = (ln >= 1 && ln <= 8) ? "Floor 1" : (ln >= 9 && ln <= 16) ? "Floor 2" : "Basement";
+            let ln = parseInt(r[1]);
+            let floor = (ln >= 1 && ln <= 8) ? "Floor 1" : (ln >= 9 && ln <= 16) ? "Floor 2" : "Basement";
             let offer = Number(r[7] || 0); let pass = Number(r[8] || 0); let fail = offer - pass;
             stats.totalQty += offer; stats.totalPass += pass; stats.totalFail += fail; stats.totalLots++;
             if(fail > 0) { stats.rejectedLots++; rejectedList.push({ line: r[1], model: r[2], id: r[5]||"N/A", defect: r[9], date: fmtDate(r[0]) }); } else { stats.passedLots++; stats.floors[floor].passLots++; }
@@ -783,8 +896,12 @@
         });
 
         let passRate = stats.totalQty ? ((stats.totalPass / stats.totalQty) * 100).toFixed(2) : "0.00";
+        // --- ADDED LOGO TO PREVIEW ---
         let html = `<div class="report-2x container-fluid">
-            <div class="d-flex justify-content-center align-items-center mb-4"><img src="https://i.postimg.cc/5y7SN4xc/logo.png" style="height:80px;" class="me-3"><h2 class="fw-bold m-0 text-primary">Daily PDI Report</h2></div>
+            <div class="d-flex justify-content-center align-items-center mb-4">
+                 <img src="https://i.postimg.cc/5y7SN4xc/logo.png" style="height:80px;" class="me-3">
+                 <h2 class="fw-bold m-0 text-primary">Daily PDI Report</h2>
+            </div>
             <div class="report-header">Date: ${fmtDate(f)} ${f!==t ? ' to '+fmtDate(t) : ''}</div>
             <div class="row g-4 mb-5">
                 <div class="col-md-3"><div class="report-card rc-total"><div class="rc-num text-dark">${stats.totalQty}</div><div class="rc-label">TOTAL UNITS</div><div class="rc-sub">(Lots: ${stats.totalLots})</div></div></div>
@@ -813,4 +930,3 @@
 </script>
 </body>
 </html>
-
