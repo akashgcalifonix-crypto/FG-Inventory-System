@@ -373,11 +373,7 @@
 <div class="modal fade" id="detailModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header bg-primary text-white"><h3 class="modal-title">Full Details</h3><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body bg-light p-5" id="detailBody"></div></div></div></div>
 
 <script>
-    // ***************************************************************
-    // SCRIPT URL
-    // ***************************************************************
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwZ67eTPLEVsl2NATIfOcEDu4cHUhtvzgAVb2PTSDPWx7Fb6Btlt9ce_p19vZsS45jHkA/exec";
-    
     const INV_URL = WEB_APP_URL;
     const PDI_URL = WEB_APP_URL;
     
@@ -388,7 +384,6 @@
     window.onload = function() {
         let today = new Date().toLocaleDateString('en-CA');
         let curMonth = today.substring(0, 7);
-        // Defaults
         ['filter-prod-from','filter-prod-to','filter-disp-from','filter-disp-to','pdi-from','pdi-to','pdi-date', 'prod-date', 'disp-date', 'dashFrom', 'dashTo', 'perf-prod-from', 'perf-prod-to', 'disp-from', 'disp-to'].forEach(id=>{ let e=document.getElementById(id); if(e)e.value=today; });
         ['filter-open-from', 'filter-open-to', 'open-month', 'open-perf-month'].forEach(id=>{ let e=document.getElementById(id); if(e)e.value=curMonth; });
         
@@ -411,8 +406,6 @@
         }).catch(e=>{ console.error(e); toggleLoader(false); alert("Connection Error. Check URL."); });
     };
 
-    function safeLen(arr){ return arr ? arr.length : 0; }
-
     function getCleanDate(iso){
         if(!iso) return "";
         if(typeof iso === 'string' && iso.length === 7) return iso;
@@ -424,369 +417,140 @@
         return `${year}-${month}-${day}`;
     }
 
-    function submitQueue(tab, type) {
-        if (!queueData[tab].length) return alert("Queue is empty!");
-        toggleLoader(true);
-        let dataToSend = [];
-        if (tab === 'prod') {
-            dataToSend = queueData[tab].map(r => {
-                let ln = parseInt(r.line);
-                let floor = (ln >= 1 && ln <= 8) ? "1st Floor" : (ln >= 9 && ln <= 16) ? "2nd Floor" : "Basement";
-                return [r.date, r.line, floor, r.model, r.color, r.partCode, r.fgQty];
-            });
-        } else if (tab === 'disp') {
-            dataToSend = queueData[tab].map(r => [r.date, r.model, r.color, r.partCode, r.dispatchQty]);
-        } else if (tab === 'open') {
-            dataToSend = queueData[tab].map(r => [r.month, r.openType, r.line || "", r.model, r.color, r.partCode, r.pdiOpenQty || 0, r.reworkOpenQty || 0, r.reworkReason || "", r.dispatchOpenQty || 0]);
-        }
-        fetch(INV_URL, { method: 'POST', body: JSON.stringify({ type: type, data: dataToSend }) })
-        .then(r => r.json()).then(d => {
-            if (d.status == 'success') { alert("Saved Successfully!"); queueData[tab] = []; renderQueue(tab); window.onload(); } else { alert("Error: " + d.message); }
-            toggleLoader(false);
-        }).catch(e => { console.error(e); alert("Connection Failed"); toggleLoader(false); });
-    }
-
-    function popProdFilters() {
-        if(!masterData) return;
-        let lines = new Set();
-        if(dbData.prod) dbData.prod.forEach(r => lines.add(r[1]));
-        let lm = document.getElementById('pp-filter-line');
-        lm.innerHTML = '<option value="">All Lines</option>';
-        [...lines].sort((a,b)=>a-b).forEach(l => lm.innerHTML += `<option value="${l}">Line ${l}</option>`);
-
-        let models = [...new Set(masterData.map(r=>r[1]))].sort();
-        let mm = document.getElementById('pp-filter-model');
-        mm.innerHTML = '<option value="">All Models</option>';
-        models.forEach(m => mm.innerHTML += `<option value="${m}">${m}</option>`);
-    }
-
-    function runProdPerf(mode) {
-        let from = document.getElementById('perf-prod-from').value;
-        let to = document.getElementById('perf-prod-to').value;
-        if(!dbData.prod) return;
-        let filtered = dbData.prod.filter(r => { let d = getCleanDate(r[0]); return d >= from && d <= to; });
-
-        let html = "";
-        
-        if (mode === 'overview') {
-            let total = 0, floorMap = {};
-            filtered.forEach(r => {
-                let q = Number(r[6]||0);
-                total += q;
-                floorMap[r[2]] = (floorMap[r[2]] || 0) + q;
-            });
-            let sumHTML = `<div class="row g-3 mb-4">
-                <div class="col-md-3"><div class="stat-box bg-dark text-white"><h4 class="fw-bold display-6">${total}</h4><small>OVERALL PRODUCTION</small></div></div>
-                <div class="col-md-3"><div class="stat-box bg-f1 text-white"><h4 class="fw-bold display-6">${floorMap['1st Floor']||0}</h4><small>1st Floor</small></div></div>
-                <div class="col-md-3"><div class="stat-box bg-f2 text-dark"><h4 class="fw-bold display-6">${floorMap['2nd Floor']||0}</h4><small>2nd Floor</small></div></div>
-                <div class="col-md-3"><div class="stat-box bg-base text-white"><h4 class="fw-bold display-6">${floorMap['Basement']||0}</h4><small>Basement</small></div></div>
-            </div>`;
-            let rows = "";
-            filtered.forEach(r => { rows += `<tr><td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[6]}</td></tr>`; });
-            html = sumHTML + `<table id="perf-res-table" class="table table-bordered table-striped text-center"><thead class="table-dark"><tr><th>Date</th><th>Line</th><th>Model</th><th>Color</th><th>Qty</th></tr></thead><tbody>${rows}</tbody></table>`;
-            document.getElementById('res-pp-overview').innerHTML = html;
-        } else if (mode === 'line') {
-            let selLine = document.getElementById('pp-filter-line').value;
-            if(selLine) filtered = filtered.filter(r => r[1] == selLine);
-            let map = {};
-            filtered.forEach(r => {
-                let k = r[1] + "|" + r[3] + "|" + r[4];
-                if(!map[k]) map[k] = { l:r[1], m:r[3], c:r[4], q:0 };
-                map[k].q += Number(r[6]||0);
-            });
-            let rows = ""; for(let k in map) { rows += `<tr><td>${map[k].l}</td><td>${map[k].m}</td><td>${map[k].c}</td><td>${map[k].q}</td></tr>`; }
-             html = `<table id="perf-res-table" class="table table-bordered text-center"><thead class="table-dark"><tr><th>Line</th><th>Model</th><th>Color</th><th>FG Qty</th></tr></thead><tbody>${rows}</tbody></table>`;
-            document.getElementById('res-pp-line').innerHTML = html;
-        } else if (mode === 'model') {
-            let selModel = document.getElementById('pp-filter-model').value;
-            if(selModel) filtered = filtered.filter(r => r[3] == selModel);
-            let map = {};
-            filtered.forEach(r => {
-                let k = r[3] + "|" + r[4] + "|" + r[5];
-                if(!map[k]) map[k] = { m:r[3], c:r[4], p:r[5], q:0 };
-                map[k].q += Number(r[6]||0);
-            });
-            let rows = ""; for(let k in map) { rows += `<tr><td>${map[k].m}</td><td>${map[k].c}</td><td>${map[k].p}</td><td>${map[k].q}</td></tr>`; }
-             html = `<table id="perf-res-table" class="table table-bordered text-center"><thead class="table-dark"><tr><th>Model</th><th>Color</th><th>Part Code</th><th>FG Qty</th></tr></thead><tbody>${rows}</tbody></table>`;
-            document.getElementById('res-pp-model').innerHTML = html;
-        }
-    }
-
-    function calcPerf(tab) {
-         let h = "";
-         if (tab === 'disp') {
-            let from = document.getElementById('disp-from').value; let to = document.getElementById('disp-to').value;
-            if(!dbData.disp) return;
-            let filtered = dbData.disp.filter(r => { let d = getCleanDate(r[0]); return d >= from && d <= to; });
-            let total = 0, mMap = {}; filtered.forEach(r => { let q = Number(r[4]||0); total += q; mMap[r[1]] = (mMap[r[1]] || 0) + q; });
-            let mRows = ""; for(let k in mMap) mRows += `<tr><td>${k}</td><td>${mMap[k]}</td></tr>`;
-            h = `<div class="row g-3 mb-4"><div class="col-md-12"><div class="stat-box border-primary"><h2 class="fw-bold display-5 text-primary">${total}</h2><div class="text-muted">TOTAL DISPATCHED</div></div></div></div>
-                 <h5 class="text-center fw-bold">Model Wise Dispatch</h5><table class="table table-bordered text-center table-striped w-50 mx-auto"><thead class="table-dark"><tr><th>Model</th><th>Qty</th></tr></thead><tbody>${mRows}</tbody></table>`;
-            document.getElementById('res-disp-perf').innerHTML = h;
-        } else if (tab === 'open') {
-            let mth = document.getElementById('open-perf-month').value;
-            if(!dbData.open) return;
-            let filtered = dbData.open.filter(r => {
-                let rd = getCleanDate(r[0]).substring(0, 7);
-                return rd === mth;
-            });
-            let pdiTot = 0, dispTot = 0, pdiMap = {}, dispMap = {}; 
-            filtered.forEach(r => {
-                if(r[1] === 'PDI') { let q = Number(r[6]||0); pdiTot += q; pdiMap[r[3]] = (pdiMap[r[3]] || 0) + q; } 
-                else { let q = Number(r[9]||0); dispTot += q; dispMap[r[3]] = (dispMap[r[3]] || 0) + q; }
-            });
-            let pRow="", dRow=""; for(let k in pdiMap) pRow += `<tr><td>${k}</td><td>${pdiMap[k]}</td></tr>`; for(let k in dispMap) dRow += `<tr><td>${k}</td><td>${dispMap[k]}</td></tr>`;
-            h = `<div class="row g-3 mb-4"><div class="col-md-6"><div class="stat-box border-info"><h2 class="fw-bold display-5 text-info">${pdiTot}</h2><div class="text-muted">Total PDI Opening</div></div></div>
-                 <div class="col-md-6"><div class="stat-box border-dark"><h2 class="fw-bold display-5 text-dark">${dispTot}</h2><div class="text-muted">Total Dispatch Opening</div></div></div></div>
-                 <div class="row"><div class="col-md-6"><h6 class="text-center">PDI Opening (Model-wise)</h6><table class="table table-bordered text-center"><thead class="table-secondary"><tr><th>Model</th><th>Qty</th></tr></thead><tbody>${pRow}</tbody></table></div>
-                 <div class="col-md-6"><h6 class="text-center">Dispatch Opening (Model-wise)</h6><table class="table table-bordered text-center"><thead class="table-secondary"><tr><th>Model</th><th>Qty</th></tr></thead><tbody>${dRow}</tbody></table></div></div>`;
-            document.getElementById('res-open-perf').innerHTML = h;
-        }
-    }
-
-    function viewDetail(tab, idx) {
-        if(!dbData[tab] || !dbData[tab][idx]) return;
-        let r = dbData[tab][idx];
-        let h = `<table class="table table-bordered table-striped fs-4">`;
-        if(tab==='prod') h += `<tr><th>Date</th><td>${fmtDate(r[0])}</td></tr><tr><th>Line</th><td>${r[1]}</td></tr><tr><th>Floor</th><td>${r[2]}</td></tr><tr><th>Model</th><td>${r[3]}</td></tr><tr><th>Color</th><td>${r[4]}</td></tr><tr><th>Part Code</th><td>${r[5]}</td></tr><tr><th>Quantity</th><td class="fw-bold fs-3">${r[6]}</td></tr>`;
-        else if(tab==='disp') h += `<tr><th>Date</th><td>${fmtDate(r[0])}</td></tr><tr><th>Model</th><td>${r[1]}</td></tr><tr><th>Color</th><td>${r[2]}</td></tr><tr><th>Part Code</th><td>${r[3]}</td></tr><tr><th>Quantity</th><td class="fw-bold fs-3">${r[4]}</td></tr>`;
-        else if(tab==='open') {
-            h += `<tr><th>Month</th><td>${r[0]}</td></tr><tr><th>Type</th><td>${r[1]}</td></tr><tr><th>Line</th><td>${r[2]}</td></tr><tr><th>Model</th><td>${r[3]}</td></tr><tr><th>Color</th><td>${r[4]}</td></tr><tr><th>Part Code</th><td>${r[5]}</td></tr>`;
-            if(r[1]=='PDI') h+= `<tr><th>PDI Open</th><td>${r[6]}</td></tr><tr><th>Rework Open</th><td>${r[7]}</td></tr><tr><th>Reason</th><td>${r[8]}</td></tr>`;
-            else h+= `<tr><th>Dispatch Open</th><td>${r[9]}</td></tr>`;
-        }
-        h += `</table>`;
-        document.getElementById('detailBody').innerHTML = h;
-        new bootstrap.Modal(document.getElementById('detailModal')).show();
-    }
-
-    function viewPdiDetail(idx) {
-        if(!pdiData[idx]) return;
-        let r = pdiData[idx];
-        let h = `<table class="table table-bordered table-striped fs-4">
-            <tr><th>Date</th><td>${fmtDate(r[0])}</td></tr><tr><th>Line</th><td>${r[1]}</td></tr><tr><th>Model</th><td>${r[2]}</td></tr><tr><th>Color</th><td>${r[3]}</td></tr><tr><th>Part Code</th><td>${r[4]}</td></tr>
-            <tr><th>Lot ID</th><td class="fw-bold">${r[5]}</td></tr><tr><th>Type</th><td>${r[6]}</td></tr><tr><th>Offer Qty</th><td>${r[7]}</td></tr><tr><th>Pass Qty</th><td class="text-success fw-bold">${r[8]}</td></tr>
-            <tr><th>Fail Qty</th><td class="text-danger fw-bold">${r[7]-r[8]}</td></tr><tr><th>Reason</th><td>${r[9]}</td></tr>
-        </table>`;
-        document.getElementById('detailBody').innerHTML = h;
-        new bootstrap.Modal(document.getElementById('detailModal')).show();
-    }
-
-    function renderDash1() {
-        let selectedLine = document.getElementById('dashLineInput').value;
-        let map = {};
-        const get = (m,c) => { 
-            let k = m + "|" + c; 
-            if(!map[k]) map[k] = { m:m, c:c, opn_pdi:0, opn_rew:0, fg:0, pass_fresh:0, offer_fresh:0, pass_war:0, offer_war:0, pass_mkt:0, offer_mkt:0, pass_oldfg:0, offer_oldfg:0, pass_rew:0, offer_rew:0, fail_fresh:0, fail_war:0, fail_mkt:0, fail_oldfg:0, fail_reasons:[], lot_tracking: {} }; 
-            return map[k]; 
-        };
-
-        if(dbData.open) dbData.open.forEach(r => { if(selectedLine && r[2] != selectedLine) return; if(r[1]=='PDI') { let o=get(r[3],r[4]); o.opn_pdi+=Number(r[6]||0); o.opn_rew+=Number(r[7]||0); } });
-        if(dbData.prod) dbData.prod.forEach(r => { if(selectedLine && r[1] != selectedLine) return; get(r[3],r[4]).fg += Number(r[6]||0); });
-        if(pdiData) pdiData.forEach(r => {
-            if(selectedLine && r[1] != selectedLine) return;
-            let o = get(r[2], r[3]); 
-            let type = r[6], offer = Number(r[7]||0), pass = Number(r[8]||0), fail = offer - pass, lotID = r[5], reason = r[9];
-            if(type === 'Fresh') { o.pass_fresh += pass; o.offer_fresh += offer; o.fail_fresh += fail; } else if(type === 'Warranty') { o.pass_war += pass; o.offer_war += offer; o.fail_war += fail; } else if(type === 'Market Return') { o.pass_mkt += pass; o.offer_mkt += offer; o.fail_mkt += fail; } else if(type === 'Old FG') { o.pass_oldfg += pass; o.offer_oldfg += offer; o.fail_oldfg += fail; } else if(type === 'Rework') { o.pass_rew += pass; o.offer_rew += offer; }
-            if(type !== 'Old FG') { if(fail > 0) { if(!o.lot_tracking[lotID]) o.lot_tracking[lotID]=0; o.lot_tracking[lotID] += fail; if(reason) o.fail_reasons.push(reason); } if(type === 'Rework' && pass > 0 && o.lot_tracking[lotID]) { o.lot_tracking[lotID] -= pass; if(o.lot_tracking[lotID] <= 0) delete o.lot_tracking[lotID]; } }
-        });
-
-        let h = "";
-        for(let k in map) {
-            let x = map[k], old_fg_bal = x.opn_rew - x.pass_oldfg; if(old_fg_bal < 0) old_fg_bal = 0;
-            let processed_fresh = x.offer_fresh + x.offer_war + x.offer_mkt;
-            let bal_pdi = (x.opn_pdi + x.fg) - processed_fresh; if(bal_pdi < 0) bal_pdi = 0; 
-            let total_fresh_fails = x.fail_fresh + x.fail_war + x.fail_mkt;
-            let for_rework = total_fresh_fails - x.pass_rew; if(for_rework < 0) for_rework = 0;
-            let rsn = [...new Set(x.fail_reasons)].join(", ");
-            h += `<tr><td class="fw-bold">${x.m}</td><td>${x.c}</td><td>${x.opn_pdi}</td><td>${x.opn_rew}</td><td>${x.fg}</td><td>${x.pass_fresh}</td><td>${x.pass_war}</td><td>${x.pass_mkt}</td><td>${x.pass_oldfg}</td><td>${x.pass_rew}</td><td class="bg-light-blue fw-bold fs-6">${bal_pdi}</td><td class="bg-light-yellow text-danger fw-bold">${old_fg_bal}</td><td class="bg-warning fw-bold">${for_rework}</td><td class="small text-danger">${rsn}</td></tr>`;
-        }
-        document.getElementById('dash1-res').innerHTML = h;
-    }
-
-    function renderDash2() {
-        let map = {}; const get = (m,c) => { let k=m+"|"+c; if(!map[k]) map[k]={m,c, total_opn_pdi:0, fg:0, total_pass:0, opn_disp:0, disp_out:0 }; return map[k]; };
-        if(dbData.open) dbData.open.forEach(r => { let o=get(r[3],r[4]); if(r[1]=='PDI') { o.total_opn_pdi += (Number(r[6]||0) + Number(r[7]||0)); } else if(r[1]=='Dispatch') { o.opn_disp += Number(r[9]||0); } });
-        if(dbData.prod) dbData.prod.forEach(r => { get(r[3],r[4]).fg += Number(r[6]||0); });
-        if(dbData.disp) dbData.disp.forEach(r => { get(r[1],r[2]).disp_out += Number(r[4]||0); });
-        if(pdiData) pdiData.forEach(r => { get(r[2],r[3]).total_pass += Number(r[8]||0); });
-        let h = ""; for(let k in map) { let x = map[k], bal_pdi = (x.total_opn_pdi + x.fg) - x.total_pass, bal_disp = (x.opn_disp + x.total_pass) - x.disp_out; h += `<tr><td>${x.m}</td><td>${x.c}</td><td>${x.total_opn_pdi}</td><td>${x.fg}</td><td>${x.total_pass}</td><td>${x.opn_disp}</td><td>${x.disp_out}</td><td class="bg-primary text-white fw-bold">${bal_pdi}</td><td class="bg-success text-white fw-bold">${bal_disp}</td></tr>`; }
-        document.getElementById('master-body').innerHTML = h;
-    }
-
-    function switchMainTab(id) { document.querySelectorAll('.main-view').forEach(e=>e.classList.add('hidden')); document.getElementById('view-'+id).classList.remove('hidden'); document.querySelectorAll('.nav-main .nav-link').forEach(e=>e.classList.remove('active')); if(event) event.target.classList.add('active'); if(id=='dash'){ renderDash1(); renderDash2(); }}
     function toggleLoader(s){ document.getElementById('global-loader').style.display = s?'flex':'none'; }
+    function switchMainTab(id) { document.querySelectorAll('.main-view').forEach(e=>e.classList.add('hidden')); document.getElementById('view-'+id).classList.remove('hidden'); document.querySelectorAll('.nav-main .nav-link').forEach(e=>e.classList.remove('active')); if(event) event.target.classList.add('active'); if(id=='dash'){ renderDash1(); renderDash2(); }}
     function populateModels(ids){ if(!masterData.length)return; let m=[...new Set(masterData.map(r=>r[1]))].sort(); ids.forEach(x=>{ let s=document.getElementById(x+'-m'); s.innerHTML='<option value="">Select</option>'; m.forEach(v=>s.innerHTML+=`<option value="${v}">${v}</option>`) }); }
     function filterC(p){ let m=document.getElementById(p+'-m').value,s=document.getElementById(p+'-c'); s.innerHTML='<option value="">Select</option>'; [...new Set(masterData.filter(r=>r[1]==m).map(r=>r[2]))].sort().forEach(c=>s.innerHTML+=`<option value="${c}">${c}</option>`); }
     function fillP(p){ let m=document.getElementById(p+'-m').value,c=document.getElementById(p+'-c').value,f=masterData.find(r=>r[1]==m&&r[2]==c); if(f)document.getElementById(p+'-p').value=f[0]; }
-    function toggleOp(v){ document.querySelectorAll('.grp-pdi').forEach(e=>e.classList.toggle('hidden',v!='PDI')); document.querySelector('.grp-disp').classList.toggle('hidden',v!='Dispatch'); }
-    function calcP(){ let f=(document.getElementById('off').value||0)-(document.getElementById('pas').value||0); document.getElementById('fal').value=f; }
     function fmtDate(iso){ if(!iso)return ""; let d=new Date(iso); d.setHours(12); return d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0'); }
-    function checkFloor(i,id){ let v=parseInt(i.value),e=document.getElementById(id); e.className="floor-badge"; if(v>=1&&v<=8){e.innerText="1st";e.classList.add("bg-f1");}else if(v>=9&&v<=16){e.innerText="2nd";e.classList.add("bg-f2");}else if(v>=17&&v<=24){e.innerText="Base";e.classList.add("bg-base");}else e.classList.add("hidden"); }
+
+    // ************************************************************************************************
+    // NEW SHOW DAY SUMMARY (PREVIEW) LOGIC BASED ON TABS
+    // ************************************************************************************************
+    function showDaySummary(){ 
+        let activeView = document.querySelector('.main-view:not(.hidden)').id;
+        let html = "";
+        let logoHeader = `<div class="d-flex justify-content-center align-items-center mb-4"><img src="https://i.postimg.cc/5y7SN4xc/logo.png" style="height:80px;" class="me-3">`;
+
+        // --- 1. PRODUCTION PREVIEW ---
+        if(activeView === 'view-prod'){
+            let f = document.getElementById('filter-prod-from').value;
+            let t = document.getElementById('filter-prod-to').value;
+            let filtered = dbData.prod.filter(r => { let dt = getCleanDate(r[0]); return dt >= f && dt <= t; });
+            
+            let stats = { total: 0, f1: 0, f2: 0, fb: 0 };
+            filtered.forEach(r => {
+                let q = Number(r[6] || 0);
+                stats.total += q;
+                if(r[2] === "1st Floor") stats.f1 += q;
+                else if(r[2] === "2nd Floor") stats.f2 += q;
+                else if(r[2] === "Basement") stats.fb += q;
+            });
+
+            html = `${logoHeader}<h2 class="fw-bold m-0 text-primary">Daily Production Report</h2></div>
+                    <div class="report-header">Period: ${fmtDate(f)} to ${fmtDate(t)}</div>
+                    <div class="row g-4 mb-5">
+                        <div class="col-md-3"><div class="report-card rc-total"><div class="rc-num text-dark">${stats.total}</div><div class="rc-label">Total FG Production</div></div></div>
+                        <div class="col-md-3"><div class="report-card rc-pass"><div class="rc-num text-success">${stats.f1}</div><div class="rc-label">1st Floor</div></div></div>
+                        <div class="col-md-3"><div class="report-card rc-rate"><div class="rc-num text-warning">${stats.f2}</div><div class="rc-label">2nd Floor</div></div></div>
+                        <div class="col-md-3"><div class="report-card rc-fail"><div class="rc-num text-danger">${stats.fb}</div><div class="rc-label">Basement</div></div></div>
+                    </div>
+                    <table class="table table-bordered table-report text-center bg-white shadow-sm">
+                        <thead><tr><th>Date</th><th>Line</th><th>Model</th><th>Color</th><th>FG Qty</th></tr></thead>
+                        <tbody>${filtered.map(r=>`<tr><td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[3]}</td><td>${r[4]}</td><td class="fw-bold">${r[6]}</td></tr>`).join('')}</tbody>
+                    </table>`;
+        }
+
+        // --- 2. DISPATCH PREVIEW ---
+        else if(activeView === 'view-disp'){
+            let f = document.getElementById('filter-disp-from').value;
+            let t = document.getElementById('filter-disp-to').value;
+            let filtered = dbData.disp.filter(r => { let dt = getCleanDate(r[0]); return dt >= f && dt <= t; });
+            let total = 0; filtered.forEach(r => total += Number(r[4]||0));
+
+            html = `${logoHeader}<h2 class="fw-bold m-0 text-success">Dispatch Report</h2></div>
+                    <div class="report-header">Period: ${fmtDate(f)} to ${fmtDate(t)}</div>
+                    <div class="row g-4 mb-5"><div class="col-md-12"><div class="report-card rc-pass"><div class="rc-num">${total}</div><div class="rc-label">Total Units Dispatched</div></div></div></div>
+                    <table class="table table-bordered table-report text-center bg-white shadow-sm">
+                        <thead><tr><th>Date</th><th>Model</th><th>Color</th><th>Part Code</th><th>Qty</th></tr></thead>
+                        <tbody>${filtered.map(r=>`<tr><td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td class="fw-bold">${r[4]}</td></tr>`).join('')}</tbody>
+                    </table>`;
+        }
+
+        // --- 3. OPENING PREVIEW ---
+        else if(activeView === 'view-open'){
+            let f = document.getElementById('filter-open-from').value;
+            let t = document.getElementById('filter-open-to').value;
+            let filtered = dbData.open.filter(r => { let dt = getCleanDate(r[0]).substring(0,7); return dt >= f && dt <= t; });
+
+            html = `${logoHeader}<h2 class="fw-bold m-0 text-info">Opening Balance Report</h2></div>
+                    <div class="report-header">Month: ${f} to ${t}</div>
+                    <table class="table table-bordered table-report text-center bg-white shadow-sm">
+                        <thead><tr><th>Month</th><th>Type</th><th>Model</th><th>Color</th><th>Qty Details</th></tr></thead>
+                        <tbody>${filtered.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[1]=='PDI' ? 'PDI: '+r[6]+' | Rew: '+r[7] : 'Disp: '+r[9]}</td></tr>`).join('')}</tbody>
+                    </table>`;
+        }
+
+        // --- 4. PDI MASTER & LIVE REPORTS (Default Detail) ---
+        else {
+            let f = document.getElementById('pdi-from').value;
+            let t = document.getElementById('pdi-to').value;
+            let d = pdiData.filter(r => { let dt = getCleanDate(r[0]); return dt >= f && dt <= t; });
+            if(!d.length) return alert("No PDI Data in Range"); 
+
+            let stats = { totalQty: 0, totalPass: 0, totalFail: 0, totalLots: 0, passedLots: 0, rejectedLots: 0, floors: { 'Floor 1': { lots:0, passLots:0, qty:0, passQty:0 }, 'Floor 2': { lots:0, passLots:0, qty:0, passQty:0 }, 'Basement': { lots:0, passLots:0, qty:0, passQty:0 } } };
+            let rejectedList = [];
+
+            d.forEach(r => {
+                let ln = parseInt(r[1]);
+                let floor = (ln >= 1 && ln <= 8) ? "Floor 1" : (ln >= 9 && ln <= 16) ? "Floor 2" : "Basement";
+                let offer = Number(r[7] || 0); let pass = Number(r[8] || 0); let fail = offer - pass;
+                stats.totalQty += offer; stats.totalPass += pass; stats.totalFail += fail; stats.totalLots++;
+                if(fail > 0) { stats.rejectedLots++; rejectedList.push({ line: r[1], model: r[2], id: r[5]||"N/A", defect: r[9], date: fmtDate(r[0]) }); } else { stats.passedLots++; stats.floors[floor].passLots++; }
+                stats.floors[floor].lots++; stats.floors[floor].qty += offer; stats.floors[floor].passQty += pass;
+            });
+
+            let passRate = stats.totalQty ? ((stats.totalPass / stats.totalQty) * 100).toFixed(2) : "0.00";
+            html = `${logoHeader}<h2 class="fw-bold m-0 text-primary">Daily PDI Report</h2></div>
+                <div class="report-header">Date: ${fmtDate(f)} ${f!==t ? ' to '+fmtDate(t) : ''}</div>
+                <div class="row g-4 mb-5">
+                    <div class="col-md-3"><div class="report-card rc-total"><div class="rc-num text-dark">${stats.totalQty}</div><div class="rc-label">TOTAL UNITS</div></div></div>
+                    <div class="col-md-3"><div class="report-card rc-pass"><div class="rc-num text-success">${stats.totalPass}</div><div class="rc-label">PASSED</div></div></div>
+                    <div class="col-md-3"><div class="report-card rc-fail"><div class="rc-num text-danger">${stats.totalFail}</div><div class="rc-label">FAILED</div></div></div>
+                    <div class="col-md-3"><div class="report-card rc-rate"><div class="rc-num text-primary">${passRate}%</div><div class="rc-label">PASS RATE</div></div></div>
+                </div>
+                <h4 class="fw-bold text-secondary mb-3">FLOOR WISE</h4>
+                <table class="table table-bordered table-report text-center bg-white mb-5 shadow-sm">
+                    <thead><tr><th>Floor</th><th>Lots</th><th>Total Qty</th><th>Pass Qty</th><th>Rate %</th></tr></thead>
+                    <tbody>${Object.keys(stats.floors).map(fn => { let fl=stats.floors[fn]; let rate=fl.qty ? ((fl.passQty/fl.qty)*100).toFixed(2) : "0.00"; return `<tr><td>${fn}</td><td>${fl.lots}</td><td>${fl.qty}</td><td>${fl.passQty}</td><td>${rate}%</td></tr>` }).join('')}</tbody>
+                </table>
+                <h4 class="fw-bold text-danger mb-3">REJECTIONS</h4>
+                <table class="table table-report text-center bg-white shadow-sm">
+                    <thead><tr><th>Line</th><th>Model</th><th>ID</th><th>Defect</th></tr></thead>
+                    <tbody>${rejectedList.length ? rejectedList.map(r=>`<tr><td>L${r.line}</td><td>${r.model}</td><td>${r.id}</td><td class="text-danger">${r.defect}</td></tr>`).join('') : '<tr><td colspan="4">No Rejections</td></tr>'}</tbody>
+                </table>`;
+        }
+
+        document.getElementById('summaryBody').innerHTML = html; 
+        new bootstrap.Modal(document.getElementById('summaryModal')).show(); 
+    }
+
+    // --- REMAINDER FUNCTIONS AS PER ORIGINAL ---
+    function submitQueue(tab, type) { if (!queueData[tab].length) return alert("Queue is empty!"); toggleLoader(true); let dataToSend = []; if (tab === 'prod') { dataToSend = queueData[tab].map(r => { let ln = parseInt(r.line); let floor = (ln >= 1 && ln <= 8) ? "1st Floor" : (ln >= 9 && ln <= 16) ? "2nd Floor" : "Basement"; return [r.date, r.line, floor, r.model, r.color, r.partCode, r.fgQty]; }); } else if (tab === 'disp') { dataToSend = queueData[tab].map(r => [r.date, r.model, r.color, r.partCode, r.dispatchQty]); } else if (tab === 'open') { dataToSend = queueData[tab].map(r => [r.month, r.openType, r.line || "", r.model, r.color, r.partCode, r.pdiOpenQty || 0, r.reworkOpenQty || 0, r.reworkReason || "", r.dispatchOpenQty || 0]); } fetch(INV_URL, { method: 'POST', body: JSON.stringify({ type: type, data: dataToSend }) }).then(r => r.json()).then(d => { if (d.status == 'success') { alert("Saved Successfully!"); queueData[tab] = []; renderQueue(tab); window.onload(); } else { alert("Error: " + d.message); } toggleLoader(false); }).catch(e => { console.error(e); alert("Connection Failed"); toggleLoader(false); }); }
+    function renderDBTable(tab) { let tb=document.getElementById('db-'+tab); tb.innerHTML=""; let data = dbData[tab]; if(!data || data.length===0) { tb.innerHTML="<tr><td colspan='8'>No data found</td></tr>"; return; } let from, to; if(tab==='open') { from = document.getElementById('filter-open-from').value; to = document.getElementById('filter-open-to').value; } else { from = document.getElementById('filter-'+tab+'-from').value; to = document.getElementById('filter-'+tab+'-to').value; } data.slice().reverse().forEach((r, idx)=>{ if(!r) return; let realIdx = data.length - 1 - idx; let rowDate = getCleanDate(r[0]); if(tab === 'open') rowDate = rowDate.substring(0, 7); if(rowDate >= from && rowDate <= to) { let row = tab=='prod' ? `<td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td>` : tab=='disp' ? `<td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td>` : `<td>${r[0]}</td><td>${r[1]}</td><td>${r[3]}</td><td>${r[5]}</td><td>${r[1]=='PDI'?r[6]:r[9]}</td>`; tb.innerHTML += `<tr>${row}<td><button class="btn btn-sm btn-link p-0 btn-action" onclick="viewDetail('${tab}', ${realIdx})"><i class="bi bi-eye"></i></button> <button class="btn btn-sm btn-link p-0 mx-1 btn-action" onclick="editDB('${tab}',${realIdx})"><i class="bi bi-pencil-square"></i></button> <button class="btn btn-sm btn-link text-danger p-0 btn-action" onclick="delDB('${tab}',${realIdx})"><i class="bi bi-trash"></i></button></td></tr>`; } }); }
+    function renderRecentTable(){ let tb=document.getElementById('crudTable'); tb.innerHTML=""; let from = document.getElementById('pdi-from').value; let to = document.getElementById('pdi-to').value; pdiData.slice().reverse().forEach((r,idx)=>{ if(!r) return; let realIdx = pdiData.length - 1 - idx; let d = getCleanDate(r[0]); if(d >= from && d <= to) tb.innerHTML+=`<tr><td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[5]}</td><td>${r[6]}</td><td>${r[8]}/${r[7]}</td><td class="text-danger fw-bold">${r[7]-r[8]}</td><td class="small text-muted">${r[9]||'-'}</td><td><button class="btn btn-sm btn-link p-0 btn-action" onclick="viewPdiDetail(${realIdx})"><i class="bi bi-eye"></i></button> <button class="btn btn-sm btn-link p-0 mx-1 btn-action" onclick="editPdiDB(${realIdx})"><i class="bi bi-pencil-square"></i></button> <button class="btn btn-sm btn-link text-danger p-0 btn-action" onclick="deletePdiSaved(${realIdx})"><i class="bi bi-trash"></i></button></td></tr>`; }); }
+    function runPdiAnalysis(){ let from=document.getElementById('dashFrom').value, to=document.getElementById('dashTo').value; let doff=0, dpass=0, dfail=0, dates={}, lines={}, floors={}, defects={}; pdiData.forEach(r=>{ let d=getCleanDate(r[0]); if(d>=from && d<=to){ let o=Number(r[7]||0), p=Number(r[8]||0), f=o-p; doff+=o; dpass+=p; dfail+=f; if(!dates[d])dates[d]={o:0,p:0}; dates[d].o+=o; dates[d].p+=p; let ln="L"+r[1]; if(!lines[ln])lines[ln]={o:0,p:0}; lines[ln].o+=o; lines[ln].p+=p; let fl=(r[1]<=8?"F1":(r[1]<=16?"F2":"Base")); if(!floors[fl])floors[fl]={o:0,p:0}; floors[fl].o+=o; floors[fl].p+=p; if(f>0 && r[9]) defects[r[9]]=(defects[r[9]]||0)+f; } }); document.getElementById('d_total_qty').innerText=doff; document.getElementById('d_passed_qty').innerText=dpass; document.getElementById('d_rejected_qty').innerText=dfail; document.getElementById('d_pass_rate').innerText=doff?((dpass/doff)*100).toFixed(1)+"%":"0%"; drawChart('ch_trend',Object.keys(dates).map(k=>[k.substr(5),(dates[k].p/dates[k].o)*100]),'Daily %'); drawChart('ch_line',Object.keys(lines).map(k=>[k,(lines[k].p/lines[k].o)*100]),'Line %'); drawChart('ch_floor',Object.keys(floors).map(k=>[k,(floors[k].p/floors[k].o)*100]),'Floor %'); drawChart('ch_defects',Object.keys(defects).map(k=>[k,defects[k]]), 'Defects'); }
+    function drawChart(id, arr, title) { let dt=new google.visualization.DataTable(); dt.addColumn('string','L'); dt.addColumn('number','V'); dt.addRows(arr); new google.visualization.ColumnChart(document.getElementById(id)).draw(dt,{title:title,legend:'none'}); }
+    function renderDash1() { let selectedLine = document.getElementById('dashLineInput').value; let map = {}; const get = (m,c) => { let k = m + "|" + c; if(!map[k]) map[k] = { m:m, c:c, opn_pdi:0, opn_rew:0, fg:0, pass_fresh:0, offer_fresh:0, pass_war:0, offer_war:0, pass_mkt:0, offer_mkt:0, pass_oldfg:0, offer_oldfg:0, pass_rew:0, offer_rew:0, fail_fresh:0, fail_war:0, fail_mkt:0, fail_oldfg:0, fail_reasons:[], lot_tracking: {} }; return map[k]; }; if(dbData.open) dbData.open.forEach(r => { if(selectedLine && r[2] != selectedLine) return; if(r[1]=='PDI') { let o=get(r[3],r[4]); o.opn_pdi+=Number(r[6]||0); o.opn_rew+=Number(r[7]||0); } }); if(dbData.prod) dbData.prod.forEach(r => { if(selectedLine && r[1] != selectedLine) return; get(r[3],r[4]).fg += Number(r[6]||0); }); if(pdiData) pdiData.forEach(r => { if(selectedLine && r[1] != selectedLine) return; let o = get(r[2], r[3]); let type = r[6], offer = Number(r[7]||0), pass = Number(r[8]||0), fail = offer - pass, lotID = r[5], reason = r[9]; if(type === 'Fresh') { o.pass_fresh += pass; o.offer_fresh += offer; o.fail_fresh += fail; } else if(type === 'Warranty') { o.pass_war += pass; o.offer_war += offer; o.fail_war += fail; } else if(type === 'Market Return') { o.pass_mkt += pass; o.offer_mkt += offer; o.fail_mkt += fail; } else if(type === 'Old FG') { o.pass_oldfg += pass; o.offer_oldfg += offer; o.fail_oldfg += fail; } else if(type === 'Rework') { o.pass_rew += pass; o.offer_rew += offer; } if(type !== 'Old FG') { if(fail > 0) { if(!o.lot_tracking[lotID]) o.lot_tracking[lotID]=0; o.lot_tracking[lotID] += fail; if(reason) o.fail_reasons.push(reason); } if(type === 'Rework' && pass > 0 && o.lot_tracking[lotID]) { o.lot_tracking[lotID] -= pass; if(o.lot_tracking[lotID] <= 0) delete o.lot_tracking[lotID]; } } }); let h = ""; for(let k in map) { let x = map[k], old_fg_bal = x.opn_rew - x.pass_oldfg; if(old_fg_bal < 0) old_fg_bal = 0; let processed_fresh = x.offer_fresh + x.offer_war + x.offer_mkt; let bal_pdi = (x.opn_pdi + x.fg) - processed_fresh; if(bal_pdi < 0) bal_pdi = 0; let total_fresh_fails = x.fail_fresh + x.fail_war + x.fail_mkt; let for_rework = total_fresh_fails - x.pass_rew; if(for_rework < 0) for_rework = 0; let rsn = [...new Set(x.fail_reasons)].join(", "); h += `<tr><td class="fw-bold">${x.m}</td><td>${x.c}</td><td>${x.opn_pdi}</td><td>${x.opn_rew}</td><td>${x.fg}</td><td>${x.pass_fresh}</td><td>${x.pass_war}</td><td>${x.pass_mkt}</td><td>${x.pass_oldfg}</td><td>${x.pass_rew}</td><td class="bg-light-blue fw-bold fs-6">${bal_pdi}</td><td class="bg-light-yellow text-danger fw-bold">${old_fg_bal}</td><td class="bg-warning fw-bold">${for_rework}</td><td class="small text-danger">${rsn}</td></tr>`; } document.getElementById('dash1-res').innerHTML = h; }
+    function renderDash2() { let map = {}; const get = (m,c) => { let k=m+"|"+c; if(!map[k]) map[k]={m,c, total_opn_pdi:0, fg:0, total_pass:0, opn_disp:0, disp_out:0 }; return map[k]; }; if(dbData.open) dbData.open.forEach(r => { let o=get(r[3],r[4]); if(r[1]=='PDI') { o.total_opn_pdi += (Number(r[6]||0) + Number(r[7]||0)); } else if(r[1]=='Dispatch') { o.opn_disp += Number(r[9]||0); } }); if(dbData.prod) dbData.prod.forEach(r => { get(r[3],r[4]).fg += Number(r[6]||0); }); if(dbData.disp) dbData.disp.forEach(r => { get(r[1],r[2]).disp_out += Number(r[4]||0); }); if(pdiData) pdiData.forEach(r => { get(r[2],r[3]).total_pass += Number(r[8]||0); }); let h = ""; for(let k in map) { let x = map[k], bal_pdi = (x.total_opn_pdi + x.fg) - x.total_pass, bal_disp = (x.opn_disp + x.total_pass) - x.disp_out; h += `<tr><td>${x.m}</td><td>${x.c}</td><td>${x.total_opn_pdi}</td><td>${x.fg}</td><td>${x.total_pass}</td><td>${x.opn_disp}</td><td>${x.disp_out}</td><td class="bg-primary text-white fw-bold">${bal_pdi}</td><td class="bg-success text-white fw-bold">${bal_disp}</td></tr>`; } document.getElementById('master-body').innerHTML = h; }
+    function runClosureReport(){ let f1=document.getElementById('list_f1'), f2=document.getElementById('list_f2'), fb=document.getElementById('list_fb'); f1.innerHTML=f2.innerHTML=fb.innerHTML=""; let lotStatus = {}; let sortedPDI = [...pdiData].sort((a,b) => new Date(a[0]) - new Date(b[0])); sortedPDI.forEach(r => { let lot = r[5]; if(lot) { let fail = Number(r[7]) - Number(r[8]); lotStatus[lot] = { fails: fail, row: r }; } }); for(let lot in lotStatus) { let item = lotStatus[lot]; if(item.fails > 0) { let r = item.row; let fl=(r[1]<=8?"Floor 1":(r[1]<=16?"Floor 2":"Basement")); let h = `<div class="ticket p-2 border-bottom mb-2"><div class="d-flex justify-content-between fw-bold"><span>${lot}</span><span class="text-danger">L${r[1]}</span></div><div class="small">${r[2]}</div><div class="text-danger small fw-bold">Failed: ${item.fails}</div></div>`; if(fl=='Floor 1') f1.innerHTML+=h; else if(fl=='Floor 2') f2.innerHTML+=h; else fb.innerHTML+=h; } } }
+    function exportTableToExcel(tid, fname) { let wb=XLSX.utils.table_to_book(document.getElementById(tid),{sheet:"Sheet1"}); XLSX.writeFile(wb,fname+".xlsx"); }
+    function editDB(tab, idx){ if(!dbData[tab] || !dbData[tab][idx]) return; let r=dbData[tab][idx]; document.getElementById('form-' + tab).scrollIntoView({ behavior: 'smooth', block: 'center' }); document.getElementById('editIdx-'+tab).value=idx+2; if(tab=='prod'){ document.getElementById('prod-date').value=getCleanDate(r[0]); document.getElementById('prod-line').value=r[1]; document.getElementById('prod-m').value=r[3]; filterC('prod'); document.getElementById('prod-c').value=r[4]; document.getElementById('prod-p').value=r[5]; document.getElementById('prod-qty').value=r[6]; document.getElementById('btnAddProd').innerText = "Update Queue"; document.getElementById('btnAddProd').classList.replace('btn-warning', 'btn-primary'); } if(tab=='disp'){ document.getElementById('disp-date').value=getCleanDate(r[0]); document.getElementById('disp-m').value=r[1]; filterC('disp'); document.getElementById('disp-c').value=r[2]; document.getElementById('disp-p').value=r[3]; document.getElementById('disp-qty').value=r[4]; document.getElementById('btnAddDisp').innerText = "Update Queue"; document.getElementById('btnAddDisp').classList.replace('btn-warning', 'btn-primary'); } if(tab=='open'){ let mVal = getCleanDate(r[0]).substring(0, 7); document.getElementById('open-month').value=mVal; document.getElementById('open-type').value=r[1]; toggleOp(r[1]); document.getElementById('open-line').value=r[2]; document.getElementById('open-m').value=r[3]; filterC('open'); document.getElementById('open-c').value=r[4]; document.getElementById('open-p').value=r[5]; if(r[1]=='PDI'){document.getElementById('open-qpdi').value=r[6];document.getElementById('open-qrew').value=r[7];} else{document.getElementById('open-qdisp').value=r[9];} document.getElementById('btnAddOpen').innerText = "Update Queue"; document.getElementById('btnAddOpen').classList.replace('btn-info', 'btn-primary'); } document.getElementById('btnCancel'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.remove('hidden'); }
+    function cancelEdit(tab){ document.getElementById('form-'+tab).reset(); document.getElementById('editIdx-'+tab).value=""; let btnId = tab=='prod'?'btnAddProd':(tab=='disp'?'btnAddDisp':'btnAddOpen'); let btnText = tab=='disp'?'Add':(tab=='open'?'Add':'+ Add to Queue'); let btnEl = document.getElementById(btnId); btnEl.innerText = btnText; btnEl.classList.remove('btn-primary'); if(tab=='prod' || tab=='disp') btnEl.classList.add('btn-warning'); if(tab=='open') btnEl.classList.add('btn-info'); document.getElementById('btnCancel'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.add('hidden'); }
+    function delDB(tab, idx){ if(confirm("Are you sure you want to delete this record?")){ toggleLoader(true); let type=(tab=='prod'?'Production':(tab=='disp'?'Dispatch':'Opening')); fetch(INV_URL, {method:'POST', body:JSON.stringify({action:'delete', type:type, rowIndex:idx+2})}).then(r=>r.json()).then(d=>{ alert("Deleted Successfully"); window.onload(); }).catch(e => { toggleLoader(false); alert("Delete Failed"); }); } }
     function addQueue(tab) { let form=document.getElementById('form-'+tab); if(document.getElementById('editIdx-'+tab).value!="") { submitEdit(tab); return; } if(!form.checkValidity()){ form.reportValidity(); return; } let fd=Object.fromEntries(new FormData(form)); queueData[tab].push(fd); renderQueue(tab); form.reset(); document.getElementById(tab+'-date').value=new Date().toLocaleDateString('en-CA'); }
     function renderQueue(tab) { let tb=document.getElementById('queue-'+tab); tb.innerHTML=""; queueData[tab].forEach((i,x)=>{ let row = tab=='prod' ? `<td>${i.date}</td><td>${i.line}</td><td>${i.model}</td><td>${i.color}</td><td>${i.fgQty}</td>` : tab=='disp' ? `<td>${i.date}</td><td>${i.model}</td><td>${i.color}</td><td>${i.dispatchQty}</td>` : `<td>${i.openType}</td><td>${i.model}</td><td>${i.color}</td><td>${i.openType=='PDI'?i.pdiOpenQty:i.dispatchOpenQty}</td>`; tb.innerHTML+=`<tr>${row}<td><button class="btn btn-sm btn-danger btn-action" onclick="queueData['${tab}'].splice(${x},1);renderQueue('${tab}')"><i class="bi bi-x-lg"></i></button></td></tr>`; }); }
-    
-    function addPdiQueue(){ let form=document.getElementById('form-pdi'); if(!form.checkValidity()){ form.reportValidity(); return; } if(document.getElementById('pdiEditIndex').value!==""){ submitPdiEdit(); return; } let fd=new FormData(form), r={date:fd.get('date'), line:fd.get('line'), model:fd.get('model'), color:fd.get('color'), partCode:fd.get('partCode'), lotId:fd.get('lotId'), lotType:fd.get('lotType'), pdiOffer:fd.get('pdiOffer'), pdiPass:fd.get('pdiPass'), defectReason:fd.get('defectReason')}; queueData.pdi.push(r); renderPdiQueue(); form.reset(); document.getElementById('pdi-date').value=new Date().toLocaleDateString('en-CA'); }
-    function renderPdiQueue(){ let tb=document.getElementById('queue-pdi'); tb.innerHTML=""; queueData.pdi.forEach((r,i)=>tb.innerHTML+=`<tr><td>${r.lotId}</td><td>${r.model}</td><td>${r.pdiPass}/${r.pdiOffer}</td><td>${r.pdiOffer-r.pdiPass}</td><td><button class="btn btn-sm btn-danger btn-action" onclick="queueData.pdi.splice(${i},1);renderPdiQueue()"><i class="bi bi-x-lg"></i></button></td></tr>`); }
-    function submitPdiQueue(){ if(!queueData.pdi.length)return; toggleLoader(true); let rows = queueData.pdi.map(r=>[r.date, r.line, r.model, r.color, r.partCode, r.lotId, r.lotType, r.pdiOffer, r.pdiPass, r.defectReason]); fetch(PDI_URL, {method:'POST', body:JSON.stringify({action:'save', data:rows})}).then(r=>r.json()).then(d=>{ alert("Saved"); queueData.pdi=[]; renderPdiQueue(); window.onload(); toggleLoader(false); }); }
-
-    function renderDBTable(tab) { 
-        let tb=document.getElementById('db-'+tab); tb.innerHTML=""; 
-        let data = dbData[tab]; if(!data || data.length===0) { tb.innerHTML="<tr><td colspan='8'>No data found</td></tr>"; return; } 
-        let from, to;
-        if(tab==='open') { from = document.getElementById('filter-open-from').value; to = document.getElementById('filter-open-to').value; } 
-        else { from = document.getElementById('filter-'+tab+'-from').value; to = document.getElementById('filter-'+tab+'-to').value; }
-        data.slice().reverse().forEach((r, idx)=>{ 
-            if(!r) return; let realIdx = data.length - 1 - idx; let rowDate = getCleanDate(r[0]);
-            if(tab === 'open') rowDate = rowDate.substring(0, 7);
-            if(rowDate >= from && rowDate <= to) { 
-                let row = tab=='prod' ? `<td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td>` : tab=='disp' ? `<td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td>` : `<td>${r[0]}</td><td>${r[1]}</td><td>${r[3]}</td><td>${r[5]}</td><td>${r[1]=='PDI'?r[6]:r[9]}</td>`; 
-                tb.innerHTML += `<tr>${row}<td><button class="btn btn-sm btn-link p-0 btn-action" onclick="viewDetail('${tab}', ${realIdx})"><i class="bi bi-eye"></i></button> <button class="btn btn-sm btn-link p-0 mx-1 btn-action" onclick="editDB('${tab}',${realIdx})"><i class="bi bi-pencil-square"></i></button> <button class="btn btn-sm btn-link text-danger p-0 btn-action" onclick="delDB('${tab}',${realIdx})"><i class="bi bi-trash"></i></button></td></tr>`; 
-            } 
-        }); 
-    }
-    
-    function renderRecentTable(){ 
-        let tb=document.getElementById('crudTable'); tb.innerHTML=""; 
-        let from = document.getElementById('pdi-from').value;
-        let to = document.getElementById('pdi-to').value;
-        pdiData.slice().reverse().forEach((r,idx)=>{ 
-            if(!r) return; let realIdx = pdiData.length - 1 - idx; let d = getCleanDate(r[0]);
-            if(d >= from && d <= to) 
-                tb.innerHTML+=`<tr><td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[5]}</td><td>${r[6]}</td><td>${r[8]}/${r[7]}</td><td class="text-danger fw-bold">${r[7]-r[8]}</td><td class="small text-muted">${r[9]||'-'}</td><td><button class="btn btn-sm btn-link p-0 btn-action" onclick="viewPdiDetail(${realIdx})"><i class="bi bi-eye"></i></button> <button class="btn btn-sm btn-link p-0 mx-1 btn-action" onclick="editPdiDB(${realIdx})"><i class="bi bi-pencil-square"></i></button> <button class="btn btn-sm btn-link text-danger p-0 btn-action" onclick="deletePdiSaved(${realIdx})"><i class="bi bi-trash"></i></button></td></tr>`; 
-        }); 
-    }
-
-    function editDB(tab, idx){ 
-        if(!dbData[tab] || !dbData[tab][idx]) return;
-        let r=dbData[tab][idx]; 
-        document.getElementById('form-' + tab).scrollIntoView({ behavior: 'smooth', block: 'center' });
-        document.getElementById('editIdx-'+tab).value=idx+2; 
-        if(tab=='prod'){ document.getElementById('prod-date').value=getCleanDate(r[0]); document.getElementById('prod-line').value=r[1]; document.getElementById('prod-m').value=r[3]; filterC('prod'); document.getElementById('prod-c').value=r[4]; document.getElementById('prod-p').value=r[5]; document.getElementById('prod-qty').value=r[6]; document.getElementById('btnAddProd').innerText = "Update Queue"; document.getElementById('btnAddProd').classList.replace('btn-warning', 'btn-primary'); } 
-        if(tab=='disp'){ document.getElementById('disp-date').value=getCleanDate(r[0]); document.getElementById('disp-m').value=r[1]; filterC('disp'); document.getElementById('disp-c').value=r[2]; document.getElementById('disp-p').value=r[3]; document.getElementById('disp-qty').value=r[4]; document.getElementById('btnAddDisp').innerText = "Update Queue"; document.getElementById('btnAddDisp').classList.replace('btn-warning', 'btn-primary'); } 
-        if(tab=='open'){ let mVal = getCleanDate(r[0]).substring(0, 7); document.getElementById('open-month').value=mVal; document.getElementById('open-type').value=r[1]; toggleOp(r[1]); document.getElementById('open-line').value=r[2]; document.getElementById('open-m').value=r[3]; filterC('open'); document.getElementById('open-c').value=r[4]; document.getElementById('open-p').value=r[5]; if(r[1]=='PDI'){document.getElementById('open-qpdi').value=r[6];document.getElementById('open-qrew').value=r[7];} else{document.getElementById('open-qdisp').value=r[9];} document.getElementById('btnAddOpen').innerText = "Update Queue"; document.getElementById('btnAddOpen').classList.replace('btn-info', 'btn-primary'); } 
-        document.getElementById('btnCancel'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.remove('hidden'); 
-    }
-    
-    function submitEdit(tab){ 
-        let form=document.getElementById('form-'+tab), idx=document.getElementById('editIdx-'+tab).value, fd=new FormData(form); 
-        let arr=[]; 
-        if(tab=='prod') arr=[fd.get('date'), fd.get('line'), "NA", fd.get('model'), fd.get('color'), fd.get('partCode'), fd.get('fgQty')]; 
-        if(tab=='disp') arr=[fd.get('date'), fd.get('model'), fd.get('color'), fd.get('partCode'), fd.get('dispatchQty')]; 
-        if(tab=='open') arr=[fd.get('month'), fd.get('openType'), fd.get('line'), fd.get('model'), fd.get('color'), fd.get('partCode'), fd.get('pdiOpenQty'), fd.get('reworkOpenQty'), fd.get('reworkReason'), fd.get('dispatchOpenQty')]; 
-        let type=(tab=='prod'?'Production':(tab=='disp'?'Dispatch':'Opening')); 
-        toggleLoader(true); fetch(INV_URL, {method:'POST', body:JSON.stringify({action:'edit', type:type, rowIndex:parseInt(idx), data:arr})}).then(r=>r.json()).then(d=>{ alert("Updated Successfully"); cancelEdit(tab); window.onload(); }).catch(e=>{ toggleLoader(false); alert("Update Failed"); }); 
-    }
-    
-    function cancelEdit(tab){ 
-        document.getElementById('form-'+tab).reset(); document.getElementById('editIdx-'+tab).value=""; 
-        let btnId = tab=='prod'?'btnAddProd':(tab=='disp'?'btnAddDisp':'btnAddOpen');
-        let btnText = tab=='disp'?'Add':(tab=='open'?'Add':'+ Add to Queue');
-        let btnEl = document.getElementById(btnId);
-        btnEl.innerText = btnText; btnEl.classList.remove('btn-primary');
-        if(tab=='prod' || tab=='disp') btnEl.classList.add('btn-warning');
-        if(tab=='open') btnEl.classList.add('btn-info');
-        document.getElementById('btnCancel'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.add('hidden'); 
-    }
-    
-    function delDB(tab, idx){ 
-        if(confirm("Are you sure you want to delete this record?")){ 
-            toggleLoader(true); let type=(tab=='prod'?'Production':(tab=='disp'?'Dispatch':'Opening')); 
-            fetch(INV_URL, {method:'POST', body:JSON.stringify({action:'delete', type:type, rowIndex:idx+2})}).then(r=>r.json()).then(d=>{ alert("Deleted Successfully"); window.onload(); }).catch(e => { toggleLoader(false); alert("Delete Failed"); });
-        } 
-    }
-    
-    function editPdiDB(idx){ 
-        if(!pdiData[idx]) return;
-        let r=pdiData[idx]; document.getElementById('pdi-card-container').scrollIntoView({ behavior: 'smooth', block: 'center' });
-        document.getElementById('pdiEditIndex').value=idx+2; document.getElementById('pdi-date').value=getCleanDate(r[0]); document.getElementById('pdi-line').value=r[1]; document.getElementById('pdi-m').value=r[2]; filterC('pdi'); document.getElementById('pdi-c').value=r[3]; document.getElementById('pdi-p').value=r[4]; document.getElementById('pdi-lot').value=r[5]; document.getElementById('pdi-type').value=r[6]; document.getElementById('off').value=r[7]; document.getElementById('pas').value=r[8]; document.getElementById('btnAddPdi').innerText = "Update Entry"; document.getElementById('btnAddPdi').classList.replace('btn-warning', 'btn-primary'); document.getElementById('btnCancelEdit').classList.remove('hidden'); 
-    }
-    
-    function submitPdiEdit(){ 
-        let form=document.getElementById('form-pdi'), idx=document.getElementById('pdiEditIndex').value, fd=new FormData(form); 
-        let arr=[fd.get('date'), fd.get('line'), fd.get('model'), fd.get('color'), fd.get('partCode'), fd.get('lotId'), fd.get('lotType'), fd.get('pdiOffer'), fd.get('pdiPass'), fd.get('defectReason')]; 
-        toggleLoader(true); fetch(PDI_URL, {method:'POST', body:JSON.stringify({action:'edit', rowIndex:parseInt(idx), data:arr})}).then(r=>r.json()).then(d=>{ alert("Updated"); cancelPdiEdit(); window.onload(); }); 
-    }
-    
-    function cancelPdiEdit(){ document.getElementById('form-pdi').reset(); document.getElementById('pdiEditIndex').value=""; let btn = document.getElementById('btnAddPdi'); btn.innerText = "+ Add Pending"; btn.classList.replace('btn-primary', 'btn-warning'); document.getElementById('btnCancelEdit').classList.add('hidden'); }
-    
-    async function deletePdiSaved(idx){ if(!confirm("Delete PDI Record?"))return; toggleLoader(true); try { await fetch(PDI_URL,{method:'POST',body:JSON.stringify({action:'delete',rowIndex:idx+2})}); alert("Deleted"); window.onload(); } catch(e) { toggleLoader(false); alert("Error deleting PDI record"); } }
-    
-    function exportTableToExcel(tid, fname) { let wb=XLSX.utils.table_to_book(document.getElementById(tid),{sheet:"Sheet1"}); XLSX.writeFile(wb,fname+".xlsx"); }
-    
-    function runPdiAnalysis(){
-        let from=document.getElementById('dashFrom').value, to=document.getElementById('dashTo').value;
-        let doff=0, dpass=0, dfail=0, dates={}, lines={}, floors={}, defects={};
-        pdiData.forEach(r=>{ let d=getCleanDate(r[0]); if(d>=from && d<=to){ let o=Number(r[7]||0), p=Number(r[8]||0), f=o-p; doff+=o; dpass+=p; dfail+=f; if(!dates[d])dates[d]={o:0,p:0}; dates[d].o+=o; dates[d].p+=p; let ln="L"+r[1]; if(!lines[ln])lines[ln]={o:0,p:0}; lines[ln].o+=o; lines[ln].p+=p; let fl=(r[1]<=8?"F1":(r[1]<=16?"F2":"Base")); if(!floors[fl])floors[fl]={o:0,p:0}; floors[fl].o+=o; floors[fl].p+=p; if(f>0 && r[9]) defects[r[9]]=(defects[r[9]]||0)+f; } });
-        document.getElementById('d_total_qty').innerText=doff; document.getElementById('d_passed_qty').innerText=dpass; document.getElementById('d_rejected_qty').innerText=dfail; document.getElementById('d_pass_rate').innerText=doff?((dpass/doff)*100).toFixed(1)+"%":"0%";
-        drawChart('ch_trend',Object.keys(dates).map(k=>[k.substr(5),(dates[k].p/dates[k].o)*100]),'Daily %'); drawChart('ch_line',Object.keys(lines).map(k=>[k,(lines[k].p/lines[k].o)*100]),'Line %'); drawChart('ch_floor',Object.keys(floors).map(k=>[k,(floors[k].p/floors[k].o)*100]),'Floor %'); drawChart('ch_defects',Object.keys(defects).map(k=>[k,defects[k]]), 'Defects');
-    }
-    function drawChart(id, arr, title) { let dt=new google.visualization.DataTable(); dt.addColumn('string','L'); dt.addColumn('number','V'); dt.addRows(arr); new google.visualization.ColumnChart(document.getElementById(id)).draw(dt,{title:title,legend:'none'}); }
-    
-    function runClosureReport(){
-        let f1=document.getElementById('list_f1'), f2=document.getElementById('list_f2'), fb=document.getElementById('list_fb'); 
-        f1.innerHTML=f2.innerHTML=fb.innerHTML="";
-        let lotStatus = {};
-        let sortedPDI = [...pdiData].sort((a,b) => new Date(a[0]) - new Date(b[0]));
-        sortedPDI.forEach(r => { let lot = r[5]; if(lot) { let fail = Number(r[7]) - Number(r[8]); lotStatus[lot] = { fails: fail, row: r }; } });
-        for(let lot in lotStatus) { let item = lotStatus[lot]; if(item.fails > 0) { let r = item.row; let fl=(r[1]<=8?"Floor 1":(r[1]<=16?"Floor 2":"Basement")); let h = `<div class="ticket p-2 border-bottom mb-2"><div class="d-flex justify-content-between fw-bold"><span>${lot}</span><span class="text-danger">L${r[1]}</span></div><div class="small">${r[2]}</div><div class="text-danger small fw-bold">Failed: ${item.fails}</div></div>`; if(fl=='Floor 1') f1.innerHTML+=h; else if(fl=='Floor 2') f2.innerHTML+=h; else fb.innerHTML+=h; } }
-    }
-
-    function showDaySummary(){ 
-        let f, t;
-        // Logic to determine date range based on active tab
-        if(!document.getElementById('view-prod').classList.contains('hidden')) { f = document.getElementById('filter-prod-from').value; t = document.getElementById('filter-prod-to').value; }
-        else if(!document.getElementById('view-disp').classList.contains('hidden')) { f = document.getElementById('filter-disp-from').value; t = document.getElementById('filter-disp-to').value; }
-        else if(!document.getElementById('view-open').classList.contains('hidden')) { f = document.getElementById('filter-open-from').value + "-01"; t = document.getElementById('filter-open-to').value + "-28"; }
-        else if(!document.getElementById('view-pdi-master').classList.contains('hidden')) {
-             if(!document.getElementById('pdi-perf').classList.contains('hidden')) { f = document.getElementById('dashFrom').value; t = document.getElementById('dashTo').value; }
-             else { f = document.getElementById('pdi-from').value; t = document.getElementById('pdi-to').value; }
-        }
-        else { f = document.getElementById('pdi-from').value; t = document.getElementById('pdi-to').value; }
-
-        if(!f || !t) { f = new Date().toISOString().split('T')[0]; t = f; }
-
-        let d = pdiData.filter(r => { let dt = getCleanDate(r[0]); return dt >= f && dt <= t; });
-        if(!d.length) return alert("No PDI Data in Range"); 
-
-        let stats = { totalQty: 0, totalPass: 0, totalFail: 0, totalLots: 0, passedLots: 0, rejectedLots: 0, floors: { 'Floor 1': { lots:0, passLots:0, qty:0, passQty:0 }, 'Floor 2': { lots:0, passLots:0, qty:0, passQty:0 }, 'Basement': { lots:0, passLots:0, qty:0, passQty:0 } } };
-        let rejectedList = [];
-
-        d.forEach(r => {
-            let ln = parseInt(r[1]);
-            let floor = (ln >= 1 && ln <= 8) ? "Floor 1" : (ln >= 9 && ln <= 16) ? "Floor 2" : "Basement";
-            let offer = Number(r[7] || 0); let pass = Number(r[8] || 0); let fail = offer - pass;
-            stats.totalQty += offer; stats.totalPass += pass; stats.totalFail += fail; stats.totalLots++;
-            if(fail > 0) { stats.rejectedLots++; rejectedList.push({ line: r[1], model: r[2], id: r[5]||"N/A", defect: r[9], date: fmtDate(r[0]) }); } else { stats.passedLots++; stats.floors[floor].passLots++; }
-            stats.floors[floor].lots++; stats.floors[floor].qty += offer; stats.floors[floor].passQty += pass;
-        });
-
-        let passRate = stats.totalQty ? ((stats.totalPass / stats.totalQty) * 100).toFixed(2) : "0.00";
-        let html = `<div class="report-2x container-fluid">
-            <div class="d-flex justify-content-center align-items-center mb-4"><img src="https://i.postimg.cc/5y7SN4xc/logo.png" style="height:80px;" class="me-3"><h2 class="fw-bold m-0 text-primary">Daily PDI Report</h2></div>
-            <div class="report-header">Date Range: ${fmtDate(f)} to ${fmtDate(t)}</div>
-            <div class="row g-4 mb-5">
-                <div class="col-md-3"><div class="report-card rc-total"><div class="rc-num text-dark">${stats.totalQty}</div><div class="rc-label">TOTAL UNITS</div><div class="rc-sub">(Lots: ${stats.totalLots})</div></div></div>
-                <div class="col-md-3"><div class="report-card rc-pass"><div class="rc-num text-success">${stats.totalPass}</div><div class="rc-label">PASSED UNITS</div><div class="rc-sub">(Lots: ${stats.passedLots})</div></div></div>
-                <div class="col-md-3"><div class="report-card rc-fail"><div class="rc-num text-danger">${stats.totalFail}</div><div class="rc-label">REJECTED UNITS</div><div class="rc-sub">(Lots: ${stats.rejectedLots})</div></div></div>
-                <div class="col-md-3"><div class="report-card rc-rate"><div class="rc-num text-primary">${passRate}%</div><div class="rc-label">PASS RATE</div></div></div>
-            </div>
-            <h4 class="fw-bold text-secondary mb-3 text-uppercase">Floor Wise Performance</h4>
-            <table class="table table-bordered table-report text-center bg-white mb-5 shadow-sm"><thead><tr><th>Floor Name</th><th>Lots</th><th>Passed Lots</th><th>Total Qty</th><th>Pass Qty</th><th>Rate %</th></tr></thead><tbody>`;
-        for(let fName in stats.floors) {
-            let fl = stats.floors[fName]; if(fl.qty > 0 || fl.lots > 0) {
-                let frate = fl.qty ? ((fl.passQty / fl.qty) * 100).toFixed(2) : "0.00";
-                let badgeClass = frate >= 95 ? 'bg-success' : (frate >= 90 ? 'bg-warning text-dark' : 'bg-danger');
-                html += `<tr><td class="fw-bold text-start ps-4">${fName}</td><td>${fl.lots}</td><td>${fl.passLots}</td><td>${fl.qty}</td><td>${fl.passQty}</td><td><span class="badge ${badgeClass} badge-lg">${frate}%</span></td></tr>`;
-            }
-        }
-        html += `<tr class="table-light fw-bold" style="border-top: 2px solid #000;"><td class="text-start ps-4">GRAND TOTAL</td><td>${stats.totalLots}</td><td>${stats.passedLots}</td><td>${stats.totalQty}</td><td>${stats.totalPass}</td><td>${passRate}%</td></tr></tbody></table>
-            <h4 class="fw-bold text-danger mb-3 text-uppercase">Rejected Lots (Raw Data)</h4><div class="table-responsive"><table class="table table-hover table-report text-center bg-white shadow-sm"><thead><tr><th>Line</th><th>Model</th><th>ID</th><th>Defect</th><th>Date</th></tr></thead><tbody>`;
-        if(rejectedList.length > 0) { rejectedList.forEach(r => { html += `<tr><td>L${r.line}</td><td>${r.model}</td><td class="fw-bold">${r.id}</td><td class="text-danger fw-bold text-start">${r.defect || "N/A"}</td><td>${r.date}</td></tr>`; }); } 
-        else { html += `<tr><td colspan="5" class="text-success py-4">No Rejections Found! Great Work.</td></tr>`; }
-        html += `</tbody></table></div></div>`;
-        document.getElementById('summaryBody').innerHTML = html; new bootstrap.Modal(document.getElementById('summaryModal')).show(); 
-    }
+    function checkFloor(i,id){ let v=parseInt(i.value),e=document.getElementById(id); e.className="floor-badge"; if(v>=1&&v<=8){e.innerText="1st";e.classList.add("bg-f1");}else if(v>=9&&v<=16){e.innerText="2nd";e.classList.add("bg-f2");}else if(v>=17&&v<=24){e.innerText="Base";e.classList.add("bg-base");}else e.classList.add("hidden"); }
 </script>
 </body>
 </html>
