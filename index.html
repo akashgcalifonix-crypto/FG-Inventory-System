@@ -208,8 +208,25 @@
                     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
                         <h4 class="fw-bold text-success m-0">Recent PDI Data</h4>
                         <div class="filter-group">
-                            <span class="fw-bold">From:</span> <input type="date" id="pdi-from" class="form-control w-auto" onchange="renderRecentTable()">
-                            <span class="fw-bold">To:</span> <input type="date" id="pdi-to" class="form-control w-auto" onchange="renderRecentTable()">
+                            <span class="fw-bold">From:</span> <input type="date" id="pdi-from" class="form-control w-auto" onchange="refreshPdiViews()">
+                            <span class="fw-bold">To:</span> <input type="date" id="pdi-to" class="form-control w-auto" onchange="refreshPdiViews()">
+                            
+                            <!-- [NEW] Type Filter Dropdown Added Here -->
+                            <div class="dropdown">
+                                <button class="btn btn-outline-dark dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-funnel"></i> Select Types
+                                </button>
+                                <ul class="dropdown-menu p-3" id="pdiTypeFilters" style="min-width: 220px;">
+                                    <li><div class="form-check"><input class="form-check-input" type="checkbox" id="type-all" checked onchange="toggleAllPdiTypes(this)"><label class="form-check-label fw-bold" for="type-all">Select All</label></div></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><div class="form-check"><input class="form-check-input pdi-type-chk" type="checkbox" value="Fresh" id="t-fresh" checked onchange="refreshPdiViews()"><label class="form-check-label" for="t-fresh">Fresh</label></div></li>
+                                    <li><div class="form-check"><input class="form-check-input pdi-type-chk" type="checkbox" value="Rework" id="t-rework" checked onchange="refreshPdiViews()"><label class="form-check-label" for="t-rework">Rework</label></div></li>
+                                    <li><div class="form-check"><input class="form-check-input pdi-type-chk" type="checkbox" value="Warranty" id="t-warranty" checked onchange="refreshPdiViews()"><label class="form-check-label" for="t-warranty">Warranty</label></div></li>
+                                    <li><div class="form-check"><input class="form-check-input pdi-type-chk" type="checkbox" value="Old FG" id="t-oldfg" checked onchange="refreshPdiViews()"><label class="form-check-label" for="t-oldfg">Old FG</label></div></li>
+                                    <li><div class="form-check"><input class="form-check-input pdi-type-chk" type="checkbox" value="Market Return" id="t-mkt" checked onchange="refreshPdiViews()"><label class="form-check-label" for="t-mkt">Market Return</label></div></li>
+                                </ul>
+                            </div>
+
                             <button class="btn btn-dark" onclick="showDaySummary()">Preview Report</button>
                             <button class="btn btn-excel" onclick="exportTableToExcel('tbl-pdi-db', 'PDI_Data')">Excel</button>
                         </div>
@@ -237,11 +254,11 @@
                 </div>
             </div>
             <div class="tab-pane fade" id="pdi-perf">
-                <div class="card p-4 mb-4"><div class="row g-4 align-items-end"><div class="col-md-3"><label class="form-label">From</label><input type="date" id="dashFrom" class="form-control"></div><div class="col-md-3"><label class="form-label">To</label><input type="date" id="dashTo" class="form-control"></div><div class="col-md-2 d-flex gap-2"><button class="btn btn-primary w-100 py-3" onclick="runPdiAnalysis()">Analyze</button><button class="btn btn-dark w-100 py-3" onclick="showDaySummary()">Preview Report</button></div></div></div>
+                <div class="card p-4 mb-4"><div class="row g-4 align-items-end"><div class="col-md-3"><label class="form-label">From</label><input type="date" id="dashFrom" class="form-control" onchange="refreshPdiViews()"></div><div class="col-md-3"><label class="form-label">To</label><input type="date" id="dashTo" class="form-control" onchange="refreshPdiViews()"></div><div class="col-md-2 d-flex gap-2"><button class="btn btn-primary w-100 py-3" onclick="runPdiAnalysis()">Analyze</button><button class="btn btn-dark w-100 py-3" onclick="showDaySummary()">Preview Report</button></div></div></div>
                 <div id="pdf-content"><div class="row g-4 mb-5"><div class="col-md-3"><div class="stat-box border-dark"><h2 class="fw-bold display-5" id="d_total_qty">0</h2><small class="fs-5">TOTAL OFFER</small></div></div><div class="col-md-3"><div class="stat-box border-success"><h2 class="fw-bold display-5 text-success" id="d_passed_qty">0</h2><small class="fs-5">PASSED</small></div></div><div class="col-md-3"><div class="stat-box border-danger"><h2 class="fw-bold display-5 text-danger" id="d_rejected_qty">0</h2><small class="fs-5">FAILED</small></div></div><div class="col-md-3"><div class="stat-box border-primary"><h2 class="fw-bold display-5 text-primary" id="d_pass_rate">0%</h2><small class="fs-5">PASS RATE</small></div></div></div><div class="row g-4"><div class="col-md-6"><div class="card p-3"><div id="ch_trend" style="height:400px"></div></div></div><div class="col-md-6"><div class="card p-3"><div id="ch_line" style="height:400px"></div></div></div><div class="col-md-6"><div class="card p-3"><div id="ch_floor" style="height:400px"></div></div></div><div class="col-md-6"><div class="card p-3"><div id="ch_defects" style="height:400px"></div></div></div></div></div>
             </div>
             <div class="tab-pane fade" id="pdi-close">
-                <div class="alert alert-info fs-5">Only lots that currently have failures and haven't passed subsequently are shown here.</div>
+                <div class="alert alert-info fs-5">Only lots that currently have failures and haven't passed subsequently are shown here (Filtered by Type).</div>
                 <div class="row g-4"><div class="col-md-4"><div class="card p-4 bg-light h-100"><h4 class="text-primary text-center">1st Floor Pending</h4><div id="list_f1"></div></div></div><div class="col-md-4"><div class="card p-4 bg-light h-100"><h4 class="text-warning text-center">2nd Floor Pending</h4><div id="list_f2"></div></div></div><div class="col-md-4"><div class="card p-4 bg-light h-100"><h4 class="text-danger text-center">Basement Pending</h4><div id="list_fb"></div></div></div></div>
             </div>
         </div>
@@ -408,8 +425,7 @@
             return fetch(PDI_URL);
         }).then(r=>r.json()).then(d=>{
             pdiData = d.data || []; if(pdiData[0] && pdiData[0][0]==="Date") pdiData.shift();
-            renderRecentTable(); 
-            runClosureReport(); 
+            refreshPdiViews(); // Filter logic triggered
             setTimeout(()=>{ renderDash1(); renderDash2(); }, 500);
             toggleLoader(false);
         }).catch(e=>{ console.error(e); toggleLoader(false); alert("Connection Error. Check URL."); });
@@ -420,18 +436,27 @@
     // --- UPDATED DATE HELPER TO FIX SHIFTING ---
     function getCleanDate(iso){
         if(!iso) return "";
-        // If already formatted like 2025-12, return it
         if(typeof iso === 'string' && iso.length === 7) return iso;
-        // If already formatted like 2025-12-28, return it
         if(typeof iso === 'string' && iso.length === 10) return iso;
-        
-        // Handle ISO Date Objects (Prevent Timezone shift)
         let d = new Date(iso);
-        // Manually format to YYYY-MM-DD using local time concept
         let year = d.getFullYear();
         let month = (d.getMonth() + 1).toString().padStart(2, '0');
         let day = d.getDate().toString().padStart(2, '0');
         return `${year}-${month}-${day}`;
+    }
+
+    // [NEW] TYPE FILTER HELPERS
+    function getSelectedPdiTypes() {
+        return Array.from(document.querySelectorAll('.pdi-type-chk:checked')).map(cb => cb.value);
+    }
+    function toggleAllPdiTypes(master) {
+        document.querySelectorAll('.pdi-type-chk').forEach(cb => cb.checked = master.checked);
+        refreshPdiViews();
+    }
+    function refreshPdiViews() {
+        renderRecentTable();
+        runPdiAnalysis();
+        runClosureReport();
     }
 
     function submitQueue(tab, type) {
@@ -646,50 +671,42 @@
         let data = dbData[tab]; if(!data || data.length===0) { tb.innerHTML="<tr><td colspan='8'>No data found</td></tr>"; return; } 
         
         let from, to;
-        // FIXED OPENING MONTH COMPARISON
-        if(tab==='open') {
-             from = document.getElementById('filter-open-from').value;
-             to = document.getElementById('filter-open-to').value;
-        } else {
-             from = document.getElementById('filter-'+tab+'-from').value;
-             to = document.getElementById('filter-'+tab+'-to').value;
-        }
+        if(tab==='open') { from = document.getElementById('filter-open-from').value; to = document.getElementById('filter-open-to').value; } 
+        else { from = document.getElementById('filter-'+tab+'-from').value; to = document.getElementById('filter-'+tab+'-to').value; }
 
         data.slice().reverse().forEach((r, idx)=>{ 
             if(!r) return; 
             let realIdx = data.length - 1 - idx; 
             let rowDate = getCleanDate(r[0]);
-            
-            // For Opening, handle YYYY-MM
-            if(tab === 'open') {
-               rowDate = rowDate.substring(0, 7);
-            }
-
+            if(tab === 'open') { rowDate = rowDate.substring(0, 7); }
             if(rowDate >= from && rowDate <= to) { 
                 let row = tab=='prod' ? `<td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td>` : tab=='disp' ? `<td>${fmtDate(r[0])}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td>` : `<td>${r[0]}</td><td>${r[1]}</td><td>${r[3]}</td><td>${r[5]}</td><td>${r[1]=='PDI'?r[6]:r[9]}</td>`; 
-                // FIXED: Passed realIdx correctly to functions
                 tb.innerHTML += `<tr>${row}<td><button class="btn btn-sm btn-link p-0 btn-action" onclick="viewDetail('${tab}', ${realIdx})"><i class="bi bi-eye"></i></button> <button class="btn btn-sm btn-link p-0 mx-1 btn-action" onclick="editDB('${tab}',${realIdx})"><i class="bi bi-pencil-square"></i></button> <button class="btn btn-sm btn-link text-danger p-0 btn-action" onclick="delDB('${tab}',${realIdx})"><i class="bi bi-trash"></i></button></td></tr>`; 
             } 
         }); 
     }
     
+    // UPDATED TABLE RENDERING WITH TYPE FILTER
     function renderRecentTable(){ 
         let tb=document.getElementById('crudTable'); tb.innerHTML=""; 
         let from = document.getElementById('pdi-from').value;
         let to = document.getElementById('pdi-to').value;
-        
+        let selectedTypes = getSelectedPdiTypes(); // NEW Logic
+
         pdiData.slice().reverse().forEach((r,idx)=>{ 
             if(!r) return; 
             let realIdx = pdiData.length - 1 - idx; 
             let d = getCleanDate(r[0]);
-            if(d >= from && d <= to) 
+            let lotType = r[6];
+
+            if(d >= from && d <= to && selectedTypes.includes(lotType)) 
                 tb.innerHTML+=`<tr>
                     <td>${fmtDate(r[0])}</td>
                     <td>${r[1]}</td>
                     <td>${r[2]}</td>
                     <td>${r[3]}</td>
                     <td>${r[5]}</td>
-                    <td>${r[6]}</td>
+                    <td class="fw-bold text-primary">${r[6]}</td>
                     <td>${r[8]}/${r[7]}</td>
                     <td class="text-danger fw-bold">${r[7]-r[8]}</td>
                     <td class="small text-muted">${r[9]||'-'}</td>
@@ -831,23 +848,36 @@
     function exportTableToExcel(tid, fname) { let wb=XLSX.utils.table_to_book(document.getElementById(tid),{sheet:"Sheet1"}); XLSX.writeFile(wb,fname+".xlsx"); }
     function downloadPDF() { html2pdf().set({margin:10,filename:'Report.pdf',jsPDF:{unit:'mm',format:'a4',orientation:'landscape'}}).from(document.getElementById('pdf-content')).save(); }
     
+    // UPDATED ANALYSIS WITH TYPE FILTER
     function runPdiAnalysis(){
         let from=document.getElementById('dashFrom').value, to=document.getElementById('dashTo').value;
+        let selectedTypes = getSelectedPdiTypes(); // NEW
         let doff=0, dpass=0, dfail=0, dates={}, lines={}, floors={}, defects={};
-        pdiData.forEach(r=>{ let d=getCleanDate(r[0]); if(d>=from && d<=to){ let o=Number(r[7]||0), p=Number(r[8]||0), f=o-p; doff+=o; dpass+=p; dfail+=f; if(!dates[d])dates[d]={o:0,p:0}; dates[d].o+=o; dates[d].p+=p; let ln="L"+r[1]; if(!lines[ln])lines[ln]={o:0,p:0}; lines[ln].o+=o; lines[ln].p+=p; let fl=(r[1]<=8?"F1":(r[1]<=16?"F2":"Base")); if(!floors[fl])floors[fl]={o:0,p:0}; floors[fl].o+=o; floors[fl].p+=p; if(f>0 && r[9]) defects[r[9]]=(defects[r[9]]||0)+f; } });
+        pdiData.forEach(r=>{ 
+            let d=getCleanDate(r[0]); 
+            if(d>=from && d<=to && selectedTypes.includes(r[6])){ // Filter Applied
+                let o=Number(r[7]||0), p=Number(r[8]||0), f=o-p; doff+=o; dpass+=p; dfail+=f; 
+                if(!dates[d])dates[d]={o:0,p:0}; dates[d].o+=o; dates[d].p+=p; 
+                let ln="L"+r[1]; if(!lines[ln])lines[ln]={o:0,p:0}; lines[ln].o+=o; lines[ln].p+=p; 
+                let fl=(r[1]<=8?"F1":(r[1]<=16?"F2":"Base")); if(!floors[fl])floors[fl]={o:0,p:0}; floors[fl].o+=o; floors[fl].p+=p; 
+                if(f>0 && r[9]) defects[r[9]]=(defects[r[9]]||0)+f; 
+            } 
+        });
         document.getElementById('d_total_qty').innerText=doff; document.getElementById('d_passed_qty').innerText=dpass; document.getElementById('d_rejected_qty').innerText=dfail; document.getElementById('d_pass_rate').innerText=doff?((dpass/doff)*100).toFixed(1)+"%":"0%";
         drawChart('ch_trend',Object.keys(dates).map(k=>[k.substr(5),(dates[k].p/dates[k].o)*100]),'Daily %'); drawChart('ch_line',Object.keys(lines).map(k=>[k,(lines[k].p/lines[k].o)*100]),'Line %'); drawChart('ch_floor',Object.keys(floors).map(k=>[k,(floors[k].p/floors[k].o)*100]),'Floor %'); drawChart('ch_defects',Object.keys(defects).map(k=>[k,defects[k]]), 'Defects');
     }
     function drawChart(id, arr, title) { let dt=new google.visualization.DataTable(); dt.addColumn('string','L'); dt.addColumn('number','V'); dt.addRows(arr); new google.visualization.ColumnChart(document.getElementById(id)).draw(dt,{title:title,legend:'none'}); }
     
+    // UPDATED CLOSURE WITH TYPE FILTER
     function runClosureReport(){
         let f1=document.getElementById('list_f1'), f2=document.getElementById('list_f2'), fb=document.getElementById('list_fb'); 
         f1.innerHTML=f2.innerHTML=fb.innerHTML="";
+        let selectedTypes = getSelectedPdiTypes(); // NEW
         let lotStatus = {};
         let sortedPDI = [...pdiData].sort((a,b) => new Date(a[0]) - new Date(b[0]));
         sortedPDI.forEach(r => {
             let lot = r[5]; 
-            if(lot) {
+            if(lot && selectedTypes.includes(r[6])) { // Filter Applied
                 let fail = Number(r[7]) - Number(r[8]); 
                 lotStatus[lot] = { fails: fail, row: r };
             }
@@ -857,15 +887,13 @@
             if(item.fails > 0) {
                 let r = item.row;
                 let fl=(r[1]<=8?"Floor 1":(r[1]<=16?"Floor 2":"Basement")); 
-                let h = `<div class="ticket"><div class="d-flex justify-content-between fw-bold"><span>${lot}</span><span class="text-danger">L${r[1]}</span></div><div class="small">${r[2]}</div><div class="text-danger small fw-bold">Failed: ${item.fails} (${r[9]||"N/A"})</div></div>`; 
+                let h = `<div class="ticket"><div class="d-flex justify-content-between fw-bold"><span>${lot}</span><span class="badge bg-info text-white me-2">${r[6]}</span><span class="text-danger">L${r[1]}</span></div><div class="small">${r[2]}</div><div class="text-danger small fw-bold">Failed: ${item.fails} (${r[9]||"N/A"})</div></div>`; 
                 if(fl=='Floor 1') f1.innerHTML+=h; else if(fl=='Floor 2') f2.innerHTML+=h; else fb.innerHTML+=h;
             }
         }
     }
 
-    // ************************************************************************************************
-    // RE-WRITTEN SHOW DAY SUMMARY (PREVIEW) LOGIC BASED ON ACTIVE TAB
-    // ************************************************************************************************
+    // UPDATED SUMMARY MODAL WITH TYPE FILTER
     function showDaySummary(){ 
         let activeView = document.querySelector('.main-view:not(.hidden)').id;
         let html = "";
@@ -930,12 +958,16 @@
                     </table>`;
         }
 
-        // --- 4. PDI MASTER PREVIEW (Original Logic) ---
+        // --- 4. PDI MASTER PREVIEW ---
         else {
             let f = document.getElementById('pdi-from').value; 
             let t = document.getElementById('pdi-to').value;
-            let d = pdiData.filter(r => { let dt = getCleanDate(r[0]); return dt >= f && dt <= t; });
-            if(!d.length) return alert("No PDI Data in Range"); 
+            let selectedTypes = getSelectedPdiTypes(); // NEW
+            let d = pdiData.filter(r => { 
+                let dt = getCleanDate(r[0]); 
+                return dt >= f && dt <= t && selectedTypes.includes(r[6]); // NEW Filter Applied
+            });
+            if(!d.length) return alert("No PDI Data in Range for Selected Types"); 
 
             let stats = { totalQty: 0, totalPass: 0, totalFail: 0, totalLots: 0, passedLots: 0, rejectedLots: 0, floors: { 'Floor 1': { lots:0, passLots:0, qty:0, passQty:0 }, 'Floor 2': { lots:0, passLots:0, qty:0, passQty:0 }, 'Basement': { lots:0, passLots:0, qty:0, passQty:0 } } };
             let rejectedList = [];
@@ -945,7 +977,7 @@
                 let floor = (ln >= 1 && ln <= 8) ? "Floor 1" : (ln >= 9 && ln <= 16) ? "Floor 2" : "Basement";
                 let offer = Number(r[7] || 0); let pass = Number(r[8] || 0); let fail = offer - pass;
                 stats.totalQty += offer; stats.totalPass += pass; stats.totalFail += fail; stats.totalLots++;
-                if(fail > 0) { stats.rejectedLots++; rejectedList.push({ line: r[1], model: r[2], id: r[5]||"N/A", defect: r[9], date: fmtDate(r[0]) }); } else { stats.passedLots++; stats.floors[floor].passLots++; }
+                if(fail > 0) { stats.rejectedLots++; rejectedList.push({ line: r[1], model: r[2], id: r[5]||"N/A", defect: r[9], date: fmtDate(r[0]), type: r[6] }); } else { stats.passedLots++; stats.floors[floor].passLots++; }
                 stats.floors[floor].lots++; stats.floors[floor].qty += offer; stats.floors[floor].passQty += pass;
             });
 
@@ -968,9 +1000,9 @@
                 }
             }
             html += `</tbody></table>
-                <h4 class="fw-bold text-danger mb-3 text-uppercase">Rejected Lots (Raw Data)</h4><div class="table-responsive"><table class="table table-hover table-report text-center bg-white shadow-sm"><thead><tr><th>Line</th><th>Model</th><th>ID</th><th>Defect</th></tr></thead><tbody>`;
-            if(rejectedList.length > 0) { rejectedList.forEach(r => { html += `<tr><td>L${r.line}</td><td>${r.model}</td><td class="fw-bold">${r.id}</td><td class="text-danger fw-bold text-start">${r.defect || "N/A"}</td></tr>`; }); } 
-            else { html += `<tr><td colspan="4" class="text-success py-4">No Rejections Found!</td></tr>`; }
+                <h4 class="fw-bold text-danger mb-3 text-uppercase">Rejected Lots (Raw Data)</h4><div class="table-responsive"><table class="table table-hover table-report text-center bg-white shadow-sm"><thead><tr><th>Line</th><th>Model</th><th>ID</th><th>Type</th><th>Defect</th></tr></thead><tbody>`;
+            if(rejectedList.length > 0) { rejectedList.forEach(r => { html += `<tr><td>L${r.line}</td><td>${r.model}</td><td class="fw-bold">${r.id}</td><td><span class="badge bg-info">${r.type}</span></td><td class="text-danger fw-bold text-start">${r.defect || "N/A"}</td></tr>`; }); } 
+            else { html += `<tr><td colspan="5" class="text-success py-4">No Rejections Found!</td></tr>`; }
             html += `</tbody></table></div>`;
         }
 
